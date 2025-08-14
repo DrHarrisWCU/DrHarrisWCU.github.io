@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Electron Flow Analogy</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-moz-osx-font-smoothing: grayscale;
+            background-color: #f0f4f8; /* Light gray background */
+        }
+        canvas {
+            display: block;
+            margin: 2rem auto;
+            border: 2px solid #cbd5e1; /* Light border */
+            border-radius: 0.75rem; /* Rounded corners */
+            background-color: #ffffff; /* White canvas background */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Subtle shadow */
+            max-width: 90vw; /* Responsive width */
+            height: auto;
+        }
+        button {
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.15), 0 2px 4px -1px rgba(0, 0, 0, 0.08);
+        }
+        button:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+    </style>
+</head>
+<body class="p-4 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col justify-center items-center">
+    <div class="max-w-4xl w-full bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Understanding Electron Flow 💡</h1>
+        <p class="text-lg text-gray-700 text-center mb-8">
+            This animation illustrates the common analogy for **electron flow** (electrical current). Imagine the tube as a wire and the balls as electrons. When a new electron (ball) enters one end, it pushes all other electrons along, causing one to exit the other end, even though individual electrons don't move very fast.
+        </p>
+
+        <canvas id="electronFlowCanvas" width="800" height="200" class="mb-8"></canvas>
+
+        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-8">
+            <button id="addBallBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+                Add New Electron (Ball)
+            </button>
+            <button id="startStopBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-75">
+                Start Continuous Flow
+            </button>
+        </div>
+
+        <div id="messageBox" class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded relative text-center hidden" role="alert">
+            <span class="block sm:inline"></span>
+        </div>
+    </div>
+
+    <script>
+        // Get the canvas and its context
+        const canvas = document.getElementById('electronFlowCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Get buttons and message box
+        const addBallBtn = document.getElementById('addBallBtn');
+        const startStopBtn = document.getElementById('startStopBtn');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = messageBox.querySelector('span');
+
+        // Canvas dimensions
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+
+        // Tube properties
+        const tubeHeight = 50;
+        const tubeY = (canvasHeight - tubeHeight) / 2;
+        const tubePadding = 50; // Padding from left/right edges
+        const tubeXStart = tubePadding;
+        const tubeXEnd = canvasWidth - tubePadding;
+        const tubeLength = tubeXEnd - tubeXStart;
+
+        // Ball properties
+        const ballRadius = 20;
+        const ballColor = '#1e3a8a'; // Dark blue
+        const ballSpacing = ballRadius * 2.5; // Space between centers of balls
+        const maxBalls = Math.floor(tubeLength / ballSpacing); // Calculate max balls based on spacing
+
+        // Animation variables
+        let balls = []; // Stores ball objects
+        let animationFrameId = null; // Stores the ID of the requestAnimationFrame
+        let isContinuousFlowing = false; // Flag for continuous flow mode
+        const ballMoveSpeed = 1; // Pixels per frame for smooth movement
+        const newBallInterval = 60; // Frames between new ball additions in continuous mode
+        let continuousFlowCounter = 0; // Counter for continuous flow
+        const tolerance = ballMoveSpeed / 2; // Tolerance for snapping ball to targetX
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - 'success', 'error', 'warning'. Determines styling.
+         */
+        function showMessage(message, type = 'warning') {
+            messageBox.classList.remove('hidden', 'bg-green-100', 'border-green-400', 'text-green-700', 'bg-red-100', 'border-red-400', 'text-red-700', 'bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
+            messageText.textContent = message;
+
+            if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            } else if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            } else { // default to warning
+                messageBox.classList.add('bg-yellow-100', 'border-yellow-400', 'text-yellow-700');
+            }
+            setTimeout(() => {
+                messageBox.classList.add('hidden');
+            }, 3000); // Hide after 3 seconds
+        }
+
+        /**
+         * Draws the transparent tube on the canvas.
+         */
+        function drawTube() {
+            ctx.clearRect(0, 0, canvasWidth, canvasHeight); // Clear the canvas
+            ctx.beginPath();
+            ctx.rect(tubeXStart, tubeY, tubeLength, tubeHeight); // Draw the tube rectangle
+            ctx.strokeStyle = '#64748b'; // Slate gray for tube outline
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Make it look "transparent" by filling with a light translucent color
+            ctx.fillStyle = 'rgba(240, 248, 255, 0.5)'; // Very light blue with transparency
+            ctx.fill();
+        }
+
+        /**
+         * Draws all balls currently in the `balls` array.
+         */
+        function drawBalls() {
+            balls.forEach(ball => {
+                ctx.beginPath();
+                ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                ctx.fillStyle = ball.color;
+                ctx.fill();
+                ctx.strokeStyle = '#334155'; // Darker outline for balls
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            });
+        }
+
+        /**
+         * Recalculates target positions for all balls when a new one is added or during continuous flow.
+         * This creates the "push" effect by setting new targetX for all balls to their right.
+         */
+        function pushNewBall() {
+            // First, update targetX for all existing balls.
+            // Each ball's new targetX will be its current targetX plus one ballSpacing.
+            balls.forEach(ball => {
+                ball.targetX += ballSpacing;
+            });
+
+            // Add the new ball at the very left, slightly off-screen to slide in.
+            // Its targetX is the first available position in the tube.
+            balls.unshift({
+                x: tubeXStart + ballRadius - ballSpacing, // Start off-screen left
+                targetX: tubeXStart + ballRadius, // Slide to this first position
+                y: tubeY + tubeHeight / 2,
+                radius: ballRadius,
+                color: ballColor,
+                isFalling: false // Not falling initially
+            });
+
+            // If the tube is now "overfull", mark the last ball as falling.
+            // This happens when more balls are in the 'balls' array than 'maxBalls'.
+            if (balls.length > maxBalls) {
+                balls[balls.length - 1].isFalling = true;
+                showMessage("Electron exited the wire!", "success");
+            }
+        }
+
+        /**
+         * Initializes the breadboard with a few balls evenly spaced.
+         * Sets both current 'x' and 'targetX' to the initial positions.
+         */
+        function initializeBalls() {
+            balls = [];
+            for (let i = 0; i < maxBalls; i++) {
+                const xPos = tubeXStart + ballRadius + i * ballSpacing;
+                balls.push({
+                    x: xPos,
+                    targetX: xPos,
+                    y: tubeY + tubeHeight / 2,
+                    radius: ballRadius,
+                    color: ballColor,
+                    isFalling: false
+                });
+            }
+        }
+
+        /**
+         * Draws the entire scene (tube and balls).
+         */
+        function draw() {
+            drawTube();
+            drawBalls();
+        }
+
+        /**
+         * The main animation loop. Moves balls towards their targets and handles falling.
+         */
+        function animate() {
+            let anyBallMoving = false; // Flag to check if any ball is still moving towards its target
+            let anyBallFalling = false; // Flag to check if any ball is currently falling
+
+            // Update ball positions
+            balls.forEach(ball => {
+                if (ball.isFalling) {
+                    ball.y += ballMoveSpeed * 2; // Make falling faster than horizontal movement
+                    if (ball.y < canvasHeight + ballRadius) { // Check if ball is still on canvas
+                        anyBallFalling = true;
+                    }
+                } else if (Math.abs(ball.x - ball.targetX) > tolerance) {
+                    // Move ball closer to its targetX
+                    ball.x += (ball.targetX > ball.x ? ballMoveSpeed : -ballMoveSpeed);
+                    anyBallMoving = true;
+                } else {
+                    ball.x = ball.targetX; // Snap to target if very close to prevent jitter
+                }
+            });
+
+            // Remove balls that have completely fallen off-screen
+            balls = balls.filter(ball => !ball.isFalling || ball.y < canvasHeight + ballRadius);
+
+            // Handle new ball generation in continuous flow mode
+            if (isContinuousFlowing) {
+                continuousFlowCounter++;
+                if (continuousFlowCounter >= newBallInterval) {
+                    pushNewBall(); // Add a new ball and update targets
+                    continuousFlowCounter = 0; // Reset counter
+                    anyBallMoving = true; // A new ball entered, so there's movement
+                    showMessage("New electron (ball) is entering!", "warning");
+                }
+            }
+
+            draw(); // Redraw the entire scene
+
+            // Determine if the animation loop should continue
+            // Continue if: in continuous flow, any ball is still moving, or any ball is still falling
+            if (isContinuousFlowing || anyBallMoving || anyBallFalling) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                // If nothing is moving and not in continuous mode, stop the animation loop
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+
+        // Event Listeners for buttons
+        addBallBtn.addEventListener('click', () => {
+            // If continuous flow is active, stop it before doing a single push
+            if (isContinuousFlowing) {
+                isContinuousFlowing = false;
+                startStopBtn.textContent = 'Start Continuous Flow';
+                startStopBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                startStopBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            }
+            pushNewBall(); // Trigger a single ball push
+            if (!animationFrameId) { // Start animation if not already running
+                animate();
+            }
+        });
+
+        startStopBtn.addEventListener('click', () => {
+            isContinuousFlowing = !isContinuousFlowing; // Toggle continuous flow state
+
+            if (isContinuousFlowing) {
+                continuousFlowCounter = 0; // Reset counter when starting continuous flow
+                startStopBtn.textContent = 'Stop Continuous Flow';
+                startStopBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                startStopBtn.classList.add('bg-red-600', 'hover:bg-red-700');
+                if (!animationFrameId) { // Start animation if not already running
+                    animate();
+                }
+            } else {
+                startStopBtn.textContent = 'Start Continuous Flow';
+                startStopBtn.classList.remove('bg-red-600', 'hover:bg-red-700');
+                startStopBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+                // The animate function's condition will naturally stop the loop when movement ceases
+            }
+        });
+
+        // Initialize the canvas and balls when the window loads
+        window.onload = function() {
+            initializeBalls();
+            draw();
+        };
+    </script>
+</body>
+</html>
