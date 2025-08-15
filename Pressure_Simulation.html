@@ -21,7 +21,7 @@
             margin: 0 auto; /* Center the canvas */
             border-radius: 0.75rem; /* Rounded corners */
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Subtle shadow */
-            cursor: ns-resize; /* Indicate vertical resize when hovering over canvas */
+            cursor: default; /* Default cursor for canvas */
         }
     </style>
 </head>
@@ -29,7 +29,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full text-gray-800">
         <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">Water Pressure Simulator 💧 (P5.js)</h1>
         <p class="text-lg text-gray-700 text-center mb-6">
-            **Drag the water level up or down inside the water tower** to change the **height** and observe its effect on **pressure**, **potential energy**, and **water spray**.
+            **Drag the water level up or down inside the water tower** OR **drag the horizontal 'Height' marker** to change the water's height and observe its effect on **pressure**, **potential energy**, and **water spray**.
         </p>
 
         <div class="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
@@ -54,7 +54,7 @@
 
                 <div class="mt-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-800 rounded-lg shadow-inner w-full md:w-64 text-center">
                     <p class="text-xl font-bold">Average Exit Distance:</p>
-                    <p id="distanceDisplay" class="text-3xl font-extrabold mt-1">0.00 px</p>
+                    <p id="distanceDisplay" class="text-3xl font-extrabold mt-1">0.00 m</p>
                 </div>
             </div>
         </div>
@@ -91,7 +91,9 @@
         // P5.js sketch global variables
         let waterTower;
         let particleSystem;
-        let draggingWater = false; // Flag to indicate if the water level is being dragged
+        let draggingWater = false; // Flag for vertical dragging inside tower
+        let draggingHeightMarker = false; // Flag for vertical dragging of the height marker
+        let currentMarkerY; // Declared globally for vertical marker
 
         // Global variables for P5.js canvas dimensions
         const canvasWidth = 800;
@@ -100,7 +102,6 @@
         // Water tower dimensions within P5.js canvas
         const towerWidth = 80;
         const towerHeight = 250;
-        // Adjusted towerX to place it in the left-hand third
         const towerX = canvasWidth / 6; // Roughly 1/3rd from the left
         const towerY = canvasHeight - towerHeight - 20; // Position above ground
 
@@ -110,6 +111,17 @@
         const faucetX = towerX + towerWidth; // Right side of the tower
         const faucetY = towerY + towerHeight - 30; // 30px from bottom of tower
 
+        // Height Marker properties (new vertical slider)
+        const heightMarkerX = towerX - 30; // Fixed X position for the vertical marker
+        const heightMarkerMinY = towerY; // Topmost position for the marker
+        const heightMarkerMaxY = towerY + towerHeight; // Bottommost position for the marker (at tower base)
+        const heightMarkerWidth = 50; // Width of the marker itself (horizontal bar)
+        const heightMarkerHeight = 10; // Height of the marker itself (vertical thickness)
+
+        // Conversion factor from P5.js pixels to meters
+        // waterTower.height (250px) represents 100 meters.
+        const PIXEL_TO_METER_SCALE = 100 / towerHeight; // meters per pixel
+
         // --- WaterTower Class ---
         class WaterTower {
             constructor(x, y, w, h) {
@@ -117,7 +129,7 @@
                 this.y = y;
                 this.width = w;
                 this.height = h;
-                this.waterLevelHeight = 0; // Current height of water in P5 units
+                this.waterLevelHeight = 0; // Current height of water in P5 units (0 to this.height)
             }
 
             // Draw the water tower and its base
@@ -229,9 +241,12 @@
                     return 0;
                 }
                 const sum = this.exitXBuffer.reduce((acc, val) => acc + val, 0);
-                // Calculate distance relative to the faucet's x position
-                const averageX = sum / this.exitXBuffer.length;
-                return averageX - (faucetX + faucetWidth); // Distance from faucet's end
+                // Calculate distance relative to the faucet's x position in pixels
+                const averageXPixels = sum / this.exitXBuffer.length;
+                const distanceInPixels = averageXPixels - (faucetX + faucetWidth); 
+                
+                // Convert pixels to meters
+                return distanceInPixels * PIXEL_TO_METER_SCALE;
             }
 
             // Clear buffer when height changes significantly to reset average
@@ -276,12 +291,12 @@
             }
 
             // Update the average distance display
-            const avgDistance = particleSystem.getAverageExitDistance();
-            distanceDisplay.textContent = `${avgDistance.toFixed(2)} px`;
+            const avgDistanceMeters = particleSystem.getAverageExitDistance();
+            distanceDisplay.textContent = `${avgDistanceMeters.toFixed(2)} m`; // Display in meters
 
             // Draw the exit marker at the average exit location
-            if (avgDistance > 0 && particleSystem.exitXBuffer.length > 0) {
-                const markerX = (faucetX + faucetWidth) + avgDistance; // Absolute X position for marker
+            if (avgDistanceMeters > 0 && particleSystem.exitXBuffer.length > 0) {
+                const markerX = (faucetX + faucetWidth) + (avgDistanceMeters / PIXEL_TO_METER_SCALE); // Convert meters back to pixels for drawing
                 const markerWidth = 5;
                 const markerHeight = 50; // Vertical rectangle height
                 const markerY = height - markerHeight; // Place at bottom of canvas
@@ -294,35 +309,47 @@
                 particleSystem.clearExitBuffer();
             }
 
-            // --- Draw Height Marker on the Left ---
-            const heightMarkerX = towerX - 30; // Position to the left of the tower
-            const heightMarkerWidth = 5;
-            const heightMarkerHeight = 30; // Height of the marker itself
-            // Y position corresponds to the top of the water level
-            const waterSurfaceY = waterTower.y + waterTower.height - waterTower.waterLevelHeight;
+            // --- Draw Vertical Height Marker and Label ---
+            // Calculate marker's Y position based on current water height (0-100m mapped to marker's Y range)
+            currentMarkerY = map(currentHeightMeters, 0, 100, heightMarkerMaxY, heightMarkerMinY); // Assigned to global variable, inverted for P5 Y-axis
 
-            if (waterTower.waterLevelHeight > 0) { // Only draw if there's water
-                fill(80, 80, 80); // Dark grey
-                noStroke();
-                rect(heightMarkerX - heightMarkerWidth / 2, waterSurfaceY - heightMarkerHeight / 2, heightMarkerWidth, heightMarkerHeight);
+            fill(80, 80, 80); // Dark grey
+            noStroke();
+            // Draw horizontal marker (now moves vertically)
+            rectMode(CENTER); // Draw rectangle from its center for easier positioning
+            rect(heightMarkerX, currentMarkerY, heightMarkerWidth, heightMarkerHeight, 5); // Width and height for horizontal bar
 
-                // Add "Height" label
-                fill(50); // Darker text color
-                textSize(12);
-                textAlign(RIGHT, CENTER);
-                text("Height", heightMarkerX - heightMarkerWidth / 2 - 5, waterSurfaceY);
-            }
+            // Add "Height" label to the left of the marker
+            fill(50); // Darker text color
+            textSize(12);
+            textAlign(RIGHT, CENTER);
+            text("Height", heightMarkerX - heightMarkerWidth / 2 - 5, currentMarkerY);
+            
+            // Display height value on the canvas itself near the marker
+            textSize(16);
+            textAlign(CENTER, BOTTOM);
+            text(`${currentHeightMeters.toFixed(0)} m`, heightMarkerX, currentMarkerY - heightMarkerHeight / 2 - 5);
+            rectMode(CORNER); // Reset rectMode to default for other rects
         }
 
         /**
          * P5.js mousePressed event handler.
-         * Checks if the mouse click is within the water tower's water-fillable area.
+         * Checks if the mouse click is within interaction areas.
          */
         function mousePressed() {
-            // Check if mouse is within the tower's bounds (where water can be)
+            // Check if mouse is within the tower's bounds (for vertical dragging)
             if (mouseX > waterTower.x && mouseX < waterTower.x + waterTower.width &&
                 mouseY > waterTower.y && mouseY < waterTower.y + waterTower.height) {
                 draggingWater = true;
+                cursor('ns-resize'); // Change cursor for vertical drag
+            } 
+            // Check if mouse is within the horizontal height marker's bounds (now a vertical slider)
+            else if (mouseX > heightMarkerX - heightMarkerWidth / 2 && mouseX < heightMarkerX + heightMarkerWidth / 2 &&
+                     mouseY > currentMarkerY - heightMarkerHeight / 2 && mouseY < currentMarkerY + heightMarkerHeight / 2) {
+                draggingHeightMarker = true;
+                cursor('ns-resize'); // Change cursor for vertical drag
+            }
+            if (draggingWater || draggingHeightMarker) {
                 // Update immediately on press
                 mouseDragged();
             }
@@ -330,39 +357,78 @@
 
         /**
          * P5.js mouseDragged event handler.
-         * Updates the water level based on vertical mouse position if dragging.
+         * Updates water level based on vertical mouse position (for tower drag) or vertical mouse position (for marker drag).
          */
         function mouseDragged() {
             if (draggingWater) {
-                // Map mouseY (inverted Y-axis for P5: lower Y is higher on screen) to water level height
-                // The water level height in P5 terms is from the bottom of the tower.
+                // Vertical dragging inside the tower
                 let newWaterLevelP5Height = waterTower.y + waterTower.height - mouseY;
-
-                // Constrain the water level height to be within the tower's drawable bounds (0 to towerHeight)
                 newWaterLevelP5Height = constrain(newWaterLevelP5Height, 0, waterTower.height);
-
-                // Check if the P5 height has changed significantly before updating and clearing buffer
-                const oldHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100);
-                const newHeightInMeters = map(newWaterLevelP5Height, 0, waterTower.height, 0, 100);
-                if (Math.abs(newHeightInMeters - oldHeightInMeters) > 1) { // Threshold for "significant" change
-                    particleSystem.clearExitBuffer(); // Clear buffer for new average calculation
-                }
-
-                // Update the water tower's internal P5 height
                 waterTower.setWaterLevel(newWaterLevelP5Height);
 
-                // Convert P5 height to meters (0-100) for HTML display and pressure calculation
-                updateSimulator(newHeightInMeters);
+                const heightInMeters = map(newWaterLevelP5Height, 0, waterTower.height, 0, 100);
+                updateSimulator(heightInMeters);
+
+            } else if (draggingHeightMarker) {
+                // Vertical dragging of the height marker
+                let newMarkerY = mouseY;
+                newMarkerY = constrain(newMarkerY, heightMarkerMinY, heightMarkerMaxY);
+                
+                // Map the marker's Y position back to the 0-100 meter height value
+                // Note: P5 Y-axis is inverted for height (lower Y is higher in tower)
+                const heightInMeters = map(newMarkerY, heightMarkerMaxY, heightMarkerMinY, 0, 100);
+
+                // Convert meters height back to P5 tower height for the waterTower object
+                const newWaterLevelP5Height = map(heightInMeters, 0, 100, 0, waterTower.height);
+                waterTower.setWaterLevel(newWaterLevelP5Height);
+
+                updateSimulator(heightInMeters);
+            }
+
+            // Clear particle buffer if height changed significantly
+            const oldHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100);
+            const newHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100); // Re-map after setting
+            if (Math.abs(newHeightInMeters - oldHeightInMeters) > 1) { // Threshold for "significant" change
+                particleSystem.clearExitBuffer(); // Clear buffer for new average calculation
             }
         }
 
         /**
          * P5.js mouseReleased event handler.
-         * Stops the dragging of the water level.
+         * Stops all dragging interactions.
          */
         function mouseReleased() {
             draggingWater = false;
+            draggingHeightMarker = false;
+            cursor('default'); // Always reset to default after release
         }
+
+        /**
+         * P5.js mouseMoved event handler to change cursor based on hover.
+         */
+        function mouseMoved() {
+            // Get current height for cursor check, as currentMarkerY depends on it.
+            const currentWaterHeightP5 = waterTower.waterLevelHeight;
+            const currentHeightMeters = map(currentWaterHeightP5, 0, waterTower.height, 0, 100);
+            const currentMarkerYForHover = map(currentHeightMeters, 0, 100, heightMarkerMaxY, heightMarkerMinY);
+
+            if (!draggingWater && !draggingHeightMarker) {
+                // Check if hovering over the water tower itself
+                if (mouseX > waterTower.x && mouseX < waterTower.x + waterTower.width &&
+                    mouseY > waterTower.y && mouseY < waterTower.y + waterTower.height) {
+                    cursor('ns-resize');
+                } 
+                // Check if hovering over the vertical height marker
+                else if (mouseX > heightMarkerX - heightMarkerWidth / 2 && mouseX < heightMarkerX + heightMarkerWidth / 2 &&
+                         mouseY > currentMarkerYForHover - heightMarkerHeight / 2 && mouseY < currentMarkerYForHover + heightMarkerHeight / 2) {
+                    cursor('ns-resize');
+                }
+                else {
+                    cursor('default'); // Default cursor if not hovering over interactive elements
+                }
+            }
+        }
+
 
         /**
          * Updates the simulator's pressure and HTML display elements.
