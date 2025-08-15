@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Pressure Simulator (P5.js)</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- P5.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <!-- MathJax CDN for LaTeX rendering -->
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Custom styles for the container and general elements */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        canvas {
+            display: block; /* Remove extra space below canvas */
+            margin: 0 auto; /* Center the canvas */
+            border-radius: 0.75rem; /* Rounded corners */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Subtle shadow */
+            cursor: ns-resize; /* Indicate vertical resize when hovering over canvas */
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full text-gray-800">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">Water Pressure Simulator 💧 (P5.js)</h1>
+        <p class="text-lg text-gray-700 text-center mb-6">
+            **Drag the water level up or down inside the water tower** to change the **height** and observe its effect on **pressure**, **potential energy**, and **water spray**.
+        </p>
+
+        <div class="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
+            <!-- P5.js Canvas will be inserted here -->
+            <div id="canvas-container" class="flex flex-col items-center justify-center">
+                <!-- P5.js canvas will be appended here by the sketch -->
+            </div>
+
+            <!-- Controls and Display (Height value, Pressure, Potential Energy, and Average Distance) -->
+            <div class="flex flex-col items-center w-full md:w-auto">
+                <p class="text-lg font-semibold mb-2">Water Height: <span id="heightValue">50</span> meters</p>
+
+                <div class="mt-6 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-800 rounded-lg shadow-inner w-full md:w-64 text-center">
+                    <p class="text-xl font-bold">Pressure at Base:</p>
+                    <p id="pressureDisplay" class="text-3xl font-extrabold mt-1">0.00 kPa</p>
+                </div>
+
+                <div class="mt-4 p-4 bg-purple-100 border-l-4 border-purple-500 text-purple-800 rounded-lg shadow-inner w-full md:w-64 text-center">
+                    <p class="text-xl font-bold">Potential Energy:</p>
+                    <p id="potentialEnergyDisplay" class="text-3xl font-extrabold mt-1">0.00 kJ</p>
+                </div>
+
+                <div class="mt-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-800 rounded-lg shadow-inner w-full md:w-64 text-center">
+                    <p class="text-xl font-bold">Average Exit Distance:</p>
+                    <p id="distanceDisplay" class="text-3xl font-extrabold mt-1">0.00 px</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 text-sm text-gray-600 text-center">
+            <p><strong>Formula for Pressure:</strong> $P = \rho \cdot g \cdot h$</p>
+            <p><strong>Formula for Potential Energy:</strong> $PE = m \cdot g \cdot (h/2)$</p>
+            <p>Where:</p>
+            <ul class="list-disc list-inside mx-auto max-w-sm text-left mt-2">
+                <li>$P$ = Pressure (Pascals)</li>
+                <li>$PE$ = Potential Energy (Joules)</li>
+                <li>$\rho$ (rho) = Density of water (approx. $1000 \, \text{kg/m}^3$)</li>
+                <li>$g$ = Acceleration due to gravity (approx. $9.81 \, \text{m/s}^2$)</li>
+                <li>$h$ = Height of water column (meters)</li>
+                <li>$m$ = Mass of water. For simplicity, we assume a unit base area ($1 \, \text{m}^2$) for the water column, so $m = \rho \cdot h$.</li>
+            </ul>
+            <p class="mt-3">
+                *Note: This simulator uses an idealized model. Real-world pressure can be affected by other factors like pipe diameter, friction, and fluid velocity.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Get references to HTML elements
+        const heightValueSpan = document.getElementById('heightValue');
+        const pressureDisplay = document.getElementById('pressureDisplay');
+        const potentialEnergyDisplay = document.getElementById('potentialEnergyDisplay');
+        const distanceDisplay = document.getElementById('distanceDisplay');
+
+        // Physical constants for water pressure and energy calculation
+        const DENSITY_OF_WATER = 1000; // kg/m^3
+        const GRAVITY = 9.81; // m/s^2
+
+        // P5.js sketch global variables
+        let waterTower;
+        let particleSystem;
+        let draggingWater = false; // Flag to indicate if the water level is being dragged
+
+        // Global variables for P5.js canvas dimensions
+        const canvasWidth = 800;
+        const canvasHeight = 400;
+
+        // Water tower dimensions within P5.js canvas
+        const towerWidth = 80;
+        const towerHeight = 250;
+        // Adjusted towerX to place it in the left-hand third
+        const towerX = canvasWidth / 6; // Roughly 1/3rd from the left
+        const towerY = canvasHeight - towerHeight - 20; // Position above ground
+
+        // Faucet position relative to tower
+        const faucetWidth = 30;
+        const faucetHeight = 15;
+        const faucetX = towerX + towerWidth; // Right side of the tower
+        const faucetY = towerY + towerHeight - 30; // 30px from bottom of tower
+
+        // --- WaterTower Class ---
+        class WaterTower {
+            constructor(x, y, w, h) {
+                this.x = x;
+                this.y = y;
+                this.width = w;
+                this.height = h;
+                this.waterLevelHeight = 0; // Current height of water in P5 units
+            }
+
+            // Draw the water tower and its base
+            display() {
+                // Tower container
+                noFill();
+                stroke(148, 163, 178); // #94a3b8
+                strokeWeight(2);
+                rect(this.x, this.y, this.width, this.height, 10, 10, 0, 0); // Rounded top corners
+
+                // Water inside the tower
+                let waterY = this.y + this.height - this.waterLevelHeight;
+                let waterHeight = this.waterLevelHeight;
+                if (waterHeight > 0) {
+                    fill(59, 130, 246, 200); // #3b82f6 with some transparency
+                    noStroke();
+                    rect(this.x + 1, waterY + 1, this.width - 2, waterHeight - 2); // Inset slightly
+                    
+                    // Water surface highlight
+                    stroke(96, 165, 250); // #60a5fa
+                    strokeWeight(2);
+                    line(this.x, waterY, this.x + this.width, waterY);
+                }
+
+                // Tower Base
+                fill(75, 85, 99); // #4b5563
+                noStroke();
+                rect(this.x - 10, this.y + this.height, this.width + 20, 20, 0, 0, 10, 10); // Rounded bottom corners
+
+                // Faucet
+                fill(156, 163, 175); // #9ca3af
+                stroke(107, 114, 128); // #6b7280
+                strokeWeight(1);
+                rect(faucetX, faucetY, faucetWidth, faucetHeight, 0, 5, 5, 0); // Rounded right corners
+            }
+
+            // Update water level based on the P5.js height (0 to this.height)
+            setWaterLevel(p5Height) {
+                this.waterLevelHeight = p5Height;
+            }
+        }
+
+        // --- Particle Class ---
+        class Particle {
+            constructor(x, y, vx, vy) {
+                this.x = x;
+                this.y = y;
+                this.vx = vx;
+                this.vy = vy;
+                this.alpha = 255; // For fading out
+                this.diameter = random(5, 10); // Random size for variation
+                this.initialX = x; // Store initial X for distance calculation
+            }
+
+            update() {
+                this.x += this.vx;
+                this.vy += 0.2; // Gravity effect
+                this.y += this.vy;
+                this.alpha -= 5; // Fade out
+            }
+
+            display() {
+                noStroke();
+                fill(59, 130, 246, this.alpha); // Water blue with fading alpha
+                ellipse(this.x, this.y, this.diameter, this.diameter);
+            }
+
+            isDead() {
+                return this.alpha < 0 || this.y > height + 20; // Remove if faded or off screen
+            }
+        }
+
+        // --- ParticleSystem Class ---
+        class ParticleSystem {
+            constructor() {
+                this.particles = [];
+                this.exitXBuffer = []; // Stores x positions of recently exited particles
+                this.bufferSize = 30; // Number of particles to average
+            }
+
+            addParticle(x, y, normalizedVelocity) {
+                // Initial horizontal velocity scaled by 'normalizedVelocity' (0 to 1)
+                // Range from 0.5 (trickle) to 20 (strong spray)
+                const vx = map(normalizedVelocity, 0, 1, 0.5, 20) + random(-0.5, 0.5); // Added random variance
+                const vy = random(-2, 0); // Start slightly upwards or horizontally
+                this.particles.push(new Particle(x, y, vx, vy));
+            }
+
+            run() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    let p = this.particles[i];
+                    p.update();
+                    p.display();
+                    if (p.isDead()) {
+                        // If the particle is just exiting the bottom of the canvas, record its final X position
+                        if (p.y > height && p.alpha > 0) { // Ensure it's exiting bottom and not just faded
+                            this.exitXBuffer.push(p.x);
+                            if (this.exitXBuffer.length > this.bufferSize) {
+                                this.exitXBuffer.shift(); // Remove the oldest entry
+                            }
+                        }
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+
+            getAverageExitDistance() {
+                if (this.exitXBuffer.length === 0) {
+                    return 0;
+                }
+                const sum = this.exitXBuffer.reduce((acc, val) => acc + val, 0);
+                // Calculate distance relative to the faucet's x position
+                const averageX = sum / this.exitXBuffer.length;
+                return averageX - (faucetX + faucetWidth); // Distance from faucet's end
+            }
+
+            // Clear buffer when height changes significantly to reset average
+            clearExitBuffer() {
+                this.exitXBuffer = [];
+            }
+        }
+
+        // --- P5.js Setup Function ---
+        function setup() {
+            let p5Canvas = createCanvas(canvasWidth, canvasHeight);
+            p5Canvas.parent('canvas-container'); // Attach canvas to the container div
+            waterTower = new WaterTower(towerX, towerY, towerWidth, towerHeight);
+            particleSystem = new ParticleSystem();
+
+            // Set initial water level (e.g., 50% of tower height)
+            const initialWaterLevelP5Height = waterTower.height / 2;
+            waterTower.setWaterLevel(initialWaterLevelP5Height); // Set internal P5 height
+            // Convert P5 height to meters (0-100) for initial display and pressure calc
+            updateSimulator(map(initialWaterLevelP5Height, 0, waterTower.height, 0, 100));
+        }
+
+        // --- P5.js Draw Function ---
+        function draw() {
+            background(240, 244, 248); // Match body background #f0f4f8
+
+            waterTower.display();
+            particleSystem.run();
+
+            // Get current water height from the P5.js water tower object
+            const currentWaterHeightP5 = waterTower.waterLevelHeight;
+            // Convert P5 height to meters (0-100) for calculations
+            const currentHeightMeters = map(currentWaterHeightP5, 0, waterTower.height, 0, 100);
+
+            if (currentHeightMeters > 0) {
+                // Emit more particles at higher pressure/height
+                let emissionRate = map(currentHeightMeters, 0, 100, 0.1, 2); // Min 0.1, Max 2 particles per frame average
+                if (random(1) < emissionRate) { // Randomly add particles
+                    // Pass normalized height (0 to 1) to control particle velocity
+                    particleSystem.addParticle(faucetX + faucetWidth, faucetY + faucetHeight / 2, currentHeightMeters / 100);
+                }
+            }
+
+            // Update the average distance display
+            const avgDistance = particleSystem.getAverageExitDistance();
+            distanceDisplay.textContent = `${avgDistance.toFixed(2)} px`;
+
+            // Draw the exit marker at the average exit location
+            if (avgDistance > 0 && particleSystem.exitXBuffer.length > 0) {
+                const markerX = (faucetX + faucetWidth) + avgDistance; // Absolute X position for marker
+                const markerWidth = 5;
+                const markerHeight = 50; // Vertical rectangle height
+                const markerY = height - markerHeight; // Place at bottom of canvas
+
+                fill(80, 80, 80); // Dark grey
+                noStroke();
+                rect(markerX - markerWidth / 2, markerY, markerWidth, markerHeight);
+            } else if (currentHeightMeters === 0) {
+                // If water level is 0, clear the buffer and ensure marker is not drawn
+                particleSystem.clearExitBuffer();
+            }
+
+            // --- Draw Height Marker on the Left ---
+            const heightMarkerX = towerX - 30; // Position to the left of the tower
+            const heightMarkerWidth = 5;
+            const heightMarkerHeight = 30; // Height of the marker itself
+            // Y position corresponds to the top of the water level
+            const waterSurfaceY = waterTower.y + waterTower.height - waterTower.waterLevelHeight;
+
+            if (waterTower.waterLevelHeight > 0) { // Only draw if there's water
+                fill(80, 80, 80); // Dark grey
+                noStroke();
+                rect(heightMarkerX - heightMarkerWidth / 2, waterSurfaceY - heightMarkerHeight / 2, heightMarkerWidth, heightMarkerHeight);
+
+                // Add "Height" label
+                fill(50); // Darker text color
+                textSize(12);
+                textAlign(RIGHT, CENTER);
+                text("Height", heightMarkerX - heightMarkerWidth / 2 - 5, waterSurfaceY);
+            }
+        }
+
+        /**
+         * P5.js mousePressed event handler.
+         * Checks if the mouse click is within the water tower's water-fillable area.
+         */
+        function mousePressed() {
+            // Check if mouse is within the tower's bounds (where water can be)
+            if (mouseX > waterTower.x && mouseX < waterTower.x + waterTower.width &&
+                mouseY > waterTower.y && mouseY < waterTower.y + waterTower.height) {
+                draggingWater = true;
+                // Update immediately on press
+                mouseDragged();
+            }
+        }
+
+        /**
+         * P5.js mouseDragged event handler.
+         * Updates the water level based on vertical mouse position if dragging.
+         */
+        function mouseDragged() {
+            if (draggingWater) {
+                // Map mouseY (inverted Y-axis for P5: lower Y is higher on screen) to water level height
+                // The water level height in P5 terms is from the bottom of the tower.
+                let newWaterLevelP5Height = waterTower.y + waterTower.height - mouseY;
+
+                // Constrain the water level height to be within the tower's drawable bounds (0 to towerHeight)
+                newWaterLevelP5Height = constrain(newWaterLevelP5Height, 0, waterTower.height);
+
+                // Check if the P5 height has changed significantly before updating and clearing buffer
+                const oldHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100);
+                const newHeightInMeters = map(newWaterLevelP5Height, 0, waterTower.height, 0, 100);
+                if (Math.abs(newHeightInMeters - oldHeightInMeters) > 1) { // Threshold for "significant" change
+                    particleSystem.clearExitBuffer(); // Clear buffer for new average calculation
+                }
+
+                // Update the water tower's internal P5 height
+                waterTower.setWaterLevel(newWaterLevelP5Height);
+
+                // Convert P5 height to meters (0-100) for HTML display and pressure calculation
+                updateSimulator(newHeightInMeters);
+            }
+        }
+
+        /**
+         * P5.js mouseReleased event handler.
+         * Stops the dragging of the water level.
+         */
+        function mouseReleased() {
+            draggingWater = false;
+        }
+
+        /**
+         * Updates the simulator's pressure and HTML display elements.
+         * This function is called when the water level changes.
+         * @param {number} height_m - The height of the water in meters (0-100 equivalent).
+         */
+        function updateSimulator(height_m) {
+            // Calculate pressure
+            const pressure_pa = DENSITY_OF_WATER * GRAVITY * height_m;
+            const pressure_kpa = pressure_pa / 1000;
+            pressureDisplay.textContent = `${pressure_kpa.toFixed(2)} kPa`;
+
+            // Calculate potential energy (PE = m * g * (h/2))
+            // Here, mass 'm' is assumed for a unit base area (1 m^2)
+            // So, m = density * height (for a 1x1xH column)
+            const mass_per_unit_area = DENSITY_OF_WATER * height_m; // kg
+            const potential_energy_joules = mass_per_unit_area * GRAVITY * (height_m / 2);
+            const potential_energy_kj = potential_energy_joules / 1000; // Convert Joules to KiloJoules
+            potentialEnergyDisplay.textContent = `${potential_energy_kj.toFixed(2)} kJ`;
+
+            // Update the HTML display for water height
+            heightValueSpan.textContent = height_m.toFixed(0); // Display as integer meters
+        }
+    </script>
+</body>
+</html>
