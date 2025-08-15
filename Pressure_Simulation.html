@@ -60,16 +60,16 @@
         </div>
 
         <div class="mt-8 text-sm text-gray-600 text-center">
-            <p><strong>Formula for Pressure:</strong> $P = \rho \cdot g \cdot h$</p>
-            <p><strong>Formula for Potential Energy:</strong> $PE = m \cdot g \cdot (h/2)$</p>
+            <p><strong>Formula for Pressure:</strong> Pressure =  &rho; &bull; gravity &bull; height</p>
+            <p><strong>Formula for Potential Energy:</strong> Potential Energy = m &bull; gravity &bull; (height/2)</p>
             <p>Where:</p>
             <ul class="list-disc list-inside mx-auto max-w-sm text-left mt-2">
-                <li>$P$ = Pressure (Pascals)</li>
-                <li>$PE$ = Potential Energy (Joules)</li>
-                <li>$\rho$ (rho) = Density of water (approx. $1000 \, \text{kg/m}^3$)</li>
-                <li>$g$ = Acceleration due to gravity (approx. $9.81 \, \text{m/s}^2$)</li>
-                <li>$h$ = Height of water column (meters)</li>
-                <li>$m$ = Mass of water. For simplicity, we assume a unit base area ($1 \, \text{m}^2$) for the water column, so $m = \rho \cdot h$.</li>
+                <li>P = Pressure (Pascals)</li>
+                <li>PE = Potential Energy (Joules)</li>
+                <li>&rho; (rho) = Density of water (approx. 1000 kg/m&sup3;)</li>
+                <li>g = Acceleration due to gravity (approx. 9.81 m/s&sup2;)</li>
+                <li>h = Height of water column (meters)</li>
+                <li>m = Mass of water. For simplicity, we assume a unit base area (1 m&sup2;) for the water column, so m =  &rho; &bull; height.</li>
             </ul>
             <p class="mt-3">
                 *Note: This simulator uses an idealized model. Real-world pressure can be affected by other factors like pipe diameter, friction, and fluid velocity.
@@ -207,7 +207,7 @@
             constructor() {
                 this.particles = [];
                 this.exitXBuffer = []; // Stores x positions of recently exited particles
-                this.bufferSize = 30; // Number of particles to average
+                this.bufferSize = 50; // Number of particles to average
             }
 
             addParticle(x, y, normalizedVelocity) {
@@ -308,6 +308,16 @@
                 // If water level is 0, clear the buffer and ensure marker is not drawn
                 particleSystem.clearExitBuffer();
             }
+                        // Add "Average Distance" label to the right of the exit marker
+            fill(50); // Darker text color
+            textSize(16);
+            textAlign(CENTER, BOTTOM);
+            if (avgDistanceMeters > 0 && particleSystem.exitXBuffer.length > 0) {
+                const markerXForText = (faucetX + faucetWidth) + (avgDistanceMeters / PIXEL_TO_METER_SCALE);
+                distanceToPrint = `Average distance: ${avgDistanceMeters.toFixed(2)} m`
+                text(distanceToPrint, markerXForText, canvasHeight - 60);
+            }
+
 
             // --- Draw Vertical Height Marker and Label ---
             // Calculate marker's Y position based on current water height (0-100m mapped to marker's Y range)
@@ -321,7 +331,7 @@
 
             // Add "Height" label to the left of the marker
             fill(50); // Darker text color
-            textSize(12);
+            textSize(16);
             textAlign(RIGHT, CENTER);
             text("Height", heightMarkerX - heightMarkerWidth / 2 - 5, currentMarkerY);
             
