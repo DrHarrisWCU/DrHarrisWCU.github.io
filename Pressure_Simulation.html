@@ -8,8 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- P5.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-    <!-- MathJax CDN for LaTeX rendering -->
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <style>
         /* Custom styles for the container and general elements */
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
@@ -29,7 +27,7 @@
     <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 max-w-2xl w-full text-gray-800">
         <h1 class="text-3xl font-bold text-center text-gray-800 mb-4">Water Pressure Simulator 💧 (P5.js)</h1>
         <p class="text-lg text-gray-700 text-center mb-6">
-            **Drag the water level up or down inside the water tower** OR **drag the horizontal 'Height' marker** to change the water's height and observe its effect on **pressure**, **potential energy**, and **water spray**.
+            **Drag the water level up or down inside the water tower** OR **drag the horizontal markers** to change the water's height and observe its effect on **pressure**, **potential energy**, and **water spray**. This also illustrates an analogy to **electrical circuits**, where water height relates to voltage, and water flow relates to current.
         </p>
 
         <div class="flex flex-col md:flex-row items-center justify-center gap-8 mb-8">
@@ -38,7 +36,7 @@
                 <!-- P5.js canvas will be appended here by the sketch -->
             </div>
 
-            <!-- Controls and Display (Height value, Pressure, Potential Energy, and Average Distance) -->
+            <!-- Controls and Display -->
             <div class="flex flex-col items-center w-full md:w-auto">
                 <p class="text-lg font-semibold mb-2">Water Height: <span id="heightValue">50</span> meters</p>
 
@@ -56,23 +54,40 @@
                     <p class="text-xl font-bold">Average Exit Distance:</p>
                     <p id="distanceDisplay" class="text-3xl font-extrabold mt-1">0.00 m</p>
                 </div>
+
+                <div class="mt-4 flex items-center justify-center">
+                    <input type="checkbox" id="toggleVoltage" class="form-checkbox h-5 w-5 text-orange-600 rounded" checked>
+                    <label for="toggleVoltage" class="ml-2 text-lg font-semibold text-gray-700">Show Voltage Analogy</label>
+                </div>
+                <div id="voltageContainer" class="mt-4 p-4 bg-orange-100 border-l-4 border-orange-500 text-orange-800 rounded-lg shadow-inner w-full md:w-64 text-center">
+                    <p class="text-xl font-bold">Voltage Potential:</p>
+                    <p id="voltageDisplay" class="text-3xl font-extrabold mt-1">0.00 V</p>
+                </div>
+                <div id="currentContainer" class="mt-4 p-4 bg-yellow-100 border-l-4 border-yellow-500 text-yellow-800 rounded-lg shadow-inner w-full md:w-64 text-center" style="display: none;">
+                    <p class="text-xl font-bold">Current (Analogy):</p>
+                    <p id="currentDisplay" class="text-3xl font-extrabold mt-1">0.00 A</p>
+                </div>
             </div>
         </div>
 
         <div class="mt-8 text-sm text-gray-600 text-center">
-            <p><strong>Formula for Pressure:</strong> Pressure =  &rho; &bull; gravity &bull; height</p>
-            <p><strong>Formula for Potential Energy:</strong> Potential Energy = m &bull; gravity &bull; (height/2)</p>
+            <h2 class="text-xl font-bold mb-2">Formulas and Analogy:</h2>
+            <p class="mb-1"><strong>Water Pressure:</strong> P = &rho; &middot; g &middot; h</p>
+            <p class="mb-1"><strong>Water Potential Energy:</strong> PE = m &middot; g &middot; (h/2)</p>
+            <p class="mb-3"><strong>Electrical Analogy:</strong> Voltage Potential (V) &harr; Water Height (h)</p>
+            
             <p>Where:</p>
             <ul class="list-disc list-inside mx-auto max-w-sm text-left mt-2">
                 <li>P = Pressure (Pascals)</li>
                 <li>PE = Potential Energy (Joules)</li>
-                <li>&rho; (rho) = Density of water (approx. 1000 kg/m&sup3;)</li>
-                <li>g = Acceleration due to gravity (approx. 9.81 m/s&sup2;)</li>
+                <li>V = Voltage (Volts)</li>
+                <li>&rho; (rho) = Density of water (approx. 1000 kg/m<sup>3</sup>)</li>
+                <li>g = Acceleration due to gravity (approx. 9.81 m/s<sup>2</sup>)</li>
                 <li>h = Height of water column (meters)</li>
-                <li>m = Mass of water. For simplicity, we assume a unit base area (1 m&sup2;) for the water column, so m =  &rho; &bull; height.</li>
+                <li>m = Mass of water (assuming a unit base area, so m = &rho; &middot; h)</li>
             </ul>
             <p class="mt-3">
-                *Note: This simulator uses an idealized model. Real-world pressure can be affected by other factors like pipe diameter, friction, and fluid velocity.
+                *Note: This simulator uses an idealized model. Real-world pressure and electrical circuits can be affected by other factors.
             </p>
         </div>
     </div>
@@ -82,7 +97,13 @@
         const heightValueSpan = document.getElementById('heightValue');
         const pressureDisplay = document.getElementById('pressureDisplay');
         const potentialEnergyDisplay = document.getElementById('potentialEnergyDisplay');
+        const voltageDisplay = document.getElementById('voltageDisplay');
         const distanceDisplay = document.getElementById('distanceDisplay');
+        const toggleVoltage = document.getElementById('toggleVoltage');
+        const voltageContainer = document.getElementById('voltageContainer');
+        const currentDisplay = document.getElementById('currentDisplay'); // New current display
+        const currentContainer = document.getElementById('currentContainer'); // New current container
+
 
         // Physical constants for water pressure and energy calculation
         const DENSITY_OF_WATER = 1000; // kg/m^3
@@ -93,7 +114,9 @@
         let particleSystem;
         let draggingWater = false; // Flag for vertical dragging inside tower
         let draggingHeightMarker = false; // Flag for vertical dragging of the height marker
-        let currentMarkerY; // Declared globally for vertical marker
+        let draggingVoltageMarker = false; // Flag for vertical dragging of the voltage marker
+        let currentMarkerY; // Declared globally for vertical position of both height and voltage markers
+        let showVoltageAnalogy = true; // State for voltage analogy toggle
 
         // Global variables for P5.js canvas dimensions
         const canvasWidth = 800;
@@ -111,16 +134,30 @@
         const faucetX = towerX + towerWidth; // Right side of the tower
         const faucetY = towerY + towerHeight - 30; // 30px from bottom of tower
 
-        // Height Marker properties (new vertical slider)
-        const heightMarkerX = towerX - 30; // Fixed X position for the vertical marker
+        // Height Marker properties (now on the right)
+        const heightMarkerX = towerX + towerWidth + 30; // Fixed X position for the height marker (right of tower)
         const heightMarkerMinY = towerY; // Topmost position for the marker
         const heightMarkerMaxY = towerY + towerHeight; // Bottommost position for the marker (at tower base)
         const heightMarkerWidth = 50; // Width of the marker itself (horizontal bar)
         const heightMarkerHeight = 10; // Height of the marker itself (vertical thickness)
 
+        // Voltage Marker properties (now on the left)
+        const voltageMarkerX = towerX - 30; // Fixed X position for the voltage marker (left of tower)
+        const voltageMarkerMinY = towerY; // Topmost position for the marker
+        const voltageMarkerMaxY = towerY + towerHeight; // Bottommost position for the marker (at tower base)
+        const voltageMarkerWidth = 50; // Width of the marker itself (horizontal bar)
+        const voltageMarkerHeight = 10; // Height of the marker itself (vertical thickness)
+
+
         // Conversion factor from P5.js pixels to meters
         // waterTower.height (250px) represents 100 meters.
         const PIXEL_TO_METER_SCALE = 100 / towerHeight; // meters per pixel
+
+        // Conversion factor for voltage (direct 1:1 with height for simplicity)
+        const VOLTAGE_SCALE = 1; // 1 meter of height = 1 Volt
+
+        // Conversion factor for current (arbitrary, proportional to height/voltage for analogy)
+        const CURRENT_SCALE = 0.5; // E.g., 100m height = 50 "Amps"
 
         // --- WaterTower Class ---
         class WaterTower {
@@ -267,6 +304,11 @@
             waterTower.setWaterLevel(initialWaterLevelP5Height); // Set internal P5 height
             // Convert P5 height to meters (0-100) for initial display and pressure calc
             updateSimulator(map(initialWaterLevelP5Height, 0, waterTower.height, 0, 100));
+
+            // Set initial state of voltage analogy display
+            showVoltageAnalogy = toggleVoltage.checked;
+            voltageContainer.style.display = showVoltageAnalogy ? 'block' : 'none';
+            currentContainer.style.display = showVoltageAnalogy ? 'block' : 'none'; // Also toggle current
         }
 
         // --- P5.js Draw Function ---
@@ -308,18 +350,18 @@
                 // If water level is 0, clear the buffer and ensure marker is not drawn
                 particleSystem.clearExitBuffer();
             }
-                        // Add "Average Distance" label to the right of the exit marker
+            // Add "Average Distance" label to the right of the exit marker
             fill(50); // Darker text color
             textSize(16);
             textAlign(CENTER, BOTTOM);
             if (avgDistanceMeters > 0 && particleSystem.exitXBuffer.length > 0) {
                 const markerXForText = (faucetX + faucetWidth) + (avgDistanceMeters / PIXEL_TO_METER_SCALE);
-                distanceToPrint = `Average distance: ${avgDistanceMeters.toFixed(2)} m`
+                distanceToPrint = `Avg distance: ${avgDistanceMeters.toFixed(2)} m`
                 text(distanceToPrint, markerXForText, canvasHeight - 60);
             }
 
 
-            // --- Draw Vertical Height Marker and Label ---
+            // --- Draw Height Marker and Label (Now on the right) ---
             // Calculate marker's Y position based on current water height (0-100m mapped to marker's Y range)
             currentMarkerY = map(currentHeightMeters, 0, 100, heightMarkerMaxY, heightMarkerMinY); // Assigned to global variable, inverted for P5 Y-axis
 
@@ -329,17 +371,58 @@
             rectMode(CENTER); // Draw rectangle from its center for easier positioning
             rect(heightMarkerX, currentMarkerY, heightMarkerWidth, heightMarkerHeight, 5); // Width and height for horizontal bar
 
-            // Add "Height" label to the left of the marker
+            // Add "Height" label to the right of the marker
             fill(50); // Darker text color
             textSize(16);
-            textAlign(RIGHT, CENTER);
-            text("Height", heightMarkerX - heightMarkerWidth / 2 - 5, currentMarkerY);
+            textAlign(LEFT, CENTER); // Align text to the left of the marker
+            text("Height", heightMarkerX + heightMarkerWidth / 2 + 5, currentMarkerY);
             
             // Display height value on the canvas itself near the marker
             textSize(16);
             textAlign(CENTER, BOTTOM);
             text(`${currentHeightMeters.toFixed(0)} m`, heightMarkerX, currentMarkerY - heightMarkerHeight / 2 - 5);
             rectMode(CORNER); // Reset rectMode to default for other rects
+
+            // --- Draw Voltage Potential Marker and Label (Now on the left) ---
+            if (showVoltageAnalogy) { // Only draw if toggle is on
+                const voltageSurfaceY = currentMarkerY; 
+                const voltageValue = currentHeightMeters * VOLTAGE_SCALE; // Voltage is directly analogous to height
+
+                if (voltageValue >= 0) { // Only draw if voltage is non-negative
+                    fill(200, 100, 0); // Orange color for voltage marker
+                    noStroke();
+                    rectMode(CENTER);
+                    rect(voltageMarkerX, voltageSurfaceY, voltageMarkerWidth, voltageMarkerHeight, 5); // Horizontal bar
+
+                    // Add "Voltage" label to the left of the marker
+                    fill(50);
+                    textSize(16);
+                    textAlign(RIGHT, CENTER); // Align text to the right of the marker
+                    text("Voltage", voltageMarkerX - voltageMarkerWidth / 2 - 5, voltageSurfaceY);
+
+                    // Display voltage value on the canvas
+                    textSize(16);
+                    textAlign(CENTER, BOTTOM);
+                    text(`${voltageValue.toFixed(0)} V`, voltageMarkerX, voltageSurfaceY - voltageMarkerHeight / 2 - 5);
+                    rectMode(CORNER);
+                }
+            }
+
+            // Draw Ground Symbol at the bottom of the canvas, under the tower
+            const groundX = towerX + towerWidth / 2; // Center of tower base
+            const groundY = canvasHeight - 10; // Near the bottom
+
+            stroke(50);
+            strokeWeight(2);
+            line(groundX - 20, groundY, groundX + 20, groundY); // Main horizontal line
+            line(groundX - 10, groundY + 5, groundX + 10, groundY + 5); // Shorter line below
+            line(groundX - 5, groundY + 10, groundX + 5, groundY + 10); // Even shorter line below
+
+            strokeWeight(1);
+            fill(50);
+            textSize(16);
+            textAlign(CENTER, TOP);
+            text("Ground (0V)", groundX, groundY + 15);
         }
 
         /**
@@ -353,13 +436,20 @@
                 draggingWater = true;
                 cursor('ns-resize'); // Change cursor for vertical drag
             } 
-            // Check if mouse is within the horizontal height marker's bounds (now a vertical slider)
+            // Check if mouse is within the height marker's bounds (now on the right)
             else if (mouseX > heightMarkerX - heightMarkerWidth / 2 && mouseX < heightMarkerX + heightMarkerWidth / 2 &&
                      mouseY > currentMarkerY - heightMarkerHeight / 2 && mouseY < currentMarkerY + heightMarkerHeight / 2) {
                 draggingHeightMarker = true;
                 cursor('ns-resize'); // Change cursor for vertical drag
             }
-            if (draggingWater || draggingHeightMarker) {
+            // Check if mouse is within the voltage marker's bounds (now on the left)
+            else if (showVoltageAnalogy && mouseX > voltageMarkerX - voltageMarkerWidth / 2 && mouseX < voltageMarkerX + voltageMarkerWidth / 2 &&
+                     mouseY > currentMarkerY - voltageMarkerHeight / 2 && mouseY < currentMarkerY + voltageMarkerHeight / 2) {
+                draggingVoltageMarker = true;
+                cursor('ns-resize'); // Change cursor for vertical drag
+            }
+
+            if (draggingWater || draggingHeightMarker || draggingVoltageMarker) {
                 // Update immediately on press
                 mouseDragged();
             }
@@ -370,36 +460,37 @@
          * Updates water level based on vertical mouse position (for tower drag) or vertical mouse position (for marker drag).
          */
         function mouseDragged() {
-            if (draggingWater) {
-                // Vertical dragging inside the tower
-                let newWaterLevelP5Height = waterTower.y + waterTower.height - mouseY;
-                newWaterLevelP5Height = constrain(newWaterLevelP5Height, 0, waterTower.height);
-                waterTower.setWaterLevel(newWaterLevelP5Height);
+            if (draggingWater || draggingHeightMarker || draggingVoltageMarker) {
+                let newWaterLevelP5Height;
+                let newHeightInMeters;
 
-                const heightInMeters = map(newWaterLevelP5Height, 0, waterTower.height, 0, 100);
-                updateSimulator(heightInMeters);
+                if (draggingWater) {
+                    // Vertical dragging inside the tower
+                    newWaterLevelP5Height = waterTower.y + waterTower.height - mouseY;
+                    newWaterLevelP5Height = constrain(newWaterLevelP5Height, 0, waterTower.height);
+                } else if (draggingHeightMarker || draggingVoltageMarker) {
+                    // Vertical dragging of either marker
+                    let newMarkerY = mouseY;
+                    newMarkerY = constrain(newMarkerY, heightMarkerMinY, heightMarkerMaxY); // Both markers share the same Y range
 
-            } else if (draggingHeightMarker) {
-                // Vertical dragging of the height marker
-                let newMarkerY = mouseY;
-                newMarkerY = constrain(newMarkerY, heightMarkerMinY, heightMarkerMaxY);
+                    // Map the marker's Y position back to the 0-100 meter height value
+                    newHeightInMeters = map(newMarkerY, heightMarkerMaxY, heightMarkerMinY, 0, 100);
+
+                    // Convert meters height back to P5 tower height for the waterTower object
+                    newWaterLevelP5Height = map(newHeightInMeters, 0, 100, 0, waterTower.height);
+                }
                 
-                // Map the marker's Y position back to the 0-100 meter height value
-                // Note: P5 Y-axis is inverted for height (lower Y is higher in tower)
-                const heightInMeters = map(newMarkerY, heightMarkerMaxY, heightMarkerMinY, 0, 100);
+                // Ensure newWaterLevelP5Height is defined before using it
+                if (newWaterLevelP5Height !== undefined) {
+                    const oldHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100);
+                    waterTower.setWaterLevel(newWaterLevelP5Height);
+                    newHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100); // Re-map after setting
 
-                // Convert meters height back to P5 tower height for the waterTower object
-                const newWaterLevelP5Height = map(heightInMeters, 0, 100, 0, waterTower.height);
-                waterTower.setWaterLevel(newWaterLevelP5Height);
-
-                updateSimulator(heightInMeters);
-            }
-
-            // Clear particle buffer if height changed significantly
-            const oldHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100);
-            const newHeightInMeters = map(waterTower.waterLevelHeight, 0, waterTower.height, 0, 100); // Re-map after setting
-            if (Math.abs(newHeightInMeters - oldHeightInMeters) > 1) { // Threshold for "significant" change
-                particleSystem.clearExitBuffer(); // Clear buffer for new average calculation
+                    if (Math.abs(newHeightInMeters - oldHeightInMeters) > 1) { // Threshold for "significant" change
+                        particleSystem.clearExitBuffer(); // Clear buffer for new average calculation
+                    }
+                    updateSimulator(newHeightInMeters);
+                }
             }
         }
 
@@ -410,6 +501,7 @@
         function mouseReleased() {
             draggingWater = false;
             draggingHeightMarker = false;
+            draggingVoltageMarker = false;
             cursor('default'); // Always reset to default after release
         }
 
@@ -422,15 +514,20 @@
             const currentHeightMeters = map(currentWaterHeightP5, 0, waterTower.height, 0, 100);
             const currentMarkerYForHover = map(currentHeightMeters, 0, 100, heightMarkerMaxY, heightMarkerMinY);
 
-            if (!draggingWater && !draggingHeightMarker) {
+            if (!draggingWater && !draggingHeightMarker && !draggingVoltageMarker) {
                 // Check if hovering over the water tower itself
                 if (mouseX > waterTower.x && mouseX < waterTower.x + waterTower.width &&
                     mouseY > waterTower.y && mouseY < waterTower.y + waterTower.height) {
                     cursor('ns-resize');
                 } 
-                // Check if hovering over the vertical height marker
+                // Check if hovering over the height marker (right side)
                 else if (mouseX > heightMarkerX - heightMarkerWidth / 2 && mouseX < heightMarkerX + heightMarkerWidth / 2 &&
                          mouseY > currentMarkerYForHover - heightMarkerHeight / 2 && mouseY < currentMarkerYForHover + heightMarkerHeight / 2) {
+                    cursor('ns-resize');
+                }
+                // Check if hovering over the voltage marker (left side) and if analogy is visible
+                else if (showVoltageAnalogy && mouseX > voltageMarkerX - voltageMarkerWidth / 2 && mouseX < voltageMarkerX + voltageMarkerWidth / 2 &&
+                         mouseY > currentMarkerYForHover - voltageMarkerHeight / 2 && mouseY < currentMarkerYForHover + voltageMarkerHeight / 2) {
                     cursor('ns-resize');
                 }
                 else {
@@ -459,9 +556,24 @@
             const potential_energy_kj = potential_energy_joules / 1000; // Convert Joules to KiloJoules
             potentialEnergyDisplay.textContent = `${potential_energy_kj.toFixed(2)} kJ`;
 
+            // Voltage is directly analogous to height
+            const voltage = height_m * VOLTAGE_SCALE;
+            voltageDisplay.textContent = `${voltage.toFixed(0)} V`;
+
+            // Current is proportional to height/voltage
+            const current = height_m * CURRENT_SCALE;
+            currentDisplay.textContent = `${current.toFixed(2)} A`;
+
             // Update the HTML display for water height
             heightValueSpan.textContent = height_m.toFixed(0); // Display as integer meters
         }
+
+        // Event listener for the voltage toggle checkbox
+        toggleVoltage.addEventListener('change', () => {
+            showVoltageAnalogy = toggleVoltage.checked;
+            voltageContainer.style.display = showVoltageAnalogy ? 'block' : 'none';
+            currentContainer.style.display = showVoltageAnalogy ? 'block' : 'none';
+        });
     </script>
 </body>
 </html>
