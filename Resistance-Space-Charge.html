@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conductor Physics - Safe Version</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+    <style>
+        body { margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; background-color: #ffffff; color: #333; font-family: sans-serif; }
+        canvas { border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .controls { margin-top: 20px; background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 8px; width: 1600px; box-sizing: border-box; }
+        p { margin: 10px 0 5px 0; font-weight: bold; font-size: 16px; color: #555; }
+        input { width: 100%; cursor: pointer; margin-bottom: 15px; }
+        .warning { color: #888; font-size: 12px; font-style: italic; margin-top: 5px; }
+    </style>
+</head>
+<body>
+
+    <h2>Electron Drift & Resistance Simulation</h2>
+    <div id="canvas-container"></div>
+    <div class="controls" id="controls-container"></div>
+    <p class="warning">Note: This simulation uses smoothed color transitions for visual comfort.</p>
+
+    <script>
+        let electrons = [];
+        let impurities = [];
+        let voltageSlider, resistanceSlider;
+        let easedHeat = 0; // For smooth color transitions
+
+        function setup() {
+            let canvas = createCanvas(1600, 700);
+            canvas.parent('canvas-container');
+            let ctrl = select('#controls-container');
+            
+            // Log scale slider: starting at 0.1 to make the low-end more active
+            createP('Voltage (Logarithmic Scale):').parent(ctrl);
+            voltageSlider = createSlider(0, 2.1, 0.6, 0.01); 
+            voltageSlider.parent(ctrl);
+            
+            createP('Impurity Density (Wire Quality):').parent(ctrl);
+            resistanceSlider = createSlider(0, 1000, 150, 10);
+            resistanceSlider.parent(ctrl);
+            resistanceSlider.changed(generateImpurities);
+
+            generateImpurities();
+        }
+
+        function draw() {
+            background(255);
+
+            // Voltage mapping: Slider 0-2 maps roughly to 0V-125V
+            let V = pow(10, voltageSlider.value()) - 1;
+            if (V < 0.1) V = 0; 
+
+            let R_val = resistanceSlider.value();
+            
+            // REALISTIC RESISTANCE: Floor of 0.05 Ohms
+            let totalResistance = (R_val * 0.02) + 0.05;
+            let targetI = V / totalResistance;
+            
+            syncElectronDensity(targetI);
+
+            // Heat Logic
+            let instantaneousHeat = 0;
+            for (let imp of impurities) {
+                let coolingRate = 0.35 + (imp.heat * 0.012); 
+                if (imp.heat > 0) imp.heat -= coolingRate; 
+                imp.heat = max(0, imp.heat);
+                instantaneousHeat += imp.heat;
+            }
+
+            // SMOOTHING: Prevents rapid color flashing
+            let targetHeatFactor = instantaneousHeat / (impurities.length * 40 + 500);
+            easedHeat = lerp(easedHeat, targetHeatFactor, 0.05);
+
+            // --- DRAW WIRE CASING ---
+            // Using a softer, deeper red-orange spectrum
+            let r = 40 + easedHeat * 140;
+            let g = 35 + easedHeat * 40;
+            let b = 35;
+            fill(r, g, b);
+            noStroke();
+            rect(0, 50, width, 500);
+
+            // Space Charge Calculation
+            let sc = (electrons.length * 0.04) * (R_val / 1000);
+
+            // --- DRAW IMPURITIES ---
+            for (let imp of impurities) {
+                let vHeat = min(imp.heat, 255);
+                let ir, ig, ib;
+                if (vHeat < 120) {
+                    ir = map(vHeat, 0, 120, 100, 200);
+                    ig = map(vHeat, 0, 120, 80, 40);
+                    ib = 60;
+                } else {
+                    ir = 255;
+                    ig = map(vHeat, 120, 255, 40, 180);
+                    ib = map(vHeat, 120, 255, 40, 100);
+                }
+                fill(ir, ig, ib);
+                rect(imp.x, imp.y, imp.w, imp.h);
+            }
+
+            // --- UPDATE ELECTRONS ---
+            for (let e of electrons) {
+                e.applyForce(V, R_val, sc);
+                e.update();
+                e.checkCollisions(impurities, V);
+                e.display();
+            }
+
+            displayTelemetry(V, totalResistance, targetI, instantaneousHeat, sc);
+        }
+
+        function syncElectronDensity(targetI) {
+            //Scaled population: 50 baseline. Capped at 700 to maintain performance and visual clarity
+            let targetCount = floor(map(targetI, 0, 50, 50, 700, true));
+            while (electrons.length < targetCount) {
+                let e = new Electron();
+                e.pos.x = random(width);
+                electrons.push(e);
+            }
+            while (electrons.length > targetCount) {
+                electrons.splice(floor(random(electrons.length)), 1);
+            }
+        }
+
+        function displayTelemetry(V, R, I, totalHeat, sc) {
+            fill(60);
+            noStroke();
+            textSize(18);
+            let avgHeat = totalHeat / (impurities.length || 1);
+            let temp = 20 + (avgHeat * 5); 
+
+            text(`Voltage: ${V.toFixed(2)}V`, 30, 600);
+            text(`Current: ${I.toFixed(2)}A`, 30, 630);
+            text(`Resistance: ${R.toFixed(4)} Ω`, 30, 660);
+            
+            text(`Impurity Count: ${resistanceSlider.value()}`, 350, 600);
+            text(`Space Charge: ${sc.toFixed(2)}`, 350, 630);
+            text(`Wire Temp: ${temp.toFixed(0)}°C`, 350, 660);
+            
+            if (temp > 1085) {
+                fill(200, 50, 0);
+                textSize(20);
+                text("STATE: OVERLOAD / MELTING", 650, 630);
+            }
+        }
+
+        function generateImpurities() {
+            impurities = [];
+            let count = resistanceSlider.value();
+            for (let i = 0; i < count; i++) {
+                impurities.push({
+                    x: random(10, width - 10), 
+                    y: random(70, 530),
+                    w: random(6, 10), // Adjusted for 500px tall wire
+                    h: random(6, 10), // Larger impurities for 2x scale
+                    heat: 0
+                });
+            }
+        }
+
+        class Electron {
+            constructor() {
+                this.pos = createVector(random(width), random(70, 530));
+                this.vel = createVector(random(-1, 1), random(-1, 1));
+                this.acc = createVector(0, 0);
+            }
+
+            applyForce(v, r, sc) {
+                let effectiveV = max(0, v - sc * 1.5); 
+                this.acc.x = (effectiveV * 0.35) / (1 + r * 0.004);
+                this.acc.add(p5.Vector.random2D().mult(0.4)); 
+            }
+
+            update() {
+                this.vel.add(this.acc);
+                this.vel.limit(14); // Slightly slower for visual comfort
+                this.pos.add(this.vel);
+                this.acc.mult(0);
+                this.vel.mult(0.96);
+
+                if (this.pos.y < 60 || this.pos.y > 540) {
+                    this.vel.y *= -0.8;
+                    this.pos.y = constrain(this.pos.y, 60, 540);
+                }
+                if (this.pos.x > width) this.pos.x = 0;
+                if (this.pos.x < 0) this.pos.x = width;
+            }
+
+            checkCollisions(obstacles, V) {
+                for (let obs of obstacles) {
+                    if (abs(this.pos.x - obs.x) < 12 && abs(this.pos.y - obs.y) < 12) {
+                        if (this.pos.x > obs.x && this.pos.x < obs.x + obs.w &&
+                            this.pos.y > obs.y && this.pos.y < obs.y + obs.h) {
+                            
+                            let eTransfer = (this.vel.magSq() * 0.6) + (V * 0.04);
+                            obs.heat += eTransfer;
+                            this.vel.x *= -0.2; 
+                            this.vel.y += random(-3, 3);
+                            this.pos.x -= 2;
+                        }
+                    }
+                }
+            }
+
+            display() {
+                fill(0, 110, 200, 180);
+                noStroke();
+                ellipse(this.pos.x, this.pos.y, 12, 12);
+            }
+        }
+    </script>
+</body>
+</html>
