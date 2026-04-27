@@ -3,15 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Conductor Physics - Safe Version</title>
+    <title>Responsive Conductor Simulation</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
-        body { margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; background-color: #ffffff; color: #333; font-family: sans-serif; }
-        canvas { border: 1px solid #ccc; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-        .controls { margin-top: 20px; background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-radius: 8px; width: 1600px; box-sizing: border-box; }
-        p { margin: 10px 0 5px 0; font-weight: bold; font-size: 16px; color: #555; }
-        input { width: 100%; cursor: pointer; margin-bottom: 15px; }
-        .warning { color: #888; font-size: 12px; font-style: italic; margin-top: 5px; }
+        body { 
+            margin: 0; 
+            padding: 10px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            background-color: #ffffff; 
+            color: #333; 
+            font-family: sans-serif; 
+            overflow-x: hidden; /* Prevent horizontal scroll */
+        }
+        
+        #canvas-container {
+            width: 95%; /* Responsive width */
+            max-width: 1400px; /* Limit maximum size */
+            aspect-ratio: 16 / 7; /* Keep the 2x scale look */
+        }
+
+        canvas { 
+            width: 100% !important; 
+            height: auto !important; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+        }
+
+        .controls { 
+            margin-top: 15px; 
+            background: #f9f9f9; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            width: 95%; 
+            max-width: 1400px; 
+            box-sizing: border-box; 
+        }
+
+        p { margin: 8px 0 3px 0; font-weight: bold; font-size: 14px; color: #555; }
+        input { width: 100%; cursor: pointer; margin-bottom: 10px; }
+        
+        h2 { font-size: 1.5rem; margin: 10px 0; }
     </style>
 </head>
 <body>
@@ -19,20 +54,20 @@
     <h2>Electron Drift & Resistance Simulation</h2>
     <div id="canvas-container"></div>
     <div class="controls" id="controls-container"></div>
-    <p class="warning">Note: This simulation uses smoothed color transitions for visual comfort.</p>
 
     <script>
         let electrons = [];
         let impurities = [];
         let voltageSlider, resistanceSlider;
-        let easedHeat = 0; // For smooth color transitions
+        let easedHeat = 0;
 
         function setup() {
+            // We still create the buffer at 1600x700 for resolution, 
+            // but CSS scales it down visually to fit your screen.
             let canvas = createCanvas(1600, 700);
             canvas.parent('canvas-container');
             let ctrl = select('#controls-container');
             
-            // Log scale slider: starting at 0.1 to make the low-end more active
             createP('Voltage (Logarithmic Scale):').parent(ctrl);
             voltageSlider = createSlider(0, 2.1, 0.6, 0.01); 
             voltageSlider.parent(ctrl);
@@ -48,7 +83,6 @@
         function draw() {
             background(255);
 
-            // Voltage mapping: Slider 0-2 maps roughly to 0V-125V
             let V = pow(10, voltageSlider.value()) - 1;
             if (V < 0.1) V = 0; 
 
@@ -129,22 +163,22 @@
         function displayTelemetry(V, R, I, totalHeat, sc) {
             fill(60);
             noStroke();
-            textSize(18);
+            textSize(22); // Increased size slightly for readability on large scaled canvases
             let avgHeat = totalHeat / (impurities.length || 1);
             let temp = 20 + (avgHeat * 5); 
 
-            text(`Voltage: ${V.toFixed(2)}V`, 30, 600);
-            text(`Current: ${I.toFixed(2)}A`, 30, 630);
-            text(`Resistance: ${R.toFixed(4)} Ω`, 30, 660);
+            // Text positions adjusted to be more "anchored" to the left/center
+            text(`Voltage: ${V.toFixed(2)}V`, 40, 600);
+            text(`Current: ${I.toFixed(2)}A`, 40, 640);
+            text(`Resistance: ${R.toFixed(4)} Ω`, 40, 680);
             
-            text(`Impurity Count: ${resistanceSlider.value()}`, 350, 600);
-            text(`Space Charge: ${sc.toFixed(2)}`, 350, 630);
-            text(`Wire Temp: ${temp.toFixed(0)}°C`, 350, 660);
+            text(`Impurity Count: ${resistanceSlider.value()}`, 400, 600);
+            text(`Space Charge: ${sc.toFixed(2)}`, 400, 640);
+            text(`Wire Temp: ${temp.toFixed(0)}°C`, 400, 680);
             
             if (temp > 1085) {
                 fill(200, 50, 0);
-                textSize(20);
-                text("STATE: OVERLOAD / MELTING", 650, 630);
+                text("STATE: OVERLOAD / MELTING", 750, 640);
             }
         }
 
@@ -211,6 +245,12 @@
                 noStroke();
                 ellipse(this.pos.x, this.pos.y, 12, 12);
             }
+        }
+
+        // Handle window resizing automatically
+        function windowResized() {
+            // No action needed for the canvas itself since CSS handles scaling,
+            // but we could use this to update p5 logic if we changed internal resolution.
         }
     </script>
 </body>
