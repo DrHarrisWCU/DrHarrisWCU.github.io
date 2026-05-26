@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parallel Circuit - Smooth Performance Optimization</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+<style>
+    body { 
+        margin: 0; 
+        padding: 10px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        background-color: #ffffff; 
+    }
+    
+    #canvas-container {
+        width: 95%; 
+        max-width: 1400px; 
+        display: flex;
+        justify-content: center;
+    }
+
+    canvas { 
+        width: 100% !important; 
+        height: auto !important; 
+        display: block; 
+        border: 1px solid #ccc; 
+        border-bottom: none; /* Remove bottom border to join with controls */
+        border-radius: 8px 8px 0 0; 
+    }
+
+    .controls { 
+        width: 95%; 
+        max-width: 1400px; 
+        padding: 15px;
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 0 0 8px 8px; /* Rounded bottom corners */
+        box-sizing: border-box;
+    }
+    
+    h2 { margin: 0 0 10px 0; font-size: 1.2rem; }
+</style>
+</head>
+<body>
+
+    <h2>Parallel Circuit Simulator (Optimized Flow Calibration)</h2>
+    <div id="canvas-container"></div>
+    <div class="controls" id="controls-container"></div>
+
+    <script>
+        let electrons = [];
+        let lowResImpurities = [];  
+        let highResImpurities = []; 
+        
+        let voltageSlider, resASlider, resBSlider;
+        let branch1Heat = 0, branch2Heat = 0;
+
+        const topWireY = 100;
+        const botWireY = 450;
+        const wireThick = 80;
+        const b1X = 400;  
+        const b2X = 1000; 
+
+        let gateCountA = 0;
+        let gateCountB = 0;
+
+        let currentSource = 0;
+        let currentBranchA = 0;
+        let currentBranchB = 0;
+        let currentReturn = 0;
+
+        function setup() {
+            let canvas = createCanvas(1600, 600);
+            canvas.parent('canvas-container');
+            let ctrl = select('#controls-container');
+            
+            createP('Voltage Pressure (Source Driving Force):').parent(ctrl);
+            voltageSlider = createSlider(0, 30, 16, 0.5); 
+            voltageSlider.parent(ctrl);
+
+            createP('Branch A Resistance (Left Path):').parent(ctrl);
+            resASlider = createSlider(0, 150, 64, 5); 
+            resASlider.parent(ctrl);
+            resASlider.input(() => generateBranchImpurities('A', resASlider.value()));
+
+            createP('Branch B Resistance (Right Path):').parent(ctrl);
+            resBSlider = createSlider(0, 150, 64, 5); 
+            resBSlider.parent(ctrl);
+            resBSlider.input(() => generateBranchImpurities('B', resBSlider.value()));
+
+            generateBranchImpurities('A', resASlider.value());
+            generateBranchImpurities('B', resBSlider.value());
+            
+            // Fix initial performance by spawning a small manageable group first
+            // The sync function will seamlessly stream the rest in over the first few frames
+            for(let i = 0; i < 80; i++) {
+                electrons.push(new Electron(true));
+            }
+        }
+
+        function draw() {
+            background(255);
+            let V = voltageSlider.value();
+
+            processBranchHeat(lowResImpurities, 1);
+            processBranchHeat(highResImpurities, 2);
+
+            drawCircuitBackbone();
+            drawImpurities(lowResImpurities);
+            drawImpurities(highResImpurities);
+
+            let targetCount = floor(map(V, 0, 30, 100, 550, true));
+            syncElectrons(targetCount);
+
+            let ohmA = (resASlider.value() * 0.5) + 2;
+            let ohmB = (resBSlider.value() * 0.5) + 2;
+            let totalConductance = (1.0 / ohmA) + (1.0 / ohmB);
+            let branchA_TargetRatio = (1.0 / ohmA) / totalConductance;
+
+            for (let e of electrons) {
+                e.applyForces(V);
+                e.update(branchA_TargetRatio);
+                e.processCollisions();
+                e.display();
+            }
+
+            let currentScalar = 2.4; 
+            currentBranchA = lerp(currentBranchA, gateCountA * currentScalar, 0.05);
+            currentBranchB = lerp(currentBranchB, gateCountB * currentScalar, 0.05);
+            currentSource = lerp(currentSource, (gateCountA + gateCountB) * currentScalar, 0.05);
+            currentReturn = currentSource; 
+
+            gateCountA = 0;
+            gateCountB = 0;
+
+            displayOverlayTelemetry(V);
+        }
+
+        function generateBranchImpurities(branch, count) {
+            if (branch === 'A') {
+                lowResImpurities = [];
+                for (let i = 0; i < count; i++) {
+                    lowResImpurities.push({
+                        x: random(b1X + 8, b1X + wireThick - 18),
+                        y: random(topWireY + wireThick + 10, botWireY - 20),
+                        w: 10, h: 10, heat: 0
+                    });
+                }
+            } else if (branch === 'B') {
+                highResImpurities = [];
+                for (let i = 0; i < count; i++) {
+                    highResImpurities.push({
+                        x: random(b2X + 8, b2X + wireThick - 18),
+                        y: random(topWireY + wireThick + 10, botWireY - 20),
+                        w: 10, h: 10, heat: 0
+                    });
+                }
+            }
+        }
+
+        function processBranchHeat(list, id) {
+            let sum = 0;
+            for (let imp of list) {
+                imp.heat = max(0, imp.heat - (0.3 + imp.heat * 0.01));
+                sum += imp.heat;
+            }
+            let targetFactor = sum / (list.length * 20 + 100);
+            if (id === 1) branch1Heat = lerp(branch1Heat, targetFactor, 0.05);
+            else branch2Heat = lerp(branch2Heat, targetFactor, 0.05);
+        }
+
+        function drawCircuitBackbone() {
+            noStroke();
+            fill(45, 45, 48); 
+            rect(0, topWireY, b2X + wireThick, wireThick);
+            rect(0, botWireY, b2X + wireThick, wireThick);
+
+            fill(45 + branch1Heat * 140, 45 + branch1Heat * 35, 45);
+            rect(b1X, topWireY, wireThick, botWireY - topWireY + wireThick);
+
+            fill(45 + branch2Heat * 140, 45 + branch2Heat * 35, 45);
+            rect(b2X, topWireY, wireThick, botWireY - topWireY + wireThick);
+            
+            fill(45, 45, 48);
+            rect(0, topWireY, b1X, wireThick);
+            rect(b1X + wireThick, topWireY, b2X - b1X - wireThick, wireThick);
+            rect(0, botWireY, b1X, wireThick);
+        }
+
+        function drawImpurities(list) {
+            for (let imp of list) {
+                let hVal = min(imp.heat, 255);
+                fill(map(hVal, 0, 255, 110, 255), map(hVal, 0, 255, 90, 160), 70);
+                rect(imp.x, imp.y, imp.w, imp.h);
+            }
+        }
+
+        function syncElectrons(target) {
+            // Cap instantiation additions to 8 particles max per frame to eradicate initialization lag
+            if (electrons.length < target) {
+                let batch = min(8, target - electrons.length);
+                for(let i=0; i<batch; i++) electrons.push(new Electron(true));
+            } 
+            while (electrons.length > target) electrons.splice(random(electrons.length), 1);
+
+            let supplyCount = electrons.filter(e => e.zone === "top" && e.pos.x < b1X).length;
+            if (supplyCount < target * 0.20) {
+                // FIXED: Check near the true end boundary (x < 80) so particles travel all the way left
+                let returnElectron = electrons.find(e => e.zone === "bottom" && e.pos.x < 80);
+                if (returnElectron) returnElectron.resetToSource();
+            }
+        }
+
+        function displayOverlayTelemetry(V) {
+            let ohmA = (resASlider.value() * 0.5) + 2;
+            let ohmB = (resBSlider.value() * 0.5) + 2;
+
+            noStroke();
+            textSize(16);
+            textFont('sans-serif');
+            textStyle(BOLD);
+
+            fill(10, 80, 180);
+            rect(25, topWireY + 12, 160, 56, 6);
+            fill(255);
+            text(`Source: ${V.toFixed(1)} V`, 38, topWireY + 34);
+            text(`Total I: ${currentSource.toFixed(1)} A`, 38, topWireY + 54);
+
+            fill(160, 50, 10);
+            rect(b1X - 165, topWireY + 130, 150, 70, 6);
+            fill(255);
+            text(`Branch A`, b1X - 120, topWireY + 152);
+            text(`Drop: ${V.toFixed(1)} V`, b1X - 152, topWireY + 174);
+            text(`Load I: ${currentBranchA.toFixed(1)} A`, b1X - 152, topWireY + 192);
+
+            fill(160, 50, 10);
+            rect(b2X + wireThick + 15, topWireY + 130, 150, 70, 6);
+            fill(255);
+            text(`Branch B`, b2X + wireThick + 50, topWireY + 152);
+            text(`Drop: ${V.toFixed(1)} V`, b2X + wireThick + 28, topWireY + 174);
+            text(`Load I: ${currentBranchB.toFixed(1)} A`, b2X + wireThick + 28, topWireY + 192);
+
+            fill(15, 110, 50);
+            rect(25, botWireY + 12, 160, 56, 6);
+            fill(255);
+            text(`Ground: 0.0 V`, 38, botWireY + 34);
+            text(`Return I: ${currentReturn.toFixed(1)} A`, 38, botWireY + 54);
+
+            textStyle(NORMAL);
+            fill(70);
+            textSize(20);
+            text("Main Distribution Rail (Supply Wire)", 40, topWireY - 18);
+            text("Return Ground Rail (Neutral Return)", 40, botWireY + wireThick + 32);
+            
+            textSize(18);
+            fill(40);
+            text(`Path A Load: ${ohmA.toFixed(1)} Ω`, b1X - 35, topWireY + wireThick + 30);
+            text(`Path B Load: ${ohmB.toFixed(1)} Ω`, b2X - 35, topWireY + wireThick + 30);
+        }
+
+        class Electron {
+          constructor(randomStart = false) {
+    this.assignedBranch = (random() < 0.5) ? 'A' : 'B';
+    
+    if (randomStart) {
+        // Force spawn them into the TOP RAIL only to prevent corner-stuck issues
+        let spawnX = random(10, b1X - 50); // Safely behind the first branch
+        let spawnY = random(topWireY + 10, topWireY + wireThick - 10);
+        
+        this.pos = createVector(spawnX, spawnY);
+        this.zone = "top"; 
+    } else {
+        this.resetToSource();
+    }
+    this.vel = createVector(random(2, 4), 0);
+    this.acc = createVector(0, 0);
+    this.recycleX = random(5, 25); 
+}
+
+            resetToSource() {
+                let spawnY = random(topWireY + 10, topWireY + wireThick - 10);
+                let spawnX = random(10, 100); 
+                this.pos = createVector(spawnX, spawnY);
+                this.vel = createVector(random(3, 5), random(-0.1, 0.1)); // Update pathing based on current slider values
+    this.assignPath(resASlider.value(), resBSlider.value());
+    
+    this.zone = "top";
+            }
+
+            applyForces(v) {
+                let mainPush = v * 0.16;
+                
+                if (this.zone === "top") {
+                    this.acc.x = mainPush;
+                    this.acc.y = 0; 
+
+                    for (let other of electrons) {
+                        if (other === this || other.zone !== "top") continue;
+                        let d = dist(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
+                        if (d < 45) {
+                            let pushVec = p5.Vector.sub(this.pos, other.pos);
+                            pushVec.normalize();
+                            let forceFactor = map(d, 0, 45, 0.55, 0, true);
+                            pushVec.mult(forceFactor);
+                            this.acc.add(pushVec);
+                        }
+                    }
+
+                } 
+                else if (this.zone === "bottom") {
+                    this.acc.x = -mainPush; 
+                    this.acc.y = 0;
+                    
+                    for (let other of electrons) {
+                        if (other === this || other.zone !== "bottom") continue;
+                        let d = dist(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
+                        if (d < 45) {
+                            let pushVec = p5.Vector.sub(this.pos, other.pos);
+                            pushVec.normalize();
+                            let forceFactor = map(d, 0, 45, 0.55, 0, true);
+                            pushVec.mult(forceFactor);
+                            this.acc.add(pushVec); 
+                        }
+                    }
+                } 
+                else if (this.zone === "branch") {
+                    this.acc.y = mainPush; 
+                    
+                    for (let other of electrons) {
+                        if (other === this || other.zone !== "branch") continue;
+                        let dY = abs(this.pos.y - other.pos.y);
+                        let dX = abs(this.pos.x - other.pos.x);
+                        if (dY < 25 && dX < 20) {
+                            if (this.pos.x < other.pos.x) this.acc.x -= 0.08;
+                            else this.acc.x += 0.08;
+                            if (this.pos.y > other.pos.y) this.acc.y -= 0.05;
+                        }
+                    }
+                }
+                
+                this.acc.add(p5.Vector.random2D().mult(0.15)); 
+            }
+
+            update(branchA_Ratio) {
+                let oldY = this.pos.y; 
+                this.vel.add(this.acc);
+                
+                let isBranchA = (this.pos.x < (b1X + b2X)/2);
+                let activeDensity = isBranchA ? resASlider.value() : resBSlider.value();
+                let maxSpeed = this.zone === "branch" ? map(activeDensity, 0, 150, 8, 0.6) : 12;
+                
+                this.vel.limit(maxSpeed);
+                this.pos.add(this.vel);
+                this.acc.mult(0);
+                this.vel.mult(0.91); 
+
+              
+                if (this.zone === "top") {
+                     this.pos.y = constrain(this.pos.y, topWireY + 5, topWireY + wireThick - 5);
+                     this.pos.x = constrain(this.pos.x, 25 + 5, b2X + wireThick - 5);
+    let branchX = (this.assignedBranch === 'A') ? b1X : b2X;
+    
+    // Check if we are in the zone where a turn is possible
+    if (this.pos.x >= branchX && this.pos.x <= branchX + wireThick) {
+        let dX = this.pos.x - branchX; // How far into the branch width are we?
+        let dY = this.pos.y - topWireY; 
+        
+        // Diagonal trigger: use the distance into the corner
+        if (dX + dY >= wireThick * 0.8) { 
+            this.zone = "branch";
+            
+            // 1. Calculate and CLAMP the new position to be inside the branch rail
+            let newX = branchX + dX;
+            this.pos.x = constrain(newX, branchX + 5, branchX + wireThick - 5);
+            
+            // 2. Set Y position
+            this.pos.y = topWireY + dY; 
+            
+            // 3. Rotate velocity: Horizontal speed becomes vertical speed
+            let speed = this.vel.mag();
+            this.vel.set(0, speed);
+            
+            // 4. IMPORTANT: Clear any residual X-force buildup
+            this.acc.x = 0; 
+        }
+    }
+}
+                else if (this.zone === "branch") {
+                    let leftLimit = (this.pos.x < (b1X + b2X)/2) ? b1X : b2X;
+                    this.pos.x = constrain(this.pos.x, leftLimit + 5, leftLimit + wireThick - 5);
+                    
+                    let midpointY = (topWireY + wireThick + botWireY) / 2;
+                    if (oldY < midpointY && this.pos.y >= midpointY) {
+                        if (leftLimit === b1X) gateCountA++;
+                        else gateCountB++;
+                    }
+
+                    if (this.pos.y >= botWireY + 5) {
+                        this.zone = "bottom";
+                    }
+                } 
+                
+                else if (this.zone === "bottom") {
+                    this.pos.y = constrain(this.pos.y, botWireY + 5, botWireY + wireThick - 5);
+                    
+                    if (this.pos.x <= this.recycleX) {
+                        this.assignedBranch = (random() < branchA_Ratio) ? 'A' : 'B';
+                        this.resetToSource();
+                    }
+                }
+            }
+            // Add this method to your Electron class to re-evaluate its path
+assignPath(resA, resB) {
+    let ohmA = (resA * 0.5) + 2;
+    let ohmB = (resB * 0.5) + 2;
+    
+    let condA = 1.0 / ohmA;
+    let condB = 1.0 / ohmB;
+    let totalCond = condA + condB;
+    
+    let probA = condA / totalCond;
+    
+    this.assignedBranch = (random() < probA) ? 'A' : 'B';
+}
+
+            processCollisions() {
+                if (this.zone === "branch") {
+                    let isBranchB = (this.pos.x > (b1X + b2X)/2);
+                    let targetList = isBranchB ? highResImpurities : lowResImpurities;
+                    for (let obs of targetList) {
+                        if (abs(this.pos.x - obs.x) < 11 && abs(this.pos.y - obs.y) < 11) {
+                            obs.heat = min(obs.heat + 5.0, 300);
+                            this.vel.y *= -0.05; 
+                            this.vel.x += random(-1.2, 1.2);
+                            this.pos.y -= 1.0; 
+                        }
+                    }
+                }
+
+            }
+
+            display() {
+                fill(0, 120, 240, 210);
+                noStroke();
+                ellipse(this.pos.x, this.pos.y, 7, 7);
+            }
+        }
+    </script>
+</body>
+</html>

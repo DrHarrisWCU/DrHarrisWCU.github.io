@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Series Circuit - Edge Spreading Resistors</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
+ <style>
+    body { 
+        margin: 0; 
+        padding: 5px; 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        background-color: #ffffff; 
+        height: 100vh; /* Lock to viewport height */
+        overflow: hidden; /* Prevent scrolling */
+    }
+    #canvas-container {
+        width: 95%; 
+        max-width: 1400px; 
+        flex: 1; /* Take up all remaining space */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+    }
+    canvas { 
+        max-width: 100%; 
+        max-height: 80vh; /* Limit canvas to 80% of screen height */
+        width: auto !important; 
+        height: auto !important; 
+        border: 1px solid #ccc; 
+        border-radius: 4px; 
+    }
+    .controls { 
+        width: 95%; 
+        max-width: 1400px; 
+        flex-shrink: 0; /* Don't let controls shrink */
+        padding: 10px;
+        background: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+</style>
+</head>
+<body>
+
+    <h2>Series Circuit Simulator (Full-Width Diffusion Flow)</h2>
+    <div id="canvas-container"></div>
+    <div class="controls" id="controls-container"></div>
+
+    <script>
+        let electrons = [];
+        let resAImpurities = [];  
+        let resBImpurities = []; 
+        
+        let voltageSlider, resASlider, resBSlider;
+        let resAHeat = 0, resBHeat = 0;
+
+        // Circuit Tracks
+        const topY = 100;
+        const botY = 450;
+        const leftX = 100;
+        const rightX = 1450; 
+        const wireThick = 80;
+
+        // Obstacles
+        const resAX1 = 400;
+        const resAX2 = 650;
+        const resBX1 = 950;
+        const resBX2 = 1200;
+
+        let currentLoopCount = 0;
+        let rollingCurrent = 0;
+
+        function setup() {
+            let canvas = createCanvas(1600, 650);
+            canvas.parent('canvas-container');
+            let ctrl = select('#controls-container');
+       // --- UPDATED LEGEND AREA ---
+let legend = createDiv(`
+    <div style="display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; padding: 15px; background: #fff; border: 1px solid #ddd; border-radius: 5px;">
+        
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <strong style="width: 125px;">Energy Potential:</strong>
+            <div style="height: 25px; width: 300px; background: linear-gradient(to right, #ffe11e, #f06e14, #4696e6); border-radius: 4px;"></div>
+        </div>
+        
+        <div style="display: flex; width: 435px; justify-content: flex-end;">
+            <div style="width: 300px; display: flex; justify-content: space-between; font-size: 13px; color: #666;">
+                <span>High (Source Potential)</span>
+                <span>Low (Ground Potential)</span>
+            </div>
+        </div>
+    </div>
+`);
+legend.parent(ctrl);
+legend.parent(ctrl);
+// ---------------------------
+            createP('Voltage Pressure (Total Source EMF):').parent(ctrl);
+            voltageSlider = createSlider(0, 10, 5, 0.25); 
+            voltageSlider.parent(ctrl);
+
+            createP('Resistor A Load (First Series Obstacle):').parent(ctrl);
+            resASlider = createSlider(0, 150, 60, 5); 
+            resASlider.parent(ctrl);
+            resASlider.input(() => generateImpurities('A', resASlider.value()));
+
+            createP('Resistor B Load (Second Series Obstacle):').parent(ctrl);
+            resBSlider = createSlider(0, 150, 60, 5); 
+            resBSlider.parent(ctrl);
+            resBSlider.input(() => generateImpurities('B', resBSlider.value()));
+
+            generateImpurities('A', resASlider.value());
+            generateImpurities('B', resBSlider.value());
+            
+
+
+            let initialTarget = floor(map(16, 0, 30, 100, 450, true));
+            for(let i = 0; i < initialTarget; i++) {
+                electrons.push(new Electron(true)); 
+            }
+        }
+
+        function draw() {
+            background(255);
+            let V = voltageSlider.value();
+
+            processThermalDissipation(resAImpurities, 1);
+            processThermalDissipation(resBImpurities, 2);
+
+            drawCircuitTrack();
+            drawImpurities(resAImpurities);
+            drawImpurities(resBImpurities);
+
+            let maxLimit = floor(map(V, 0, 30, 80, 450, true));
+            adjustPopulation(maxLimit);
+
+            let ohmA = (resASlider.value() * 0.5) + 2;
+            let ohmB = (resBSlider.value() * 0.5) + 2;
+
+            for (let e of electrons) {
+                e.applyPhysicsForces(V);
+                e.update();
+                e.handleObstacleCollisions();
+                e.display();
+            }
+
+            rollingCurrent = V/(ohmA+ohmB);
+            currentLoopCount = 0;
+
+            displayTelemetryOverlay(V, ohmA, ohmB);
+            // At the end of draw()
+let targetCapacity = floor(map(voltageSlider.value(), 0, 30, 80, 450, true));
+
+if (electrons.length > targetCapacity) {
+    let diff = electrons.length - targetCapacity;
+    // Remove every Nth electron to keep the flow uniform
+    let step = floor(electrons.length / diff);
+    for (let i = electrons.length - 1; i >= 0; i--) {
+        if (i % step === 0 && electrons.length > targetCapacity) {
+            electrons.splice(i, 1);
+        }
+    }
+} else if (electrons.length < targetCapacity) {
+    // Add new electrons if we are below capacity
+    electrons.push(new Electron(true));
+}
+        }
+
+        function generateImpurities(target, count) {
+            if (target === 'A') {
+                resAImpurities = [];
+                for (let i = 0; i < count; i++) {
+                    resAImpurities.push({
+                        // Allowed to go edge-to-edge flush on the Y axis
+                        x: random(resAX1 + 5, resAX2 - 15),
+                        y: random(topY, topY + wireThick - 10),
+                        w: 10, h: 10, heat: 0
+                    });
+                }
+            } else if (target === 'B') {
+                resBImpurities = [];
+                for (let i = 0; i < count; i++) {
+                    resBImpurities.push({
+                        // Allowed to go edge-to-edge flush on the Y axis
+                        x: random(resBX1 + 5, resBX2 - 15),
+                        y: random(topY, topY + wireThick - 10),
+                        w: 10, h: 10, heat: 0
+                    });
+                }
+            }
+        }
+
+        function processThermalDissipation(list, identity) {
+            let total = 0;
+            for (let imp of list) {
+                imp.heat = max(0, imp.heat - (0.3 + imp.heat * 0.01));
+                total += imp.heat;
+            }
+            let factor = total / (list.length * 20 + 100);
+            if (identity === 1) resAHeat = lerp(resAHeat, factor, 0.05);
+            else resBHeat = lerp(resBHeat, factor, 0.05);
+        }
+
+        
+           
+
+
+        // Add this helper function outside your main loop
+function drawGradientRect(x, y, w, h, c1, c2) {
+    for (let i = 0; i < w; i++) {
+        let inter = map(i, 0, w, 0, 1);
+        let c = lerpColor(color(c1), color(c2), inter);
+        stroke(c);
+        line(x + i, y, x + i, y + h);
+    }
+}
+
+// Update your drawCircuitTrack function
+function drawCircuitTrack() {
+    noStroke();
+    fill(45, 45, 48);
+    // Draw the main wire structure
+    rect(leftX, topY, rightX - leftX + wireThick, wireThick);
+    rect(rightX, topY, wireThick, botY - topY + wireThick);
+    rect(leftX, botY, rightX - leftX + wireThick, wireThick);
+    rect(leftX, topY, wireThick, botY - topY + wireThick);
+
+    // Resistor A Gradient: Yellow -> Orange
+    drawGradientRect(resAX1, topY, resAX2 - resAX1, wireThick, "#ffe11e", "#f06e14");
+    
+    // Resistor B Gradient: Orange -> Blue
+    drawGradientRect(resBX1, topY, resBX2 - resBX1, wireThick, "#f06e14", "#4696e6");
+}
+        
+
+        function drawImpurities(list) {
+            noStroke();
+            for (let imp of list) {
+                let hVal = min(imp.heat, 255);
+                fill(map(hVal, 0, 255, 120, 255), map(hVal, 0, 255, 80, 140), 60);
+                rect(imp.x, imp.y, imp.w, imp.h);
+            }
+        }
+
+        function adjustPopulation(targetCapacity) {
+            if (electrons.length < targetCapacity) {
+                let batch = min(3, targetCapacity - electrons.length);
+                for(let i = 0; i < batch; i++) {
+                    electrons.push(new Electron(false));
+                }
+            }
+        }
+
+        function displayTelemetryOverlay(V, rA, rB) {
+            let totalR = rA + rB;
+            let dropA = rollingCurrent * rA ;
+            let dropB = rollingCurrent * rB ;
+
+            noStroke();
+            textSize(16);
+            textFont('sans-serif');
+            textStyle(BOLD);
+
+            fill(10, 80, 180);
+            rect(leftX - 75, (topY + botY)/2, 150, 75, 6);
+            fill(255);
+            text(`Source: ${V.toFixed(2)} V`, leftX - 60, (topY + botY)/2 + 25);
+            text(`Total I: ${rollingCurrent.toFixed(2)} mA`, leftX - 60, (topY + botY)/2 + 45);
+            text(`Req: ${totalR.toFixed(2)} kΩ`, leftX - 60, (topY + botY)/2 + 65);
+
+            fill(170, 55, 15);
+            rect((resAX1 + resAX2)/2 - 70, topY - 85, 140, 75, 4);
+            fill(255);
+            text(`Load A: ${rA.toFixed(2)} kΩ`, (resAX1 + resAX2)/2 - 60, topY - 63);
+            text(`Drop: ${dropA.toFixed(2)} V`, (resAX1 + resAX2)/2 - 60, topY - 41);
+            text(`I: ${rollingCurrent.toFixed(2)} mA`, (resAX1 + resAX2)/2 - 60, topY - 19);
+
+            fill(170, 55, 15);
+            rect((resBX1 + resBX2)/2 - 70, topY - 85, 140, 75, 4);
+            fill(255);
+            text(`Load B: ${rB.toFixed(2)} kΩ`, (resBX1 + resBX2)/2 - 60, topY - 63);
+            text(`Drop: ${dropB.toFixed(2)} V`, (resBX1 + resBX2)/2 - 60, topY - 41);
+            text(`I: ${rollingCurrent.toFixed(2)} mA`, (resBX1 + resBX2)/2 - 60, topY - 19);
+
+            fill(15, 110, 50);
+            rect((leftX + rightX)/2 - 80, botY + wireThick + 12, 160, 34, 4);
+            fill(255);
+            text(`Ground Rail: 0.0 V`, (leftX + rightX)/2 - 65, botY + wireThick + 34);
+        }
+
+        class Electron {
+            constructor(distributeUniformly = true) {
+                this.vel = createVector(0, 0);
+                this.acc = createVector(0, 0);
+                this.energyState = "high";
+
+                if (distributeUniformly) {
+                    let partition = random(['T', 'R', 'B', 'L']);
+                    if (partition === 'T') {
+                        this.zone = "top";
+                        this.pos = createVector(random(leftX + wireThick, rightX), random(topY + 5, topY + wireThick - 5));
+                    } else if (partition === 'R') {
+                        this.zone = "right";
+                        this.pos = createVector(random(rightX + 5, rightX + wireThick - 5), random(topY + wireThick, botY));
+                    } else if (partition === 'B') {
+                        this.zone = "bottom";
+                        this.pos = createVector(random(leftX + wireThick, rightX), random(botY + 5, botY + wireThick - 5));
+                    } else {
+                        this.zone = "left";
+                        this.pos = createVector(random(leftX + 5, leftX + wireThick - 5), random(topY + wireThick, botY));
+                    }
+                } else {
+                    this.assignToStartGate();
+                }
+            }
+
+            assignToStartGate() {
+                this.pos = createVector(random(leftX + 5, leftX + wireThick - 5), random(botY - 50, botY - 10));
+                this.zone = "left";
+                this.energyState = "high";
+            }
+
+            applyPhysicsForces(v) {
+                let drivePower = v * 0.15;
+                
+                if (this.zone === "top")    this.acc.x = drivePower;
+                if (this.zone === "right")  this.acc.y = drivePower;
+                if (this.zone === "bottom") this.acc.x = -drivePower;
+                if (this.zone === "left")   this.acc.y = -drivePower;
+
+                // Proximity separation handling
+                for (let other of electrons) {
+                    if (other === this || other.zone !== this.zone) continue;
+                    let spaceDist = dist(this.pos.x, this.pos.y, other.pos.x, other.pos.y);
+                    if (spaceDist < 32) {
+                        let repulse = p5.Vector.sub(this.pos, other.pos).normalize();
+                        repulse.mult(map(spaceDist, 0, 32, 0.55, 0, true));
+                        this.acc.add(repulse);
+                    }
+                }
+                this.acc.add(p5.Vector.random2D().mult(0.12));
+            }
+
+            update() {
+                this.vel.add(this.acc);
+                
+                let maxSpeedLimit = 11;
+                
+                if (this.zone === "top") {
+                    if (this.pos.x > resAX1 && this.pos.x < resAX2) {
+                        maxSpeedLimit = map(resASlider.value(), 0, 150, 11, 0.5);
+                        this.energyState = "high";
+                    } 
+                    else if (this.pos.x >= resAX2 && this.pos.x <= resBX1) {
+                        this.energyState = "medium";
+                    }
+                    else if (this.pos.x > resBX1 && this.pos.x < resBX2) {
+                        maxSpeedLimit = map(resBSlider.value(), 0, 150, 11, 0.5);
+                    }
+                } 
+                else if (this.zone === "right" || this.zone === "bottom") {
+                    this.energyState = "low";
+                }
+
+                this.vel.limit(maxSpeedLimit);
+                this.pos.add(this.vel);
+                this.acc.mult(0);
+                this.vel.mult(0.92);
+
+                // --- PERFECT DIAGONAL CORNER MATRIX MAPPING ---
+                
+                // 1. TOP RIGHT CORNER (Top Wire -> Right Wire)
+                if (this.zone === "top" && this.pos.x >= rightX) {
+                    let dX = this.pos.x - rightX; 
+                    let dY = this.pos.y - topY;   
+                    
+                    if (dX + dY >= wireThick) {   
+                        this.zone = "right";
+                        this.pos.x = rightX + dX;
+                        this.pos.y = topY + dY;
+                        let speed = this.vel.mag();
+                        this.vel.set(0, speed); 
+                    }
+                }
+
+                // 2. BOTTOM RIGHT CORNER (Right Wire -> Bottom Wire)
+                else if (this.zone === "right" && this.pos.y >= botY) {
+                    let dX = this.pos.x - rightX;
+                    let dY = this.pos.y - botY;
+                    
+                    if (dY >= dX) { 
+                        this.zone = "bottom";
+                        this.pos.x = rightX + dY;
+                        this.pos.y = botY + dX;
+                        let tempVy = this.vel.y;
+                        this.vel.y = -this.vel.x;
+                        this.vel.x = -tempVy;
+                    }
+                }
+
+                // 3. BOTTOM LEFT CORNER (Bottom Wire -> Left Wire)
+                else if (this.zone === "bottom" && this.pos.x <= leftX + wireThick) {
+                    let dX = (leftX + wireThick) - this.pos.x;
+                    let dY = (botY + wireThick) - this.pos.y;
+                    
+                    if (dX + dY >= wireThick) { 
+                        this.zone = "left";
+                        this.pos.x = leftX + (wireThick - dX);
+                        this.pos.y = botY + (wireThick - dY);
+                        let currentMagnitude = this.vel.mag();
+                        this.vel.set(0, -currentMagnitude);
+                    }
+                }
+
+                // 4. TOP LEFT CORNER (Left Wire -> Top Wire)
+                else if (this.zone === "left" && this.pos.y <= topY + wireThick) {
+                    let dX = this.pos.x - leftX;
+                    let dY = (topY + wireThick) - this.pos.y;
+                    
+                    if (dX + dY >= wireThick) { 
+                        currentLoopCount++;
+
+                        let capLimit = floor(map(voltageSlider.value(), 0, 30, 80, 450, true));
+                        if (electrons.length > capLimit) {
+                            let itemIdx = electrons.indexOf(this);
+                            if (itemIdx > -1) electrons.splice(itemIdx, 1);
+                            return;
+                        }
+
+                        this.zone = "top";
+                        this.energyState = "high";
+                        this.pos.x = leftX + wireThick - dY;
+                        this.pos.y = topY + dX;
+                        let tempVy = this.vel.y;
+                        this.vel.y = -this.vel.x;
+                        this.vel.x = -tempVy;
+                    }
+                }
+
+                // Safeguard alignment constraints within standard straight track zones
+                if (this.zone === "top")    this.pos.y = constrain(this.pos.y, topY + 4, topY + wireThick - 4);
+                if (this.zone === "right")  this.pos.x = constrain(this.pos.x, rightX + 4, rightX + wireThick - 4);
+                if (this.zone === "bottom") this.pos.y = constrain(this.pos.y, botY + 4, botY + wireThick - 4);
+                if (this.zone === "left")   this.pos.x = constrain(this.pos.x, leftX + 4, leftX + wireThick - 4);
+
+                // Requirement 1: Blue after Resistor B
+    if ( this.pos.x > resBX2) {
+        this.colorOverride = "blue";
+    }
+    // Requirement 2: Yellow halfway up the left wire
+    else if (this.zone === "left" && this.pos.y < (topY + botY) / 2) {
+        this.colorOverride = "yellow";
+    }
+    // Otherwise, clear the override so they resume normal energy color
+    else {
+        this.colorOverride = null;
+    }
+            }
+
+            handleObstacleCollisions() {
+                if (this.zone === "top") {
+                    let midWireY = topY + wireThick / 2;
+
+                    // Check Resistor A bounds
+                    if (this.pos.x > resAX1 && this.pos.x < resAX2) {
+                        for (let imp of resAImpurities) {
+                            if (abs(this.pos.x - imp.x) < 11 && abs(this.pos.y - imp.y) < 11) {
+                                imp.heat = min(imp.heat + 6.0, 300);
+                                this.vel.x *= -0.15; // Slow down forward push
+                                
+                                // NEW COLLISION DEFLECTION ENGINE: Push particles AWAY from the nearest edge
+                                if (this.pos.y < midWireY) {
+                                    this.vel.y += random(0.5, 2.0); // Deflect downward away from ceiling
+                                } else {
+                                    this.vel.y -= random(0.5, 2.0); // Deflect upward away from floor
+                                }
+                            }
+                        }
+                    }
+                    // Check Resistor B bounds
+                    else if (this.pos.x > resBX1 && this.pos.x < resBX2) {
+                        for (let imp of resBImpurities) {
+                            if (abs(this.pos.x - imp.x) < 11 && abs(this.pos.y - imp.y) < 11) {
+                                imp.heat = min(imp.heat + 6.0, 300);
+                                this.vel.x *= -0.15;
+                                
+                                // NEW COLLISION DEFLECTION ENGINE: Push particles AWAY from the nearest edge
+                                if (this.pos.y < midWireY) {
+                                    this.vel.y += random(0.5, 2.0);
+                                } else {
+                                    this.vel.y -= random(0.5, 2.0);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            display() {
+    // Priority: Color Override first, then Energy State
+    if (this.colorOverride === "blue") {
+        fill(70, 150, 230, 230); // Bright Blue
+    } else if (this.colorOverride === "yellow") {
+        fill(255, 225, 30, 230); // Bright Yellow
+    } else if (this.energyState === "high") {
+        fill(255, 225, 30, 230); 
+    } else if (this.energyState === "medium") {
+        fill(240, 110, 20, 230); 
+    } else {
+        fill(70, 150, 230, 180); 
+    }
+    
+    noStroke();
+    ellipse(this.pos.x, this.pos.y, 7, 7);
+}
+        }
+    </script>
+</body>
+</html>
