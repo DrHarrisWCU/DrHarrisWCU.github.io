@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Car Suspension vs Parallel RLC (Bump + Step Simulator)</title>
+<style>
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f4f0;
+    color: #2c2c2a;
+    max-width: 760px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+  h1 {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+  p.sub {
+    font-size: 14px;
+    color: #5f5e5a;
+    margin-top: 0;
+    margin-bottom: 24px;
+  }
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+  .controls label {
+    font-size: 14px;
+    color: #5f5e5a;
+  }
+  select, button {
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 0.5px solid #b4b2a9;
+    background: white;
+    cursor: pointer;
+  }
+  select { min-width: 220px; }
+  button {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  button:hover, select:hover { background: #f1efe8; }
+  button:active { transform: scale(0.98); }
+
+  #ride-label {
+    text-align: center;
+    font-size: 14px;
+    font-weight: 500;
+    margin: 4px 0 4px;
+    color: #5f5e5a;
+  }
+  .hint {
+    text-align: center;
+    font-size: 12px;
+    color: #888780;
+    margin: 0 0 8px;
+  }
+
+  .panel {
+    background: #ECEAE3;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .panel p.title {
+    font-size: 13px;
+    color: #5f5e5a;
+    margin: 0 0 8px;
+    font-weight: 500;
+  }
+  svg { width: 100%; display: block; }
+  #susp-svg { cursor: crosshair; }
+  p.note {
+    font-size: 13px;
+    color: #5f5e5a;
+    margin-top: 16px;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+
+<h1>Car suspension vs. parallel RLC (step response simulator)</h1>
+<p class="sub">Left-click adds or removes a step (the road permanently changes level). Right-click toggles a repeating series of bumps, so you can see whether the suspension keeps up or falls behind (underdamped and critically damped only — see note below). Synced live to the matching parallel RLC voltage.</p>
+
+<div class="controls">
+  <label for="damp-select">Damping case</label>
+  <select id="damp-select">
+    <option value="under">Underdamped: bouncy / overshoots</option>
+    <option value="critical">Critically damped: smooth</option>
+    <option value="over">Overdamped: sluggish, can't keep up</option>
+  </select>
+  <button id="replay-btn">&#10227; Reset</button>
+</div>
+
+<div id="ride-label"></div>
+<p class="hint">Left-click: add/remove a plateau. Right-click: start or stop a repeating series of bumps.</p>
+
+<div class="panel">
+  <p class="title">Car suspension: mass should track the wheel once any bounce settles</p>
+  <svg id="susp-svg" viewBox="0 0 640 200" role="img" aria-label="Side view of a car suspension. Left-click the road to add or remove a plateau. Right-click to start or stop a repeating series of bumps">
+    <defs>
+      <clipPath id="road-clip"><rect x="20" y="0" width="600" height="200"/></clipPath>
+    </defs>
+    <line id="rest-line-old" x1="20" y1="77" x2="620" y2="77" stroke="#B4B2A9" stroke-width="1" stroke-dasharray="4,4"/>
+    <line id="rest-line-new" x1="20" y1="77" x2="620" y2="77" stroke="#5DCAA5" stroke-width="1" stroke-dasharray="4,4" opacity="0"/>
+    <g clip-path="url(#road-clip)">
+      <rect x="0" y="160" width="640" height="60" fill="#D3D1C7"/>
+      <path id="road-path" d="" fill="none" stroke="#888780" stroke-width="2"/>
+    </g>
+    <g id="car-rod"><line x1="320" y1="58" x2="320" y2="110" stroke="#888780" stroke-width="3"/></g>
+    <g id="car-spring"></g>
+    <g id="car-damper"></g>
+    <rect id="car-mass" x="276" y="58" width="88" height="38" rx="4" fill="#378ADD"/>
+    <text x="320" y="82" text-anchor="middle" style="font-size:13px;font-weight:500;fill:#0C447C">m</text>
+    <circle id="car-wheel" cx="320" cy="155" r="18" fill="#444441"/>
+    <circle cx="320" cy="155" r="4" fill="#888780" id="car-hub"/>
+  </svg>
+</div>
+
+<div class="panel">
+  <p class="title">Parallel RLC: capacitor voltage, reacts to each step</p>
+  <svg id="rlc-svg" viewBox="0 0 640 160" role="img" aria-label="Graph of capacitor voltage reacting to each step disturbance, matching the same damping case as the suspension">
+    <line x1="20" y1="10" x2="20" y2="140" stroke="#888780" stroke-width="1"/>
+    <line x1="20" y1="140" x2="620" y2="140" stroke="#888780" stroke-width="1"/>
+    <line x1="20" y1="90" x2="620" y2="90" stroke="#D3D1C7" stroke-width="1" stroke-dasharray="3,3"/>
+    <line id="rlc-final-line" x1="20" y1="90" x2="620" y2="90" stroke="#5DCAA5" stroke-width="1" stroke-dasharray="3,3" opacity="0"/>
+    <text x="24" y="22" style="font-size:11px;fill:#888780">v(t)</text>
+    <text x="595" y="155" style="font-size:11px;fill:#888780">t</text>
+    <path id="rlc-path" d="" fill="none" stroke="#D85A30" stroke-width="2"/>
+    <circle id="rlc-dot" cx="620" cy="90" r="4" fill="#D85A30"/>
+  </svg>
+</div>
+
+<p class="note">
+  A step is a step response: the road permanently moves to a new level, like a source turning on and staying on, so the system settles at a new final value. Left-click an already-stepped section to bring it back down to ground level. Right-click starts a steady stream of small bumps for the underdamped and critically damped cases, so you can see whether each new disturbance arrives before the last one has settled. The mass height plays the role of capacitor voltage; the shock absorber's resistance plays the role of R.
+</p>
+<p class="note">
+  The bump train isn't available for the overdamped case. In this simple linear model, an overdamped system actually produces the <em>smoothest</em> response to a fast train of repeated bumps — heavy damping acts like a low-pass filter, smoothing out rapid disturbances. That's mathematically correct, but it's the opposite of how an overdamped car suspension feels in real life: the harsh, jarring ride people associate with overdamped shocks comes from the suspension running out of physical travel and "packing down" between hits, an effect this linear model doesn't capture. Use the single-step plateau instead to see overdamped's true signature: a slow, sluggish, non-oscillating creep toward a new level, with no overshoot.
+</p>
+
+<script>
+(function(){
+  const cases = {
+    under:    { alpha: 1.5,  omega0: 5,    label: 'Underdamped: bounces or overshoots before settling' },
+    critical: { alpha: 5,    omega0: 5,    label: 'Critically damped: settles fastest with no overshoot' },
+    over:     { alpha: 12,   omega0: 5,    label: 'Overdamped: sluggish, lags behind and creeps toward the new level' }
+  };
+
+  const carMass = document.getElementById('car-mass');
+  const carWheel = document.getElementById('car-wheel');
+  const carHub = document.getElementById('car-hub');
+  const carRod = document.getElementById('car-rod').querySelector('line');
+  const carSpring = document.getElementById('car-spring');
+  const carDamper = document.getElementById('car-damper');
+  const roadPath = document.getElementById('road-path');
+  const restLineOld = document.getElementById('rest-line-old');
+  const restLineNew = document.getElementById('rest-line-new');
+  const suspSvg = document.getElementById('susp-svg');
+  const rlcPath = document.getElementById('rlc-path');
+  const rlcDot = document.getElementById('rlc-dot');
+  const rlcFinalLine = document.getElementById('rlc-final-line');
+  const select = document.getElementById('damp-select');
+  const replayBtn = document.getElementById('replay-btn');
+  const rideLabel = document.getElementById('ride-label');
+
+  const wheelPx = 320;
+  const wheelBaseY = 155;
+  const massBaseY = 58;
+  const massH = 38;
+  const stepHeight = 27;
+  const rampWidth = 60;
+  const scrollSpeed = 90;
+  const leadTimeSeconds = 1;
+  const leadDistance = scrollSpeed * leadTimeSeconds;
+
+  const rlcLeft = 20, rlcRight = 620, rlcMid = 90;
+  const rlcWindow = 3.5;
+
+  let currentCase = 'under';
+  let unitAmp = 30;
+  let isOverdamped = false;
+  let startTime = null;
+  let rafId = null;
+  let wheelWorldPos = 0;
+  let lastFrameElapsed = 0;
+
+  let baseLevel = 0;
+  let transitions = [];
+  let rlcHistory = [];
+
+  let bumpTrainActive = false;
+  let bumps = [];
+  let nextBumpSpawnWorldX = 0;
+
+  // True physical state of the mass: its displacement above the
+  // original baseline, and its current vertical velocity. This is
+  // integrated forward every frame from the actual forced damped
+  // harmonic oscillator equation, so repeated disturbances (many
+  // bumps, several steps) combine correctly through real dynamics
+  // instead of summing independent closed-form curves -- which
+  // previously let contributions stack without bound.
+  let massX = 0;
+  let massV = 0;
+
+  const bumpHeight = 16;
+  const bumpWidth = 26;
+  const bumpSpacing = 45;
+
+  function bumpProfile(distFromBump){
+    if (Math.abs(distFromBump) > bumpWidth) return 0;
+    return bumpHeight * Math.cos((distFromBump/bumpWidth) * Math.PI/2) ** 2;
+  }
+
+  function smoothstep(frac){
+    return frac - Math.sin(frac*Math.PI)/Math.PI;
+  }
+
+  function levelAtWorld(worldX){
+    let level = baseLevel;
+    for (const tr of transitions){
+      if (worldX >= tr.worldX) level = tr.toLevel;
+    }
+    return level;
+  }
+
+  function rampedLevelAtWorld(worldX){
+    const sorted = transitions.slice().sort((a,b) => a.worldX - b.worldX);
+    let curLevel = baseLevel;
+    for (const tr of sorted){
+      if (worldX < tr.worldX - rampWidth){
+        return curLevel;
+      } else if (worldX < tr.worldX){
+        const frac = 1 - (tr.worldX - worldX) / rampWidth;
+        return curLevel + (tr.toLevel - curLevel) * smoothstep(frac);
+      } else {
+        curLevel = tr.toLevel;
+      }
+    }
+    return curLevel;
+  }
+
+  function totalRoadHeightAtWorld(worldX){
+    let h = rampedLevelAtWorld(worldX) * stepHeight;
+    for (const b of bumps){
+      h += bumpProfile(worldX - b.worldX);
+    }
+    return h;
+  }
+
+  function drawRoad(){
+    let d = '';
+    for (let px = 0; px <= 640; px += 6){
+      const worldX = wheelWorldPos + (px - wheelPx);
+      const y = 160 - totalRoadHeightAtWorld(worldX);
+      d += (px === 0 ? 'M' : 'L') + ` ${px} ${y}`;
+    }
+    roadPath.setAttribute('d', d);
+  }
+
+  function drawSpring(x, yTop, yBot){
+    const coils = 5;
+    const dy = (yBot - yTop) / coils;
+    let d = `M ${x} ${yTop}`;
+    for (let i=0;i<coils;i++){
+      const yMid = yTop + dy*(i+0.5);
+      const dir = i % 2 === 0 ? 12 : -12;
+      d += ` L ${x+dir} ${yMid}`;
+    }
+    d += ` L ${x} ${yBot}`;
+    carSpring.innerHTML = `<path d="${d}" fill="none" stroke="#5DCAA5" stroke-width="2.5"/>`;
+  }
+
+  function drawDamper(x, yTop, yBot, strained){
+    const midY = yTop + (yBot - yTop) * 0.45;
+    const fill = strained ? '#F0997B' : 'none';
+    carDamper.innerHTML = `
+      <line x1="${x}" y1="${yTop}" x2="${x}" y2="${midY}" stroke="#888780" stroke-width="2.5"/>
+      <rect x="${x-10}" y="${midY}" width="20" height="22" fill="${fill}" stroke="#888780" stroke-width="2.5"/>
+      <line x1="${x}" y1="${midY+22}" x2="${x}" y2="${yBot}" stroke="#888780" stroke-width="2.5"/>
+    `;
+  }
+
+  function resetState(){
+    baseLevel = 0;
+    transitions = [];
+    rlcHistory = [];
+    wheelWorldPos = 0;
+    lastFrameElapsed = 0;
+    startTime = performance.now();
+    bumpTrainActive = false;
+    bumps = [];
+    nextBumpSpawnWorldX = 0;
+    massX = 0;
+    massV = 0;
+    restLineNew.setAttribute('opacity', 0);
+    rlcFinalLine.setAttribute('opacity', 0);
+  }
+
+  function addOrRemoveStepAtWorldX(worldX){
+    const currentLevel = levelAtWorld(worldX);
+    const newLevel = currentLevel === 0 ? 1 : 0;
+    transitions = transitions.filter(tr => Math.abs(tr.worldX - worldX) > rampWidth*1.5);
+    transitions.push({ worldX, toLevel: newLevel });
+    transitions.sort((a,b) => a.worldX - b.worldX);
+  }
+
+  function toggleBumpTrain(startWorldX){
+    // The repeating bump train isn't shown for the overdamped case: in
+    // this simple linear model, overdamped genuinely produces the
+    // smoothest response to fast, repeated bumps, which is the opposite
+    // of how a real overdamped car suspension actually feels. That
+    // real-world harshness comes from effects outside this model (the
+    // shock absorber "packing down" and running out of travel between
+    // hits), so rather than show a misleading result, the train is only
+    // available for the underdamped and critically damped cases. Use
+    // the single-step plateau instead to see overdamped's slow,
+    // sluggish, non-oscillating response to one disturbance at a time.
+    if (isOverdamped){
+      bumpTrainActive = false;
+      return;
+    }
+    bumpTrainActive = !bumpTrainActive;
+    if (bumpTrainActive){
+      nextBumpSpawnWorldX = startWorldX;
+    }
+  }
+
+  function frame(now){
+    const elapsed = (now - startTime) / 1000;
+    wheelWorldPos = elapsed * scrollSpeed;
+    drawRoad();
+
+    // While the bump train is active, keep spawning evenly-spaced bumps
+    // far enough ahead of the wheel that they appear smoothly, without
+    // ever needing the user to click again.
+    if (bumpTrainActive){
+      while (nextBumpSpawnWorldX < wheelWorldPos + leadDistance + bumpSpacing){
+        bumps.push({ worldX: nextBumpSpawnWorldX });
+        nextBumpSpawnWorldX += bumpSpacing;
+      }
+    }
+
+    const wheelLift = totalRoadHeightAtWorld(wheelWorldPos);
+
+    // The green dashed line tracks the road's current settled level
+    // (the level the wheel/mass are heading toward or already resting
+    // at), so it always reflects whatever plateau the car is on now.
+    const currentSettledLevel = levelAtWorld(wheelWorldPos) * stepHeight;
+    if (currentSettledLevel !== 0){
+      const newLineY = massBaseY - currentSettledLevel;
+      restLineNew.setAttribute('y1', newLineY);
+      restLineNew.setAttribute('y2', newLineY);
+      restLineNew.setAttribute('opacity', 1);
+    } else {
+      restLineNew.setAttribute('opacity', 0);
+    }
+
+    // Integrate the actual forced damped harmonic oscillator forward by
+    // the real elapsed time since the last frame. This is a true,
+    // continuous physical state -- one position and one velocity -- so
+    // any number of bumps or steps combine correctly through real
+    // dynamics, the same way a real suspension would respond, instead
+    // of summing independent closed-form curves that could stack
+    // without bound.
+    const c = cases[currentCase];
+    let dt = elapsed - lastFrameElapsed;
+    lastFrameElapsed = elapsed;
+    if (dt > 0){
+      // Substep for numerical stability with the larger alpha/omega0
+      // values (critically damped case in particular).
+      const subSteps = 8;
+      const subDt = dt / subSteps;
+      for (let i = 0; i < subSteps; i++){
+        const accel = c.omega0*c.omega0*(wheelLift - massX) - 2*c.alpha*massV;
+        massV += accel*subDt;
+        massX += massV*subDt;
+      }
+    }
+    const disp = massX;
+
+    const massY = massBaseY - disp;
+    carMass.setAttribute('y', massY);
+    carRod.setAttribute('y1', massY + massH);
+    drawSpring(300, 40, massY);
+
+    const wheelY = wheelBaseY - wheelLift;
+    carHub.setAttribute('cy', wheelY);
+    carWheel.setAttribute('cy', wheelY);
+    carRod.setAttribute('y2', wheelY - 18);
+    drawDamper(345, 58, massY + massH, false);
+
+    rlcHistory.push({ t: elapsed, disp });
+    while (rlcHistory.length && elapsed - rlcHistory[0].t > rlcWindow) rlcHistory.shift();
+
+    if (rlcHistory.length > 1){
+      let maxAbs = 1;
+      for (const pt of rlcHistory) maxAbs = Math.max(maxAbs, Math.abs(pt.disp));
+      const rlcAmp = 60 / maxAbs;
+
+      const tEnd = rlcHistory[rlcHistory.length-1].t;
+      const tStart = tEnd - rlcWindow;
+      let d = '';
+      for (let i=0;i<rlcHistory.length;i++){
+        const pt = rlcHistory[i];
+        const px = rlcLeft + ((pt.t - tStart)/rlcWindow)*(rlcRight-rlcLeft);
+        const py = rlcMid - pt.disp*rlcAmp;
+        d += (i===0 ? 'M' : 'L') + ` ${px} ${py}`;
+      }
+      rlcPath.setAttribute('d', d);
+      const lastPt = rlcHistory[rlcHistory.length-1];
+      rlcDot.setAttribute('cx', rlcRight);
+      rlcDot.setAttribute('cy', rlcMid - lastPt.disp*rlcAmp);
+
+      if (currentSettledLevel !== 0){
+        const finalY = rlcMid - currentSettledLevel*rlcAmp;
+        rlcFinalLine.setAttribute('y1', finalY);
+        rlcFinalLine.setAttribute('y2', finalY);
+        rlcFinalLine.setAttribute('opacity', 1);
+      } else {
+        rlcFinalLine.setAttribute('opacity', 0);
+      }
+    } else {
+      rlcFinalLine.setAttribute('opacity', 0);
+    }
+
+    // Transitions must be kept indefinitely -- rampedLevelAtWorld needs
+    // the full history to know the road's current permanent level.
+    // Bumps have no lasting effect once they've scrolled far behind, so
+    // those are safe to drop to keep the array from growing forever.
+    bumps = bumps.filter(b => b.worldX > wheelWorldPos - 1000);
+
+    rafId = requestAnimationFrame(frame);
+  }
+
+  function start(caseKey){
+    if (rafId) cancelAnimationFrame(rafId);
+    currentCase = caseKey;
+    const c = cases[caseKey];
+    rideLabel.textContent = c.label;
+    unitAmp = caseKey === 'under' ? 34 : (caseKey === 'critical' ? 24 : 16);
+    isOverdamped = caseKey === 'over';
+    resetState();
+    rafId = requestAnimationFrame(frame);
+  }
+
+  suspSvg.addEventListener('click', (e) => {
+    const worldX = wheelWorldPos + leadDistance;
+    addOrRemoveStepAtWorldX(worldX);
+  });
+
+  suspSvg.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+    if (isOverdamped){
+      const original = cases.over.label;
+      rideLabel.textContent = 'Bump train isn\u2019t shown for overdamped \u2014 try a left-click plateau instead.';
+      clearTimeout(window.__overdampedHintTimer);
+      window.__overdampedHintTimer = setTimeout(() => {
+        if (currentCase === 'over') rideLabel.textContent = original;
+      }, 2200);
+      return;
+    }
+    const worldX = wheelWorldPos + leadDistance;
+    toggleBumpTrain(worldX);
+  });
+
+  select.addEventListener('change', () => start(select.value));
+  replayBtn.addEventListener('click', () => start(select.value));
+  start('under');
+})();
+</script>
+
+</body>
+</html>
