@@ -98,7 +98,7 @@
   <select id="damp-select">
     <option value="under">Underdamped: bouncy / overshoots</option>
     <option value="critical">Critically damped: smooth</option>
-    <option value="over">Overdamped: sluggish, can't keep up</option>
+    <option value="over">Overdamped: very slow and sluggish</option>
   </select>
   <button id="replay-btn">&#10227; Reset</button>
 </div>
@@ -120,9 +120,11 @@
     </g>
     <g id="car-rod"><line x1="320" y1="58" x2="320" y2="110" stroke="#888780" stroke-width="3"/></g>
     <g id="car-spring"></g>
+    <g id="car-body-group">
+      <rect id="car-mass" x="276" y="58" width="88" height="38" rx="4" fill="#378ADD"/>
+      <text id="car-mass-label" x="320" y="82" text-anchor="middle" style="font-size:13px;font-weight:500;fill:#0C447C">m</text>
+    </g>
     <g id="car-damper"></g>
-    <rect id="car-mass" x="276" y="58" width="88" height="38" rx="4" fill="#378ADD"/>
-    <text x="320" y="82" text-anchor="middle" style="font-size:13px;font-weight:500;fill:#0C447C">m</text>
     <circle id="car-wheel" cx="320" cy="155" r="18" fill="#444441"/>
     <circle cx="320" cy="155" r="4" fill="#888780" id="car-hub"/>
   </svg>
@@ -133,12 +135,12 @@
   <svg id="rlc-svg" viewBox="0 0 640 160" role="img" aria-label="Graph of capacitor voltage reacting to each step disturbance, matching the same damping case as the suspension">
     <line x1="20" y1="10" x2="20" y2="140" stroke="#888780" stroke-width="1"/>
     <line x1="20" y1="140" x2="620" y2="140" stroke="#888780" stroke-width="1"/>
-    <line x1="20" y1="90" x2="620" y2="90" stroke="#D3D1C7" stroke-width="1" stroke-dasharray="3,3"/>
-    <line id="rlc-final-line" x1="20" y1="90" x2="620" y2="90" stroke="#5DCAA5" stroke-width="1" stroke-dasharray="3,3" opacity="0"/>
+    <line x1="20" y1="140" x2="620" y2="140" stroke="#D3D1C7" stroke-width="1" stroke-dasharray="3,3"/>
+    <line id="rlc-final-line" x1="20" y1="140" x2="620" y2="140" stroke="#5DCAA5" stroke-width="1" stroke-dasharray="3,3" opacity="0"/>
     <text x="24" y="22" style="font-size:11px;fill:#888780">v(t)</text>
     <text x="595" y="155" style="font-size:11px;fill:#888780">t</text>
     <path id="rlc-path" d="" fill="none" stroke="#D85A30" stroke-width="2"/>
-    <circle id="rlc-dot" cx="620" cy="90" r="4" fill="#D85A30"/>
+    <circle id="rlc-dot" cx="620" cy="140" r="4" fill="#D85A30"/>
   </svg>
 </div>
 
@@ -146,7 +148,7 @@
   A step is a step response: the road permanently moves to a new level, like a source turning on and staying on, so the system settles at a new final value. Left-click an already-stepped section to bring it back down to ground level. Right-click starts a steady stream of small bumps for the underdamped and critically damped cases, so you can see whether each new disturbance arrives before the last one has settled. The mass height plays the role of capacitor voltage; the shock absorber's resistance plays the role of R.
 </p>
 <p class="note">
-  The bump train isn't available for the overdamped case. In this simple linear model, an overdamped system actually produces the <em>smoothest</em> response to a fast train of repeated bumps — heavy damping acts like a low-pass filter, smoothing out rapid disturbances. That's mathematically correct, but it's the opposite of how an overdamped car suspension feels in real life: the harsh, jarring ride people associate with overdamped shocks comes from the suspension running out of physical travel and "packing down" between hits, an effect this linear model doesn't capture. Use the single-step plateau instead to see overdamped's true signature: a slow, sluggish, non-oscillating creep toward a new level, with no overshoot.
+  The bump train isn't available for the overdamped case. Use the single-step plateau instead to see overdamped's true signature: a slow, sluggish, non-oscillating creep toward the new level that takes noticeably longer than even critically damped — often several times longer — while never overshooting past it. Watch for a brief shake and flash right at the moment of contact: that's the shock absorber's force spiking sharply and quickly, which is the actual jarring sensation a rider would feel, even though the mass's smooth position curve afterward stays slow.
 </p>
 
 <script>
@@ -154,10 +156,12 @@
   const cases = {
     under:    { alpha: 1.5,  omega0: 5,    label: 'Underdamped: bounces or overshoots before settling' },
     critical: { alpha: 5,    omega0: 5,    label: 'Critically damped: settles fastest with no overshoot' },
-    over:     { alpha: 12,   omega0: 5,    label: 'Overdamped: sluggish, lags behind and creeps toward the new level' }
+    over:     { alpha: 30,   omega0: 5,    label: 'Overdamped: very slow and sluggish to reach the new level' }
   };
 
   const carMass = document.getElementById('car-mass');
+  const carMassLabel = document.getElementById('car-mass-label');
+  const carBodyGroup = document.getElementById('car-body-group');
   const carWheel = document.getElementById('car-wheel');
   const carHub = document.getElementById('car-hub');
   const carRod = document.getElementById('car-rod').querySelector('line');
@@ -184,7 +188,16 @@
   const leadTimeSeconds = 1;
   const leadDistance = scrollSpeed * leadTimeSeconds;
 
-  const rlcLeft = 20, rlcRight = 620, rlcMid = 90;
+  const rlcLeft = 20, rlcRight = 620;
+  // Fixed scale: 0 at the bottom, with headroom above the highest value
+  // the mass can ever actually reach (underdamped's overshoot peaks
+  // around 37 for a single step, so 42 leaves a clean margin). This
+  // never rescales itself based on recent history, so the same
+  // physical displacement always maps to the same vertical position.
+  const rlcCeiling = 42;
+  const rlcZeroY = 140;
+  const rlcTopY = 15;
+  const rlcScale = (rlcZeroY - rlcTopY) / rlcCeiling;
   const rlcWindow = 3.5;
 
   let currentCase = 'under';
@@ -212,6 +225,16 @@
   // previously let contributions stack without bound.
   let massX = 0;
   let massV = 0;
+
+  // A brief visual jolt, separate from the smooth position curve above.
+  // It's driven by the actual instantaneous damper force (2*alpha*massV),
+  // which genuinely does spike sharply and quickly for the overdamped
+  // case at the moment a bump or step hits -- even though the resulting
+  // position stays smooth and slow. This represents what a rider would
+  // actually FEEL (a sudden jolt of force) as distinct from where the
+  // mass visually ends up over time.
+  let joltAmount = 0;
+  let lastDamperForce = 0;
 
   const bumpHeight = 16;
   const bumpWidth = 26;
@@ -303,6 +326,9 @@
     nextBumpSpawnWorldX = 0;
     massX = 0;
     massV = 0;
+    joltAmount = 0;
+    lastDamperForce = 0;
+    carBodyGroup.setAttribute('transform', 'translate(0 0)');
     restLineNew.setAttribute('opacity', 0);
     rlcFinalLine.setAttribute('opacity', 0);
   }
@@ -389,41 +415,57 @@
     }
     const disp = massX;
 
+    // Track the instantaneous damper force and use any sharp increase
+    // in its magnitude to trigger a brief visual jolt -- a quick shake
+    // and color flash that decays almost immediately, representing the
+    // felt force spike at the moment of contact. This is calibrated so
+    // overdamped (large alpha) produces the strongest, sharpest jolt,
+    // since its damper genuinely does react with the most force, the
+    // fastest, even though its resulting position curve stays smooth.
+    const damperForce = 2 * c.alpha * massV;
+    const forceJump = Math.abs(damperForce) - Math.abs(lastDamperForce);
+    if (forceJump > 0){
+      joltAmount = Math.min(1, joltAmount + forceJump / 220);
+    }
+    lastDamperForce = damperForce;
+    joltAmount *= 0.80;
+
     const massY = massBaseY - disp;
     carMass.setAttribute('y', massY);
+    carMassLabel.setAttribute('y', massY + 24);
     carRod.setAttribute('y1', massY + massH);
     drawSpring(300, 40, massY);
+
+    const jitterX = joltAmount > 0.03 ? (Math.random() - 0.5) * 6 * joltAmount : 0;
+    const jitterY = joltAmount > 0.03 ? (Math.random() - 0.5) * 4 * joltAmount : 0;
+    carBodyGroup.setAttribute('transform', `translate(${jitterX} ${jitterY})`);
 
     const wheelY = wheelBaseY - wheelLift;
     carHub.setAttribute('cy', wheelY);
     carWheel.setAttribute('cy', wheelY);
     carRod.setAttribute('y2', wheelY - 18);
-    drawDamper(345, 58, massY + massH, false);
+    drawDamper(345, 58, massY + massH, joltAmount > 0.18);
 
     rlcHistory.push({ t: elapsed, disp });
     while (rlcHistory.length && elapsed - rlcHistory[0].t > rlcWindow) rlcHistory.shift();
 
     if (rlcHistory.length > 1){
-      let maxAbs = 1;
-      for (const pt of rlcHistory) maxAbs = Math.max(maxAbs, Math.abs(pt.disp));
-      const rlcAmp = 60 / maxAbs;
-
       const tEnd = rlcHistory[rlcHistory.length-1].t;
       const tStart = tEnd - rlcWindow;
       let d = '';
       for (let i=0;i<rlcHistory.length;i++){
         const pt = rlcHistory[i];
         const px = rlcLeft + ((pt.t - tStart)/rlcWindow)*(rlcRight-rlcLeft);
-        const py = rlcMid - pt.disp*rlcAmp;
+        const py = rlcZeroY - pt.disp*rlcScale;
         d += (i===0 ? 'M' : 'L') + ` ${px} ${py}`;
       }
       rlcPath.setAttribute('d', d);
       const lastPt = rlcHistory[rlcHistory.length-1];
       rlcDot.setAttribute('cx', rlcRight);
-      rlcDot.setAttribute('cy', rlcMid - lastPt.disp*rlcAmp);
+      rlcDot.setAttribute('cy', rlcZeroY - lastPt.disp*rlcScale);
 
       if (currentSettledLevel !== 0){
-        const finalY = rlcMid - currentSettledLevel*rlcAmp;
+        const finalY = rlcZeroY - currentSettledLevel*rlcScale;
         rlcFinalLine.setAttribute('y1', finalY);
         rlcFinalLine.setAttribute('y2', finalY);
         rlcFinalLine.setAttribute('opacity', 1);
