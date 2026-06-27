@@ -91,7 +91,7 @@
 <body>
 
 <h1>Car suspension vs. parallel RLC (step response simulator)</h1>
-<p class="sub">Left-click adds or removes a step (the road permanently changes level). Right-click toggles a repeating series of bumps, so you can see whether the suspension keeps up or falls behind (underdamped and critically damped only — see note below). Synced live to the matching parallel RLC voltage.</p>
+<p class="sub">Left-click adds or removes a step (the road permanently changes level). Right-click toggles a repeating series of bumps, so you can see whether the suspension keeps up or falls behind. Synced live to the matching parallel RLC voltage.</p>
 
 <div class="controls">
   <label for="damp-select">Damping case</label>
@@ -118,14 +118,13 @@
       <rect x="0" y="160" width="640" height="60" fill="#D3D1C7"/>
       <path id="road-path" d="" fill="none" stroke="#888780" stroke-width="2"/>
     </g>
-    <g id="car-rod"><line x1="320" y1="58" x2="320" y2="110" stroke="#888780" stroke-width="3"/></g>
-    <g id="car-spring"></g>
     <g id="car-body-group">
       <rect id="car-mass" x="276" y="58" width="88" height="38" rx="4" fill="#378ADD"/>
       <text id="car-mass-label" x="320" y="82" text-anchor="middle" style="font-size:13px;font-weight:500;fill:#0C447C">m</text>
     </g>
+    <g id="car-spring"></g>
     <g id="car-damper"></g>
-    <circle id="car-wheel" cx="320" cy="155" r="18" fill="#444441"/>
+    <circle id="car-wheel" cx="320" cy="155" r="26" fill="#444441"/>
     <circle cx="320" cy="155" r="4" fill="#888780" id="car-hub"/>
   </svg>
 </div>
@@ -148,7 +147,7 @@
   A step is a step response: the road permanently moves to a new level, like a source turning on and staying on, so the system settles at a new final value. Left-click an already-stepped section to bring it back down to ground level. Right-click starts a steady stream of small bumps for the underdamped and critically damped cases, so you can see whether each new disturbance arrives before the last one has settled. The mass height plays the role of capacitor voltage; the shock absorber's resistance plays the role of R.
 </p>
 <p class="note">
-  The bump train isn't available for the overdamped case. Use the single-step plateau instead to see overdamped's true signature: a slow, sluggish, non-oscillating creep toward the new level that takes noticeably longer than even critically damped — often several times longer — while never overshooting past it. Watch for a brief shake and flash right at the moment of contact: that's the shock absorber's force spiking sharply and quickly, which is the actual jarring sensation a rider would feel, even though the mass's smooth position curve afterward stays slow.
+  Right-click also works for the overdamped case now: each bump produces the same slow, sluggish, non-oscillating creep as a single step, so a fast train of bumps tends to blur together into a smoother-looking ride in this simple linear model — even though watching for the brief shake and flash right at each contact point still shows the shock absorber's force spiking sharply and quickly, which is the actual jarring sensation a rider would feel.
 </p>
 
 <script>
@@ -164,8 +163,7 @@
   const carBodyGroup = document.getElementById('car-body-group');
   const carWheel = document.getElementById('car-wheel');
   const carHub = document.getElementById('car-hub');
-  const carRod = document.getElementById('car-rod').querySelector('line');
-  const carSpring = document.getElementById('car-spring');
+    const carSpring = document.getElementById('car-spring');
   const carDamper = document.getElementById('car-damper');
   const roadPath = document.getElementById('road-path');
   const restLineOld = document.getElementById('rest-line-old');
@@ -342,20 +340,6 @@
   }
 
   function toggleBumpTrain(startWorldX){
-    // The repeating bump train isn't shown for the overdamped case: in
-    // this simple linear model, overdamped genuinely produces the
-    // smoothest response to fast, repeated bumps, which is the opposite
-    // of how a real overdamped car suspension actually feels. That
-    // real-world harshness comes from effects outside this model (the
-    // shock absorber "packing down" and running out of travel between
-    // hits), so rather than show a misleading result, the train is only
-    // available for the underdamped and critically damped cases. Use
-    // the single-step plateau instead to see overdamped's slow,
-    // sluggish, non-oscillating response to one disturbance at a time.
-    if (isOverdamped){
-      bumpTrainActive = false;
-      return;
-    }
     bumpTrainActive = !bumpTrainActive;
     if (bumpTrainActive){
       nextBumpSpawnWorldX = startWorldX;
@@ -433,8 +417,6 @@
     const massY = massBaseY - disp;
     carMass.setAttribute('y', massY);
     carMassLabel.setAttribute('y', massY + 24);
-    carRod.setAttribute('y1', massY + massH);
-    drawSpring(300, 40, massY);
 
     const jitterX = joltAmount > 0.03 ? (Math.random() - 0.5) * 6 * joltAmount : 0;
     const jitterY = joltAmount > 0.03 ? (Math.random() - 0.5) * 4 * joltAmount : 0;
@@ -443,8 +425,14 @@
     const wheelY = wheelBaseY - wheelLift;
     carHub.setAttribute('cy', wheelY);
     carWheel.setAttribute('cy', wheelY);
-    carRod.setAttribute('y2', wheelY - 18);
-    drawDamper(345, 58, massY + massH, joltAmount > 0.18);
+
+    // Spring and damper both run the real distance between the mass
+    // and the wheel, in parallel with the rigid rod, just offset to
+    // either side of it -- matching how a real suspension is laid out,
+    // rather than the spring floating above the mass attached to
+    // nothing.
+    drawSpring(310, massY + massH, wheelY - 24);
+    drawDamper(330, massY + massH, wheelY - 24, joltAmount > 0.18);
 
     rlcHistory.push({ t: elapsed, disp });
     while (rlcHistory.length && elapsed - rlcHistory[0].t > rlcWindow) rlcHistory.shift();
@@ -503,15 +491,6 @@
 
   suspSvg.addEventListener('contextmenu', (e) => {
     e.preventDefault();
-    if (isOverdamped){
-      const original = cases.over.label;
-      rideLabel.textContent = 'Bump train isn\u2019t shown for overdamped \u2014 try a left-click plateau instead.';
-      clearTimeout(window.__overdampedHintTimer);
-      window.__overdampedHintTimer = setTimeout(() => {
-        if (currentCase === 'over') rideLabel.textContent = original;
-      }, 2200);
-      return;
-    }
     const worldX = wheelWorldPos + leadDistance;
     toggleBumpTrain(worldX);
   });
