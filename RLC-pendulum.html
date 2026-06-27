@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LC Tank Analogy: Physically Rigorous Integration Mapping</title>
+    <style>
+        body {
+            background-color: #111;
+            color: #eee;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            border: 1px solid #444;
+            background-color: #000;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        #controls-container {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        .sliders-row {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .slider-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #222;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #333;
+        }
+        .key {
+            background: #333;
+            border: 1px solid #555;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #fff;
+        }
+        input[type="range"] {
+            accent-color: #00ff00;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <canvas id="pendulumCanvas" width="800" height="400"></canvas>
+    
+    <div id="controls-container">
+        <div class="sliders-row">
+            <div class="slider-group">
+                <label for="speedSlider">Simulation Speed:</label>
+                <input type="range" id="speedSlider" min="0" max="3" step="0.1" value="1">
+                <span id="speedValue" style="font-family: monospace; width: 35px;">1.0x</span>
+            </div>
+            <div class="slider-group">
+                <label for="frictionSlider">Resistance (Friction / R):</label>
+                <input type="range" id="frictionSlider" min="0" max="2" step="0.05" value="0">
+                <span id="frictionValue" style="font-family: monospace; width: 35px;">0.00</span>
+            </div>
+        </div>
+        <div>
+            <strong>Controls:</strong> Press <span class="key">k</span> to Start/Pause | Press <span class="key">r</span> to Reset<br>
+            <strong>Color Mapping:</strong> 
+            Left Max (+V) = <span style="color: #00ff00;">Green</span> | 
+            Center (0V) = <span style="color: #888;">Gray</span> | 
+            Right Max (-V) = <span style="color: #ff0000;">Red</span>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('pendulumCanvas');
+const ctx = canvas.getContext('2d');
+const speedSlider = document.getElementById('speedSlider');
+const speedValue = document.getElementById('speedValue');
+const frictionSlider = document.getElementById('frictionSlider');
+const frictionValue = document.getElementById('frictionValue');
+
+// Layout Boundaries
+const animationRightBound = 400; 
+const scopeLeftBound = 450;      
+
+// Physical Constants Setup
+const pivotX = animationRightBound / 2 + 20; 
+const pivotY = 40;
+const armLength = 220;
+const maxAngle = Math.PI / 4; 
+const g_over_L = 6.25; // Replaces omega0^2 to maintain matching natural speed
+
+// Calculate horizontal limits
+const xLeftExtent = pivotX + armLength * Math.sin(-maxAngle);
+const xRightExtent = pivotX + armLength * Math.sin(maxAngle);
+const scaleWidth = xRightExtent - xLeftExtent;
+const scaleY = 320;
+
+// STATE VARIABLES (Explicit State-Space Tracking)
+let angle = -maxAngle;       // Current system state position (starts at far left)
+let angularVelocity = 0.0;   // Current system state velocity (starts stationary)
+let isRunning = false;
+let elapsedTime = 0;
+let lastFrameTime = performance.now();
+let speedMultiplier = 1.0;
+let damping = 0.0;          // Instantaneous friction factor
+
+// Rolling Scope Data
+const plotHistory = [];
+const maxPlotPoints = canvas.width - scopeLeftBound - 20; 
+
+speedSlider.addEventListener('input', (e) => {
+    speedMultiplier = parseFloat(e.target.value);
+    speedValue.textContent = speedMultiplier.toFixed(1) + 'x';
+});
+
+frictionSlider.addEventListener('input', (e) => {
+    damping = parseFloat(e.target.value);
+    frictionValue.textContent = damping.toFixed(2);
+});
+
+function getPendulumColor(ratio) {
+    let r, g, b;
+    if (ratio >= 0) {
+        r = Math.round(128 * (1 - ratio));
+        g = Math.round(128 + (127 * ratio));
+        b = Math.round(128 * (1 - ratio));
+    } else {
+        const absRatio = Math.abs(ratio);
+        r = Math.round(128 + (127 * absRatio));
+        g = Math.round(128 * (1 - absRatio));
+        b = Math.round(128 * (1 - absRatio));
+    }
+    return `rgb(${r}, ${g}, ${b})`;
+}
+
+window.addEventListener('keydown', (e) => {
+    if (e.key.toLowerCase() === 'k') {
+        isRunning = !isRunning;
+        if (isRunning) lastFrameTime = performance.now();
+    } else if (e.key.toLowerCase() === 'r') {
+        isRunning = false;
+        elapsedTime = 0;
+        angle = -maxAngle;
+        angularVelocity = 0.0;
+        plotHistory.length = 0; 
+    }
+});
+
+function draw() {
+    const bobX = pivotX + armLength * Math.sin(angle); 
+    const bobY = pivotY + armLength * Math.cos(angle); 
+
+    const colorRatio = -(angle / maxAngle); 
+    const dynamicColor = getPendulumColor(colorRatio);
+
+    if (isRunning && speedMultiplier > 0) {
+        plotHistory.push({ ratio: colorRatio, color: dynamicColor });
+        if (plotHistory.length > maxPlotPoints) plotHistory.shift();
+    }
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Vertical Reference Line
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(pivotX, 0);
+    ctx.lineTo(pivotX, scaleY + 20);
+    ctx.stroke();
+
+    // Pendulum Arm
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(pivotX, pivotY);
+    ctx.lineTo(bobX, bobY);
+    ctx.stroke();
+
+    // Pivot
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.arc(pivotX, pivotY, 6, 0, 2 * Math.PI);
+    ctx.fill();
+
+    // Pendulum Bob
+    ctx.fillStyle = dynamicColor;
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = dynamicColor; 
+    ctx.beginPath();
+    ctx.arc(bobX, bobY, 22, 0, 2 * Math.PI);
+    ctx.fill();
+    ctx.shadowBlur = 0; 
+
+    // Horizontal Scale Track
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(xLeftExtent, scaleY);
+    ctx.lineTo(xRightExtent, scaleY);
+    ctx.stroke();
+
+    for (let i = 0; i <= 4; i++) {
+        const tickX = xLeftExtent + (i / 4) * scaleWidth;
+        ctx.strokeStyle = '#333';
+        ctx.beginPath();
+        ctx.moveTo(tickX, scaleY - 8);
+        ctx.lineTo(tickX, scaleY + 8);
+        ctx.stroke();
+    }
+
+    // Displacement Pointer Slider (Tracks bobX perfectly)
+    ctx.fillStyle = dynamicColor;
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = dynamicColor;
+    ctx.beginPath();
+    ctx.moveTo(bobX - 6, scaleY + 15);
+    ctx.lineTo(bobX, scaleY);
+    ctx.lineTo(bobX + 6, scaleY + 15);
+    ctx.closePath();
+    ctx.fill();
+    ctx.shadowBlur = 0; 
+
+    ctx.fillStyle = '#666';
+    ctx.font = '10px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText("+V MAX (LEFT EXTENT)", xLeftExtent, scaleY - 15);
+    ctx.fillText("-V MAX (RIGHT EXTENT)", xRightExtent, scaleY - 15);
+    ctx.fillText("0V (Gnd)", pivotX, scaleY + 28);
+
+    // ==========================================
+    // THE SCOPE PLOT
+    // ==========================================
+    const scopeCenterY = canvas.height / 2;
+    const scopeAmplitude = 100;
+    const scopeRightBound = canvas.width - 20;
+
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(scopeLeftBound, 40, scopeRightBound - scopeLeftBound, canvas.height - 80);
+
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(scopeLeftBound, scopeCenterY);
+    ctx.lineTo(scopeRightBound, scopeCenterY);
+    ctx.stroke();
+
+    ctx.fillStyle = '#888';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText("+V Max (Green)", scopeLeftBound + 10, scopeCenterY - scopeAmplitude - 8);
+    ctx.fillText("-V Max (Red)", scopeLeftBound + 10, scopeCenterY + scopeAmplitude + 15);
+    ctx.fillText("0V Baseline", scopeLeftBound + 10, scopeCenterY - 6);
+    
+    ctx.fillStyle = '#444';
+    ctx.textAlign = 'right';
+    ctx.fillText("Time (t) increases right ➔", scopeRightBound - 10, canvas.height - 25);
+
+    if (plotHistory.length > 1) {
+        ctx.lineWidth = 3;
+        const activeWidth = plotHistory.length;
+        const startDrawX = scopeRightBound - activeWidth;
+
+        for (let i = 0; i < plotHistory.length - 1; i++) {
+            const currentX = startDrawX + i;
+            if (currentX < scopeLeftBound) continue; 
+
+            const yStart = scopeCenterY - (plotHistory[i].ratio * scopeAmplitude);
+            const yEnd = scopeCenterY - (plotHistory[i + 1].ratio * scopeAmplitude);
+
+            ctx.strokeStyle = plotHistory[i].color;
+            ctx.beginPath();
+            ctx.moveTo(currentX, yStart);
+            ctx.lineTo(currentX + 1, yEnd);
+            ctx.stroke();
+        }
+    }
+
+    ctx.fillStyle = '#aaa';
+    ctx.font = '14px monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(`Status     : ${isRunning ? "RUNNING" : "PAUSED"}`, 20, 30);
+    ctx.fillText(`Time (t)   : ${elapsedTime.toFixed(2)}s`, 20, 50);
+    ctx.fillText(`Voltage (V): ${(colorRatio * 10).toFixed(2)} V`, 20, 70);
+}
+
+function loop(currentTime) {
+    if (isRunning) {
+        const dt = ((currentTime - lastFrameTime) / 1000) * speedMultiplier;
+        elapsedTime += dt;
+
+        // VERKNOT STATE-SPACE INTEGRATION (Newton's 2nd Law Step-by-Step)
+        // Acceleration = Restoration Force (-g/L * sin(theta)) - Damping Friction Force (b * velocity)
+        const angularAcceleration = -g_over_L * Math.sin(angle) - damping * angularVelocity;
+        
+        // Update state step velocities and positions incrementally
+        angularVelocity += angularAcceleration * dt;
+        angle += angularVelocity * dt;
+    }
+    lastFrameTime = currentTime;
+
+    draw();
+    requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
+</script>
+
+</body>
+</html>
