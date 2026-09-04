@@ -7,19 +7,63 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+                :root {
+            --page-bg-1: #f3f8fc;
+            --page-bg-2: #eaf1f8;
+            --panel-bg: #ffffff;
+            --panel-bg-alt: #eef4fa;
+            --panel-border: #d9e2ec;
+            --text-color: #243b53;
+            --text-muted: #627d98;
+            --heading-color: #102a43;
+            --accent: #2472a4;
+            color-scheme: light;
+        }
+        [data-theme="dark"] {
+            --page-bg-1: #0b1420;
+            --page-bg-2: #111d2c;
+            --panel-bg: #17212e;
+            --panel-bg-alt: #1d2a3a;
+            --panel-border: #2a3b4f;
+            --text-color: #dbe6f3;
+            --text-muted: #93a6bd;
+            --heading-color: #f0f5fa;
+            --accent: #5db3df;
+            color-scheme: dark;
+        }
+        .theme-toggle-btn {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--panel-border);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(16, 42, 67, 0.12);
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .theme-toggle-btn:hover { transform: scale(1.06); }
         body {
             font-family: 'Inter', sans-serif;
             -webkit-font-smoothing: antialiased;
             -moz-osx-moz-osx-font-smoothing: grayscale;
-            background-color: #f0f4f8; /* Light gray background */
         }
         canvas {
             display: block;
             margin: 2rem auto;
-            border: 2px solid #cbd5e1; /* Light border */
+            border: 2px solid var(--panel-border); /* Light border, matches shared palette */
             border-radius: 0.75rem; /* Rounded corners */
-            background-color: #ffffff; /* White canvas background */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Subtle shadow */
+            background-color: var(--panel-bg); /* White canvas background */
+            box-shadow: 0 4px 6px -1px rgba(16, 42, 67, 0.08), 0 2px 4px -1px rgba(16, 42, 67, 0.05); /* Subtle shadow */
             max-width: 90vw; /* Responsive width */
             height: auto;
         }
@@ -35,9 +79,41 @@
             transform: translateY(0);
             box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
         }
+        /* Dark-mode overrides for Tailwind utility classes, which don't
+           respond to CSS variables on their own. */
+        [data-theme="dark"] .bg-white { background-color: var(--panel-bg) !important; }
+        [data-theme="dark"] .text-gray-800 { color: var(--heading-color) !important; }
+        [data-theme="dark"] .text-gray-700 { color: var(--text-color) !important; }
+        [data-theme="dark"] .bg-yellow-100 { background-color: #3a3211 !important; color: #f2e6a3 !important; }
+        [data-theme="dark"] .border-yellow-400 { border-color: #c9ac2f !important; }
+        [data-theme="dark"] .text-yellow-700 { color: #f2e6a3 !important; }
     </style>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('sim-theme');
+                if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
 </head>
-<body class="p-4 bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col justify-center items-center">
+<body class="p-4 min-h-screen flex flex-col justify-center items-center" style="background: linear-gradient(160deg, var(--page-bg-1), var(--page-bg-2));">
+    <button id="theme-toggle" class="theme-toggle-btn" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+    <script>
+        (function () {
+            var btn = document.getElementById('theme-toggle');
+            function sync() { btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'; }
+            sync();
+            btn.addEventListener('click', function () {
+                var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                try { localStorage.setItem('sim-theme', next); } catch (e) {}
+                sync();
+            });
+        })();
+    </script>
+
     <div class="max-w-4xl w-full bg-white rounded-xl shadow-lg p-6 md:p-8">
         <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Understanding Electron Flow 💡</h1>
         <p class="text-lg text-gray-700 text-center mb-8">

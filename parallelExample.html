@@ -6,13 +6,61 @@
     <title>Parallel Circuit - Smooth Performance Optimization</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+                :root {
+            --page-bg-1: #f3f8fc;
+            --page-bg-2: #eaf1f8;
+            --panel-bg: #ffffff;
+            --panel-bg-alt: #eef4fa;
+            --panel-border: #d9e2ec;
+            --text-color: #243b53;
+            --text-muted: #627d98;
+            --heading-color: #102a43;
+            --accent: #2472a4;
+            color-scheme: light;
+        }
+        [data-theme="dark"] {
+            --page-bg-1: #0b1420;
+            --page-bg-2: #111d2c;
+            --panel-bg: #17212e;
+            --panel-bg-alt: #1d2a3a;
+            --panel-border: #2a3b4f;
+            --text-color: #dbe6f3;
+            --text-muted: #93a6bd;
+            --heading-color: #f0f5fa;
+            --accent: #5db3df;
+            color-scheme: dark;
+        }
+        .theme-toggle-btn {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--panel-border);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(16, 42, 67, 0.12);
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .theme-toggle-btn:hover { transform: scale(1.06); }
     body { 
         margin: 0; 
         padding: 10px; 
         display: flex; 
         flex-direction: column; 
         align-items: center; 
-        background-color: #ffffff; 
+        background: linear-gradient(160deg, var(--page-bg-1), var(--page-bg-2)); 
+        font-family: 'Inter', sans-serif;
+        color: var(--text-color);
     }
     
     #canvas-container {
@@ -26,27 +74,73 @@
         width: 100% !important; 
         height: auto !important; 
         display: block; 
-        border: 1px solid #ccc; 
+        border: 1px solid var(--panel-border); 
         border-bottom: none; /* Remove bottom border to join with controls */
-        border-radius: 8px 8px 0 0; 
+        border-radius: 12px 12px 0 0; 
+        background-color: var(--panel-bg);
     }
 
     .controls { 
         width: 95%; 
         max-width: 1400px; 
         padding: 15px;
-        background: #f9f9f9;
-        border: 1px solid #ddd;
-        border-radius: 0 0 8px 8px; /* Rounded bottom corners */
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 0 0 12px 12px; /* Rounded bottom corners */
         box-sizing: border-box;
+        box-shadow: 0 10px 28px rgba(16, 42, 67, 0.08);
     }
     
-    h2 { margin: 0 0 10px 0; font-size: 1.2rem; }
+    h2 { margin: 0 0 10px 0; font-size: 1.2rem; color: var(--heading-color); }
+    .explainer {
+        width: 95%;
+        max-width: 1400px;
+        box-sizing: border-box;
+        background: var(--panel-bg);
+        border: 1px solid var(--panel-border);
+        border-radius: 12px;
+        padding: 10px 16px;
+        margin-bottom: 10px;
+    }
+    .explainer p {
+        margin: 0;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--text-color);
+    }
+    .explainer strong { color: var(--heading-color); }
 </style>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('sim-theme');
+                if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body>
+    <button id="theme-toggle" class="theme-toggle-btn" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+    <script>
+        (function () {
+            var btn = document.getElementById('theme-toggle');
+            function sync() { btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'; }
+            sync();
+            btn.addEventListener('click', function () {
+                var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                try { localStorage.setItem('sim-theme', next); } catch (e) {}
+                sync();
+            });
+        })();
+    </script>
+
 
     <h2>Parallel Circuit Simulator (Optimized Flow Calibration)</h2>
+    <div class="explainer">
+        <p><strong>What you're looking at:</strong> electrons split between two separate branches, A and B, each with its own adjustable resistance — that's what "parallel" means: two paths sharing the same voltage. Watch how the branch with lower resistance carries more current (more electrons per second) while the higher-resistance branch carries less, even though both branches sit across the exact same voltage.</p>
+    </div>
     <div id="canvas-container"></div>
     <div class="controls" id="controls-container"></div>
 

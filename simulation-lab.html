@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Engineering Simulators</title>
+
+  <style>
+    :root {
+      --navy: #102a43;
+      --blue: #2472a4;
+      --gold: #f4b942;
+      --text: #243b53;
+      --muted: #627d98;
+      --border: #d9e2ec;
+      --background: #f3f8fc;
+      --card-bg: #ffffff;
+      --preview-bg: #e7f2f9;
+      --shadow: 0 10px 28px rgba(16, 42, 67, 0.13);
+      color-scheme: light;
+    }
+
+    [data-theme="dark"] {
+      --navy: #f0f5fa;
+      --blue: #5db3df;
+      --gold: #f4c968;
+      --text: #dbe6f3;
+      --muted: #93a6bd;
+      --border: #2a3b4f;
+      --background: #0b1420;
+      --card-bg: #17212e;
+      --preview-bg: #1d2a3a;
+      --shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+      color-scheme: dark;
+    }
+
+    .theme-toggle-btn {
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 1000;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text);
+      font-size: 16px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow);
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .theme-toggle-btn:hover {
+      transform: scale(1.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--background);
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+      line-height: 1.5;
+    }
+
+    /*
+      Compact header.
+      The small padding keeps it from taking up much vertical space.
+    */
+    header {
+      padding: 1rem 1rem 1.1rem;
+      color: white;
+      background:
+        linear-gradient(
+          120deg,
+          rgba(16, 42, 67, 0.98),
+          rgba(36, 114, 164, 0.95)
+        ),
+        url("https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1600&q=80")
+        center / cover;
+    }
+
+    .header-content,
+    main,
+    footer {
+      width: min(1080px, calc(100% - 2rem));
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 0.2rem;
+      color: var(--gold);
+      font-size: 0.66rem;
+      font-weight: bold;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.4rem, 2.6vw, 1.9rem);
+      line-height: 1.15;
+    }
+
+    header p:last-child {
+      max-width: 650px;
+      margin: 0.35rem 0 0;
+      color: #dcecf6;
+      font-size: 0.85rem;
+    }
+
+    main {
+      padding: 2.5rem 0 3.5rem;
+    }
+
+    .section-heading {
+      margin-bottom: 1.5rem;
+    }
+
+    .section-heading h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.7rem;
+    }
+
+    .section-heading p {
+      margin: 0.25rem 0 0;
+      color: var(--muted);
+    }
+
+    .simulator-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.4rem;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--card-bg);
+      box-shadow: var(--shadow);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 17px 35px rgba(16, 42, 67, 0.18);
+    }
+
+    .preview {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      overflow: hidden;
+      background: var(--preview-bg);
+    }
+
+    .preview img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .placeholder {
+      display: grid;
+      place-items: center;
+      width: 100%;
+      height: 100%;
+      color: var(--blue);
+      background: linear-gradient(135deg, #e4f2fa, #fff3d7);
+    }
+
+    [data-theme="dark"] .placeholder {
+      background: linear-gradient(135deg, #16283a, #3a3116);
+    }
+
+    .placeholder-content {
+      text-align: center;
+    }
+
+    .placeholder-icon {
+      display: grid;
+      place-items: center;
+      width: 3.5rem;
+      height: 3.5rem;
+      margin: 0 auto 0.5rem;
+      border: 2px solid rgba(36, 114, 164, 0.3);
+      border-radius: 50%;
+      font-size: 1.8rem;
+    }
+
+    .placeholder-label {
+      font-size: 0.72rem;
+      font-weight: bold;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .card-content {
+      display: flex;
+      flex: 1;
+      flex-direction: column;
+      padding: 1.2rem;
+    }
+
+    .card h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.18rem;
+    }
+
+    .card p {
+      flex: 1;
+      margin: 0.55rem 0 1.1rem;
+      color: var(--muted);
+      font-size: 0.93rem;
+    }
+
+    .button {
+      display: block;
+      padding: 0.7rem 1rem;
+      border-radius: 9px;
+      color: white;
+      background: var(--blue);
+      font-weight: bold;
+      text-align: center;
+      text-decoration: none;
+    }
+
+    .button:hover {
+      background: var(--navy);
+    }
+
+    footer {
+      padding-bottom: 1.8rem;
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+    }
+
+    footer a {
+      color: var(--blue);
+    }
+
+    @media (max-width: 600px) {
+      header {
+        padding: 1.2rem 0.75rem 1.4rem;
+      }
+
+      .header-content,
+      main,
+      footer {
+        width: calc(100% - 1.5rem);
+      }
+
+      main {
+        padding-top: 2rem;
+      }
+
+      .simulator-grid {
+        grid-template-columns: 1fr;
+        gap: 1.1rem;
+      }
+    }
+  </style>
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('sim-theme');
+        if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        document.documentElement.setAttribute('data-theme', t);
+      } catch (e) {}
+    })();
+  </script>
+</head>
+
+<body>
+  <button id="theme-toggle" class="theme-toggle-btn" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+  <script>
+    (function () {
+      var btn = document.getElementById('theme-toggle');
+      function sync() { btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'; }
+      sync();
+      btn.addEventListener('click', function () {
+        var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('sim-theme', next); } catch (e) {}
+        sync();
+      });
+    })();
+  </script>
+  <header>
+    <div class="header-content">
+      <p class="eyebrow">Interactive Learning Tools</p>
+      <h1>Engineering Simulators</h1>
+      <p>
+        Interactive tools for exploring engineering concepts through
+        experimentation and visualization.
+      </p>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-heading">
+      <h2>Explore the Simulators</h2>
+      <p>Select a simulator to begin experimenting.</p>
+    </div>
+
+    <section id="simulator-grid" class="simulator-grid"></section>
+  </main>
+
+  <footer>
+    Created for engineering education ·
+    <a
+      href="https://github.com/DrHarrisWCU/DrHarrisWCU.github.io"
+      target="_blank"
+      rel="noopener"
+    >
+      View the source on GitHub
+    </a>
+  </footer>
+
+  <script>
+    /*
+      The cards appear in the order listed here.
+
+      To change the order, move an entire object up or down.
+
+      Screenshots belong in:
+        screenshots/
+
+      For example:
+        screenshots/series.png
+    */
+
+    const simulators = [
+      {
+        title: "Electron Flow Animation",
+        href: "Electron_Flow_Animation.html",
+        image: "Electron_Flow_Animation.png",
+        icon: "↝",
+        description:
+          "Visualize electron movement and current flow through an electrical circuit."
+      },
+      {
+        title: "Pressure Simulation",
+        href: "Pressure_Simulation.html",
+        image: "Pressure_Simulation.png",
+        icon: "◉",
+        description:
+          "Explore pressure behavior through an interactive engineering simulation."
+      },
+      {
+        title: "Electrical Simulation",
+        href: "electrical_simulation.html",
+        image: "electrical_simulation.png",
+        icon: "⚡",
+        description:
+          "Experiment with electrical quantities and observe how circuit variables interact."
+      },
+      {
+        title: "Resistance Space Charge",
+        href: "Resistance-Space-Charge.html",
+        image: "Resistance-Space-Charge.png",
+        icon: "Ω",
+        description:
+          "Explore resistance and space-charge effects through an interactive model."
+      },      
+      {
+        title: "Series Circuit Example",
+        href: "series.html",
+        image: "series.png",
+        icon: "→",
+        description:
+          "Explore current and voltage behavior in a series circuit."
+      },
+      {
+        title: "Parallel Circuit Example",
+        href: "parallelExample.html",
+        image: "parallelExample.png",
+        icon: "∥",
+        description:
+          "Explore the behavior of components connected in parallel."
+      },      
+      {
+        title: "RLC Pendulum",
+        href: "RLC-pendulum.html",
+        image: "RLC-pendulum.png",
+        icon: "∿",
+        description:
+          "Investigate the relationship between pendulum motion and RLC circuit behavior."
+      },
+      {
+        title: "Car Suspension RLC Example",
+        href: "car-suspension-RLC-example.html",
+        image: "car-suspension-RLC-example.png",
+        icon: "↕",
+        description:
+          "Compare a vehicle suspension system with the behavior of an RLC circuit."
+      },
+      {
+        title: "Timer Simulator",
+        href: "timerSimulator.html",
+        image: "timerSimulator.png",
+        icon: "⏱",
+        description:
+          "Experiment with timing behavior and timer-based circuit concepts."
+      },
+      {
+        title: "Image2CPP",
+        href: "image2cpp/index.html",
+        image: "image2cpp.png",
+        icon: "▦",
+        description:
+          "Convert images into C/C++ bitmap data for use with microcontrollers and embedded displays."
+      },      
+    ];
+
+    const grid = document.getElementById("simulator-grid");
+
+    function createPlaceholder(simulator) {
+      return `
+        <div class="placeholder">
+          <div class="placeholder-content">
+            <div class="placeholder-icon">${simulator.icon}</div>
+            <div class="placeholder-label">Simulator Preview</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function createCard(simulator) {
+      const card = document.createElement("article");
+      card.className = "card";
+
+      const preview = document.createElement("div");
+      preview.className = "preview";
+
+      const image = document.createElement("img");
+      image.alt = `${simulator.title} screenshot`;
+      image.loading = "lazy";
+
+      image.onerror = function () {
+        preview.innerHTML = createPlaceholder(simulator);
+      };
+
+      // src is set last, after the onerror handler is wired up, so a
+      // missing screenshot is always caught instead of racing the
+      // browser's error event.
+      image.src = `screenshots/${simulator.image}`;
+
+      preview.appendChild(image);
+
+      const content = document.createElement("div");
+      content.className = "card-content";
+
+      content.innerHTML = `
+        <h3>${simulator.title}</h3>
+        <p>${simulator.description}</p>
+        <a class="button" href="${simulator.href}">
+          Open simulator →
+        </a>
+      `;
+
+      card.appendChild(preview);
+      card.appendChild(content);
+
+      return card;
+    }
+
+    simulators.forEach(function (simulator) {
+      grid.appendChild(createCard(simulator));
+    });
+  </script>
+</body>
+</html>

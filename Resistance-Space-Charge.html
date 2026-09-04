@@ -6,15 +6,61 @@
     <title>Responsive Conductor Simulation</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+                :root {
+            --page-bg-1: #f3f8fc;
+            --page-bg-2: #eaf1f8;
+            --panel-bg: #ffffff;
+            --panel-bg-alt: #eef4fa;
+            --panel-border: #d9e2ec;
+            --text-color: #243b53;
+            --text-muted: #627d98;
+            --heading-color: #102a43;
+            --accent: #2472a4;
+            color-scheme: light;
+        }
+        [data-theme="dark"] {
+            --page-bg-1: #0b1420;
+            --page-bg-2: #111d2c;
+            --panel-bg: #17212e;
+            --panel-bg-alt: #1d2a3a;
+            --panel-border: #2a3b4f;
+            --text-color: #dbe6f3;
+            --text-muted: #93a6bd;
+            --heading-color: #f0f5fa;
+            --accent: #5db3df;
+            color-scheme: dark;
+        }
+        .theme-toggle-btn {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--panel-border);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(16, 42, 67, 0.12);
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .theme-toggle-btn:hover { transform: scale(1.06); }
         body { 
             margin: 0; 
             padding: 10px; 
             display: flex; 
             flex-direction: column; 
             align-items: center; 
-            background-color: #ffffff; 
-            color: #333; 
-            font-family: sans-serif; 
+            background: linear-gradient(160deg, var(--page-bg-1), var(--page-bg-2)); 
+            color: var(--text-color); 
+            font-family: 'Inter', sans-serif; 
             overflow-x: hidden; /* Prevent horizontal scroll */
         }
         
@@ -27,31 +73,79 @@
         canvas { 
             width: 100% !important; 
             height: auto !important; 
-            border: 1px solid #ccc; 
-            border-radius: 4px; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1); 
+            border: 1px solid var(--panel-border); 
+            border-radius: 12px; 
+            background-color: var(--panel-bg); 
+            box-shadow: 0 10px 28px rgba(16, 42, 67, 0.10); 
         }
 
         .controls { 
             margin-top: 15px; 
-            background: #f9f9f9; 
+            background: var(--panel-bg); 
             padding: 15px; 
-            border: 1px solid #ddd; 
-            border-radius: 8px; 
+            border: 1px solid var(--panel-border); 
+            border-radius: 12px; 
             width: 95%; 
             max-width: 1400px; 
             box-sizing: border-box; 
+            box-shadow: 0 10px 28px rgba(16, 42, 67, 0.06); 
         }
 
-        p { margin: 8px 0 3px 0; font-weight: bold; font-size: 14px; color: #555; }
+        p { margin: 8px 0 3px 0; font-weight: bold; font-size: 14px; color: var(--text-muted); }
         input { width: 100%; cursor: pointer; margin-bottom: 10px; }
         
-        h2 { font-size: 1.5rem; margin: 10px 0; }
+        h2 { font-size: 1.3rem; margin: 10px 0; color: var(--heading-color); }
+        .explainer {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 14px 18px;
+            width: 95%;
+            max-width: 1400px;
+            box-sizing: border-box;
+            margin-bottom: 15px;
+            box-shadow: 0 10px 28px rgba(16, 42, 67, 0.06);
+        }
+        .explainer p {
+            margin: 0;
+            font-weight: normal;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+        .explainer strong { color: var(--heading-color); }
     </style>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('sim-theme');
+                if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body>
+    <button id="theme-toggle" class="theme-toggle-btn" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+    <script>
+        (function () {
+            var btn = document.getElementById('theme-toggle');
+            function sync() { btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'; }
+            sync();
+            btn.addEventListener('click', function () {
+                var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                try { localStorage.setItem('sim-theme', next); } catch (e) {}
+                sync();
+            });
+        })();
+    </script>
+
 
     <h2>Electron Drift & Resistance Simulation</h2>
+    <div class="explainer">
+        <p><strong>What you're looking at:</strong> the blue dots are electrons drifting through the metal, pushed along by the voltage you set. The small blocks scattered through the wire are impurities and gaps in the crystal lattice — the everyday imperfections that give real metal its resistance. Every time an electron collides with one, it hands off some of its energy as heat, and that impurity glows hotter for a moment before cooling back down. The wire's background color tracks the average of all that heat, so a brighter, redder wire means more energy is being lost to collisions right now. Turn up the impurity density and you'll see electrons struggle to get through more often — that's resistance in action, alongside a "space charge" effect where electrons crowding together slow down the ones behind them.</p>
+    </div>
     <div id="canvas-container"></div>
     <div class="controls" id="controls-container"></div>
 

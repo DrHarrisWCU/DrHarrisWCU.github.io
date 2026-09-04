@@ -4,10 +4,56 @@
     <meta charset="UTF-8">
     <title>LC Tank Analogy: Physically Rigorous Integration Mapping</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+                :root {
+            --page-bg-1: #f3f8fc;
+            --page-bg-2: #eaf1f8;
+            --panel-bg: #ffffff;
+            --panel-bg-alt: #eef4fa;
+            --panel-border: #d9e2ec;
+            --text-color: #243b53;
+            --text-muted: #627d98;
+            --heading-color: #102a43;
+            --accent: #2472a4;
+            color-scheme: light;
+        }
+        [data-theme="dark"] {
+            --page-bg-1: #0b1420;
+            --page-bg-2: #111d2c;
+            --panel-bg: #17212e;
+            --panel-bg-alt: #1d2a3a;
+            --panel-border: #2a3b4f;
+            --text-color: #dbe6f3;
+            --text-muted: #93a6bd;
+            --heading-color: #f0f5fa;
+            --accent: #5db3df;
+            color-scheme: dark;
+        }
+        .theme-toggle-btn {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            z-index: 1000;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 1px solid var(--panel-border);
+            background: var(--panel-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(16, 42, 67, 0.12);
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .theme-toggle-btn:hover { transform: scale(1.06); }
         body {
-            background-color: #111;
-            color: #eee;
-            font-family: sans-serif;
+            background: linear-gradient(160deg, var(--page-bg-1), var(--page-bg-2));
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -16,12 +62,15 @@
             margin: 0;
         }
         canvas {
-            border: 1px solid #444;
+            /* Kept black: the voltage color-mapping (green/gray/red) below is drawn
+               against this backdrop and isn't something we want to touch. */
+            border: 1px solid var(--panel-border);
             background-color: #000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 28px rgba(16, 42, 67, 0.14);
         }
         #controls-container {
-            margin-top: 15px;
+            margin-top: 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -41,30 +90,115 @@
             display: flex;
             align-items: center;
             gap: 10px;
-            background: #222;
+            background: var(--panel-bg);
             padding: 6px 12px;
             border-radius: 6px;
-            border: 1px solid #333;
+            border: 1px solid var(--panel-border);
+            box-shadow: 0 2px 6px rgba(16, 42, 67, 0.06);
         }
         .key {
-            background: #333;
-            border: 1px solid #555;
+            background: var(--panel-bg-alt);
+            border: 1px solid var(--panel-border);
             padding: 2px 6px;
             border-radius: 4px;
             font-family: monospace;
-            color: #fff;
+            color: var(--text-color);
         }
         input[type="range"] {
             accent-color: #00ff00;
             cursor: pointer;
         }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .ctrl-button {
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            padding: 8px 18px;
+            border-radius: 8px;
+            border: 1px solid var(--panel-border);
+            background: var(--accent);
+            color: #ffffff;
+            cursor: pointer;
+            transition: background 0.15s ease, transform 0.1s ease;
+        }
+        .ctrl-button:hover { background: #1c5a80; }
+        .ctrl-button:active { transform: scale(0.97); }
+        .ctrl-button.secondary {
+            background: var(--panel-bg);
+            color: var(--text-color);
+        }
+        .ctrl-button.secondary:hover { background: var(--panel-bg-alt); }
+        .falstad-note {
+            font-size: 12.5px;
+            color: var(--text-muted);
+            max-width: 600px;
+            line-height: 1.5;
+        }
+        .falstad-note a {
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+            border-bottom: 1px solid #b9d3e6;
+        }
+        .falstad-note a:hover { border-color: var(--accent); }
+        .explainer {
+            background: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 12px;
+            padding: 12px 18px;
+            max-width: 700px;
+            margin-bottom: 14px;
+            box-shadow: 0 10px 28px rgba(16, 42, 67, 0.08);
+        }
+        .explainer p {
+            margin: 0;
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: var(--text-color);
+        }
+        .explainer strong { color: var(--heading-color); }
     </style>
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('sim-theme');
+                if (!t) t = (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', t);
+            } catch (e) {}
+        })();
+    </script>
 </head>
 <body>
+    <button id="theme-toggle" class="theme-toggle-btn" type="button" title="Toggle dark mode" aria-label="Toggle dark mode">🌙</button>
+    <script>
+        (function () {
+            var btn = document.getElementById('theme-toggle');
+            function sync() { btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '☀️' : '🌙'; }
+            sync();
+            btn.addEventListener('click', function () {
+                var next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+                document.documentElement.setAttribute('data-theme', next);
+                try { localStorage.setItem('sim-theme', next); } catch (e) {}
+                sync();
+            });
+        })();
+    </script>
 
+
+    <div class="explainer">
+        <p><strong>What you're looking at:</strong> a swinging pendulum and an LC tank circuit obey the same equation of motion, just with different variables. As the pendulum swings from side to side, energy trades back and forth between potential energy (playing the role of a charged capacitor) and motion (playing the role of current through an inductor) — exactly how an LC circuit trades energy between its capacitor and inductor. The bob's color tracks that swing: green on the left, red on the right, gray at center, matching the same convention Falstad's simulator uses for positive, negative, and zero voltage.</p>
+    </div>
     <canvas id="pendulumCanvas" width="800" height="400"></canvas>
-    
+
     <div id="controls-container">
+        <div class="button-row">
+            <button id="runButton" class="ctrl-button">Start (k)</button>
+            <button id="resetButton" class="ctrl-button secondary">Reset (r)</button>
+        </div>
         <div class="sliders-row">
             <div class="slider-group">
                 <label for="speedSlider">Simulation Speed:</label>
@@ -84,6 +218,11 @@
             Center (0V) = <span style="color: #888;">Gray</span> | 
             Right Max (-V) = <span style="color: #ff0000;">Red</span>
         </div>
+        <p class="falstad-note">
+            This mapping and swing rate follow
+            <a href="https://www.falstad.com/circuit/" target="_blank" rel="noopener">Falstad's circuit simulator</a>,
+            which opens with this same LRC circuit by default. Open it in another tab to compare side by side.
+        </p>
     </div>
 
 <script>
@@ -93,6 +232,8 @@ const speedSlider = document.getElementById('speedSlider');
 const speedValue = document.getElementById('speedValue');
 const frictionSlider = document.getElementById('frictionSlider');
 const frictionValue = document.getElementById('frictionValue');
+const runButton = document.getElementById('runButton');
+const resetButton = document.getElementById('resetButton');
 
 // Layout Boundaries
 const animationRightBound = 400; 
@@ -103,7 +244,13 @@ const pivotX = animationRightBound / 2 + 20;
 const pivotY = 40;
 const armLength = 220;
 const maxAngle = Math.PI / 4; 
-const g_over_L = 6.25; // Replaces omega0^2 to maintain matching natural speed
+// Falstad's circuit simulator opens by default with a series LRC loop of
+// L = 30 mH, C = 15 µF, R = 10 Ω (values taken from its own source: circuits/lrc.txt
+// in the pfalstad/circuitjs1 repo). That loop's real damped oscillation period works
+// out to about 4.24 ms (omega_d = 1/sqrt(LC - (R/2L)^2) =~ 1481 rad/s) -- far too fast
+// to watch directly, so it's time-dilated here 1000x (1 ms of circuit time = 1 second
+// of pendulum swing), giving a period of ~4.24s at 1.0x Simulation Speed.
+const g_over_L = 2.194; // = (omega_d / 1000)^2
 
 // Calculate horizontal limits
 const xLeftExtent = pivotX + armLength * Math.sin(-maxAngle);
@@ -149,18 +296,34 @@ function getPendulumColor(ratio) {
     return `rgb(${r}, ${g}, ${b})`;
 }
 
+function setRunning(running) {
+    isRunning = running;
+    if (isRunning) lastFrameTime = performance.now();
+    runButton.textContent = isRunning ? 'Pause (k)' : 'Start (k)';
+}
+
+function toggleRunning() {
+    setRunning(!isRunning);
+}
+
+function resetSimulation() {
+    setRunning(false);
+    elapsedTime = 0;
+    angle = -maxAngle;
+    angularVelocity = 0.0;
+    plotHistory.length = 0;
+}
+
 window.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() === 'k') {
-        isRunning = !isRunning;
-        if (isRunning) lastFrameTime = performance.now();
+        toggleRunning();
     } else if (e.key.toLowerCase() === 'r') {
-        isRunning = false;
-        elapsedTime = 0;
-        angle = -maxAngle;
-        angularVelocity = 0.0;
-        plotHistory.length = 0; 
+        resetSimulation();
     }
 });
+
+runButton.addEventListener('click', toggleRunning);
+resetButton.addEventListener('click', resetSimulation);
 
 function draw() {
     const bobX = pivotX + armLength * Math.sin(angle); 
@@ -299,6 +462,7 @@ function draw() {
     ctx.fillText(`Time (t)   : ${elapsedTime.toFixed(2)}s`, 20, 50);
     ctx.fillText(`Voltage (V): ${(colorRatio * 10).toFixed(2)} V`, 20, 70);
 }
+
 
 function loop(currentTime) {
     if (isRunning) {
