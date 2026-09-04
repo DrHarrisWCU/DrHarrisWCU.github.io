@@ -1,6 +1,7 @@
 # github.io Website Template
-The source code for the personal page of this user.
 
-Visit my site directly here: https://DrHarrisWCU.github.io
+To view the landing page of the simulators, click here: https://drharriswcu.github.io/simulation-lab.html
 
-Provided by the tutorial at https://kinsta.com/blog/github-pages/
+
+Visit the homepage of my github.io site directly here: https://DrHarrisWCU.github.io
+Template Provided by the tutorial at https://kinsta.com/blog/github-pages/
