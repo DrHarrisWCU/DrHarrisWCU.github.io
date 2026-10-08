@@ -1,0 +1,2050 @@
+<title>Robot Lab Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: a lab notebook. Left rail of numbered modules, one working column, each lab sits in a ruled "bench" panel with its own readouts. */
+:root{
+  --paper:#f0eef4; --panel:#fbfafd; --ink:#1e1a2a; --ink2:#5b5469; --rule:#d8d3e2;
+  --accent:#5a2d86; --accent-ink:#ffffff; --accent-soft:#ece4f6; --gold:#b9800a;
+  --ok:#1b7a4b; --warn:#9a6100; --bad:#b3261e;
+  --plot-bg:#ffffff; --grid:#e7e3ef; --t1:#5a2d86; --t2:#d1650f; --t3:#1c6e8c; --t4:#8a8697;
+  --code-bg:#ebe8f2; --term-bg:#17141f; --term-fg:#e6e1f0; --term-dim:#8d86a1; --term-acc:#d9b3ff;
+  --h1:#5a2d86; --h2:#1c6e8c; --h3:#b9800a; --h4:#2f7d4f; --h5:#b0357a; --h6:#8a6a1f;
+  --font-d:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-b:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --font-m:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#14111b; --panel:#1c1826; --ink:#ece8f5; --ink2:#a7a0b9; --rule:#342f48;
+  --accent:#b88ce8; --accent-ink:#1a1226; --accent-soft:#2b2240; --gold:#e8b23a;
+  --ok:#5fd09a; --warn:#f0b44a; --bad:#ff8a80;
+  --plot-bg:#120f19; --grid:#2a2640; --t1:#c39cf0; --t2:#f0913a; --t3:#5cc0e0; --t4:#8d86a1;
+  --code-bg:#241f33; --term-bg:#0e0c14;
+  --h1:#c39cf0; --h2:#5cc0e0; --h3:#e8b23a; --h4:#6fd49a; --h5:#f08ac0; --h6:#d3b45a;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#14111b; --panel:#1c1826; --ink:#ece8f5; --ink2:#a7a0b9; --rule:#342f48;
+  --accent:#b88ce8; --accent-ink:#1a1226; --accent-soft:#2b2240; --gold:#e8b23a;
+  --ok:#5fd09a; --warn:#f0b44a; --bad:#ff8a80;
+  --plot-bg:#120f19; --grid:#2a2640; --t1:#c39cf0; --t2:#f0913a; --t3:#5cc0e0; --t4:#8d86a1;
+  --code-bg:#241f33; --term-bg:#0e0c14;
+  --h1:#c39cf0; --h2:#5cc0e0; --h3:#e8b23a; --h4:#6fd49a; --h5:#f08ac0; --h6:#d3b45a;
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 var(--font-b);padding-inline:16px}
+.wrap{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:232px minmax(0,1fr);gap:36px;padding-block:22px 72px}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--font-d);text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.08;font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(22px,3vw,28px);line-height:1.15;font-weight:700;letter-spacing:-.005em}
+h3{font-size:16px;font-weight:600;font-family:var(--font-b)}
+p{margin:0 0 .8em;max-width:68ch}
+code,.mono{font-family:var(--font-m);font-size:.9em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* rail */
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);align-self:start;min-width:0}
+.brand{font:600 12px/1.2 var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin-bottom:14px}
+.brand b{display:block;font:700 19px/1.15 var(--font-d);letter-spacing:0;text-transform:none;color:var(--ink);margin-top:4px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:26px 1fr 16px;align-items:center;gap:8px;width:100%;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--ink2)}
+.rail button:hover{background:var(--accent-soft);color:var(--ink)}
+.rail button:focus-visible{outline:2px solid var(--accent)}
+.rail button[aria-current="true"]{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.rail .n{font:500 12px var(--font-m);width:24px;height:24px;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center;background:var(--panel);color:var(--ink2)}
+.rail [aria-current="true"] .n{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.rail .tick{font-size:13px;color:var(--ok);opacity:0}
+.rail .done .tick{opacity:1}
+.prog{margin-top:14px;font:12px var(--font-m);color:var(--ink2)}
+.prog i{display:block;height:4px;border-radius:2px;background:var(--rule);margin-top:6px;overflow:hidden}
+.prog i b{display:block;height:100%;width:0;background:var(--accent)}
+
+/* module chrome */
+main{min-width:0}
+.mod{display:flex;flex-direction:column;gap:20px}
+.mod[hidden]{display:none!important}
+.eyebrow{font:500 12px var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:17px;max-width:62ch;color:var(--ink)}
+.goal{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;font-size:14px;color:var(--ink2)}
+.goal b{color:var(--ink)}
+.callout{border:1px solid var(--rule);background:var(--panel);border-radius:8px;padding:12px 14px}
+.callout .eyebrow{display:block;margin-bottom:4px;color:var(--gold)}
+.callout p:last-child{margin-bottom:0}
+.lab{border:1px solid var(--rule);background:var(--panel);border-radius:8px;overflow:hidden}
+.lab-h{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--accent-soft)}
+.lab-h b{font:600 13px var(--font-m);letter-spacing:.03em;color:var(--ink)}
+.lab-b{padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--font-m);padding:2px 9px;border-radius:99px;border:1px solid var(--rule);color:var(--ink2);background:var(--panel)}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.pill.bad{color:var(--bad);border-color:var(--bad)}
+.pill.warn{color:var(--warn);border-color:var(--warn)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:14px}.rail{position:static}.rail ol{flex-direction:row;overflow-x:auto;padding-bottom:6px}.rail button{width:auto;grid-template-columns:24px auto 14px;white-space:nowrap}.rail .t{display:none}.rail [aria-current="true"] .t{display:inline}.prog{display:none}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+label{font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:4px;min-width:0}
+label .v{font:500 13px var(--font-m);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number],input[type=text],select{font:14px var(--font-m);padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg);color:var(--ink);min-width:0;max-width:100%}
+.btn{font:600 14px var(--font-b);padding:7px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{font:500 12px var(--font-m);padding:3px 9px;border-radius:99px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+canvas{width:100%;display:block;background:var(--plot-bg);border:1px solid var(--rule);border-radius:6px}
+pre.code{margin:0;padding:12px 14px;background:var(--code-bg);border-radius:6px;overflow-x:auto;font:13px/1.55 var(--font-m);color:var(--ink);tab-size:2}
+pre.code .hl{background:color-mix(in srgb,var(--gold) 28%,transparent);display:inline-block;width:100%}
+.out{font:13px/1.5 var(--font-m);background:var(--code-bg);border-radius:6px;padding:8px 12px;min-height:2.6em;overflow-wrap:anywhere}
+.readout{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px var(--font-m);color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:500 12px var(--font-m);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.tw{overflow-x:auto}
+details.ask{border:1px dashed var(--rule);border-radius:8px;padding:10px 14px;background:transparent}
+details.ask summary{cursor:pointer;font:500 12px var(--font-m);letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+details.ask p{margin:8px 0 0}
+.nav2{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:6px;border-top:1px solid var(--rule)}
+
+/* packet bytes */
+.hex{display:flex;flex-wrap:wrap;gap:5px;font:500 15px var(--font-m)}
+.hex .b{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hex .b span:first-child{padding:3px 6px;border-radius:4px;border-bottom:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel))}
+.hex .b span:last-child{font:10px var(--font-m);color:var(--ink2);letter-spacing:.04em}
+.hex .bad span:first-child{outline:2px solid var(--bad)}
+.f-hdr{--c:var(--h1)}.f-rsv{--c:var(--h6)}.f-id{--c:var(--h2)}.f-len{--c:var(--h3)}.f-inst{--c:var(--h5)}.f-par{--c:var(--h4)}.f-crc{--c:var(--t4)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font:11px var(--font-m);color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:5px;vertical-align:-1px}
+
+/* terminal */
+.term{background:var(--term-bg);color:var(--term-fg);border-radius:6px;padding:10px 12px;font:13px/1.45 var(--font-m);height:300px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--rule)}
+.term .p{color:var(--term-acc)}.term .d{color:var(--term-dim)}.term .e{color:#ff9d94}
+.termin{display:flex;gap:8px;align-items:center;background:var(--term-bg);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;margin-top:-8px}
+.termin span{font:13px var(--font-m);color:var(--term-acc)}
+.termin input{flex:1;min-width:0;background:transparent;border:0;color:var(--term-fg);font:13px var(--font-m);outline:none;padding:4px}
+.mission{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:5px 0}
+.mission .box{flex:none;width:18px;height:18px;border:1.5px solid var(--rule);border-radius:4px;display:grid;place-items:center;font-size:12px;color:var(--accent-ink);margin-top:2px}
+.mission.done .box{background:var(--ok);border-color:var(--ok)}
+.mission.done span:last-child{color:var(--ink2);text-decoration:line-through}
+.graph{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font:12px var(--font-m);padding:10px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg)}
+.graph .node{border:1.5px solid var(--accent);border-radius:6px;padding:5px 9px;color:var(--ink);background:var(--accent-soft)}
+.graph .topic{color:var(--t2);display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.graph .you{border-color:var(--t2);background:transparent}
+
+/* code reading */
+.chunk{border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--panel)}
+.chunk>button{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;gap:12px;width:100%;padding:9px 14px;cursor:pointer;font:600 13px var(--font-m);color:var(--ink);background:var(--accent-soft)}
+.chunk>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.chunk .why{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.chunk .why p{margin:0}
+.quiz{display:flex;flex-direction:column;gap:8px}
+.quiz .q{font-weight:600}
+.quiz .opt{display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer;color:var(--ink)}
+.quiz .fb{font-size:13px;min-height:1.2em}
+.check{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:14px}
+.check input{margin-top:4px;accent-color:var(--accent)}
+.legendline{font:12px var(--font-m);color:var(--ink2)}
+.sw{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+textarea.edit{width:100%;font:12.5px/1.5 var(--font-m);padding:10px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg);color:var(--ink);resize:vertical;tab-size:2;white-space:pre;overflow:auto;min-width:0}
+.rv{background:transparent;border:1px dashed var(--rule);color:var(--ink2);cursor:pointer;font:12px var(--font-m);padding:2px 10px;border-radius:99px}
+.rv:hover{border-color:var(--accent);color:var(--accent)}
+#mj-rs td{vertical-align:top}#mj-rs td:nth-child(1),#mj-rs td:nth-child(2){font:12.5px/1.45 var(--font-m);overflow-wrap:anywhere}
+</style>
+<div class="wrap">
+<nav class="rail" id="rail" aria-label="Modules"></nav>
+<main id="main">
+
+<!-- ================= MODULE 0 ================= -->
+<section class="mod" id="m0" data-title="Start here">
+  <div class="eyebrow">Robot Lab onboarding</div>
+  <h1>From PWM pulses to a robot that walks and maps</h1>
+  <p class="lede">You already drive servos from an ATmega128. These eleven labs carry that skill to smart servos, simulators, learning, and mapping. Every idea runs in this page before you meet it in a real tool.</p>
+
+  <div class="callout"><span class="eyebrow">How each module works</span>
+    <div class="grid2" style="margin-top:6px">
+      <div><b>Read</b> a short explanation, usually under three minutes.</div>
+      <div><b>Do</b> the lab. Drag, type, break things. The page scores you.</div>
+      <div><b>Check</b> your result against the target shown in the lab.</div>
+      <div><b>Explain</b> the answer out loud to your mentor. That is the sign-off.</div>
+    </div>
+    <p style="margin:8px 0 0;font-size:13px;color:var(--ink2)">Plan on 9 to 11 hours across a week. Your progress is saved in this browser.</p>
+  </div>
+
+  <div>
+    <h2 style="margin-bottom:10px">What you already know</h2>
+    <div class="tw"><table>
+      <tr><th>You have done this</th><th>It shows up here as</th><th>Module</th></tr>
+      <tr><td>Wrote a PWM servo library</td><td>Servo packets on a serial bus</td><td>1</td></tr>
+      <tr><td>Described hardware in a header file</td><td>Describing a robot in a URDF file</td><td>2</td></tr>
+      <tr><td>Passed bytes between chips over UART</td><td>ROS 2 topics between programs</td><td>3</td></tr>
+      <tr><td>Wrote a PID loop in C</td><td>Tuning Kp and Kd on a servo</td><td>4</td></tr>
+      <tr><td>Calibrated a sensor against a known input</td><td>Fitting a motor model to logged data</td><td>5</td></tr>
+      <tr><td>Timer interrupt calling a control routine</td><td>The simulator step loop</td><td>6</td></tr>
+      <tr><td>Tuned until it worked</td><td>Reinforcement learning tunes for you</td><td>7</td></tr>
+      <tr><td>Dead reckoning with encoders</td><td>Odometry, lidar, and SLAM</td><td>8</td></tr>
+      <tr><td>Debugged a program that printed NaN</td><td>A simulator that blows up, and why</td><td>10</td></tr>
+      <tr><td>Sequenced several outputs on a timer</td><td>A gait: which foot is down when</td><td>11</td></tr>
+    </table></div>
+  </div>
+
+  <div>
+    <h2 style="margin-bottom:10px">The hardware on your bench</h2>
+    <div class="tw"><table>
+      <tr><th>Part</th><th>What it is</th><th>Its job</th></tr>
+      <tr><td>DYNAMIXEL XL430-W250</td><td>A servo with its own microcontroller, encoder, and serial bus</td><td>Joints of the arm and legs</td></tr>
+      <tr><td>U2D2 or OpenCR</td><td>USB to servo bus adapter</td><td>Lets a computer talk to the servos</td></tr>
+      <tr><td>Raspberry Pi 5</td><td>Small Linux computer</td><td>The robot's brain, runs ROS 2</td></tr>
+      <tr><td>MS200 lidar and IMU</td><td>Laser distance scanner, plus gyro and accelerometer</td><td>Seeing walls, sensing turning</td></tr>
+      <tr><td>Laptop with Isaac Lab</td><td>A physics simulator that also trains robots</td><td>Practice before the real robot moves</td></tr>
+    </table></div>
+    <p style="margin-top:10px;font-size:13px;color:var(--ink2)">Shop rule: turn torque off before you put a hand near the linkage, and power the bus from the lab supply only.</p>
+  </div>
+
+  <div>
+    <h2 style="margin-bottom:10px">Nine words you will hear all week</h2>
+    <div class="tw"><table>
+      <tr><td><b>URDF</b></td><td>A text file listing a robot's rigid parts and the joints between them.</td></tr>
+      <tr><td><b>ROS 2</b></td><td>Software that lets separate programs on a robot exchange messages.</td></tr>
+      <tr><td><b>Node</b></td><td>One running program inside ROS 2.</td></tr>
+      <tr><td><b>Topic</b></td><td>A named message channel. Nodes publish to it or subscribe to it.</td></tr>
+      <tr><td><b>Simulator</b></td><td>Software that computes how the robot would move, so you can test before building.</td></tr>
+      <tr><td><b>Reinforcement learning</b></td><td>Trial and error at scale. A score tells a program which attempts were better.</td></tr>
+      <tr><td><b>SLAM</b></td><td>Building a map and finding the robot's place on it at the same time.</td></tr>
+      <tr><td><b>MuJoCo</b></td><td>A second physics simulator, free and light enough for a laptop. Its robot files are called MJCF.</td></tr>
+      <tr><td><b>Gait</b></td><td>A schedule of which feet are on the ground and when.</td></tr>
+    </table></div>
+  </div>
+  <div class="nav2"><span></span><button class="btn" data-go="1">Start Module 1</button></div>
+</section>
+
+<!-- ================= MODULE 1 ================= -->
+<section class="mod" id="m1" hidden data-title="Talk to a servo">
+  <div><div class="eyebrow">Module 1 of 11 · about 25 minutes</div><h2>Talk to a servo</h2></div>
+  <p class="lede">A hobby servo reads one pulse width. A DYNAMIXEL is a small computer on a shared serial bus, so you send it packets. Each servo has an ID and answers only when addressed.</p>
+  <div class="goal"><b>By the end:</b> build a real Protocol 2.0 packet by hand, decode one, and explain why a servo ignores a damaged packet.</div>
+
+  <div class="callout"><span class="eyebrow">In ATmega terms</span>
+    <p>This is UART framing you could write yourself: a start pattern, a length, a payload, and a check value. The CRC routine is eight lines of C.</p>
+<pre class="code">uint16_t crc16(const uint8_t *p, uint16_t n) {
+  uint16_t crc = 0;
+  while (n--) {
+    crc ^= (uint16_t)(*p++) << 8;
+    for (uint8_t i = 0; i &lt; 8; i++)
+      crc = (crc &amp; 0x8000) ? (crc &lt;&lt; 1) ^ 0x8005 : (crc &lt;&lt; 1);
+  }
+  return crc;
+}</pre>
+  </div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 1.1 · Build a packet and send it</b><span class="pill" id="pk-pill">virtual servo, ID 1</span></div>
+  <div class="lab-b">
+    <div class="grid3">
+      <label>Servo ID<input type="number" id="pk-id" min="1" max="253" value="1"></label>
+      <label>Instruction<select id="pk-inst">
+        <option value="ping">Ping</option>
+        <option value="torque">Write: Torque Enable (address 64)</option>
+        <option value="goal" selected>Write: Goal Position (address 116)</option>
+        <option value="read">Read: Present Position (address 132)</option></select></label>
+      <label id="pk-valwrap"><span>Value <span class="v" id="pk-valtxt"></span></span><input type="range" id="pk-val" min="0" max="360" step="1" value="90"></label>
+    </div>
+    <div><div class="hex" id="pk-hex" aria-live="polite"></div></div>
+    <div class="legend">
+      <span class="f-hdr"><i></i>header</span><span class="f-rsv"><i></i>reserved</span><span class="f-id"><i></i>ID</span><span class="f-len"><i></i>length</span><span class="f-inst"><i></i>instruction</span><span class="f-par"><i></i>parameters</span><span class="f-crc"><i></i>CRC</span>
+    </div>
+    <div class="row">
+      <button class="btn" id="pk-send">Send to servo</button>
+      <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="pk-corrupt"> Flip one bit on the wire</label>
+    </div>
+    <div class="grid2">
+      <div style="display:flex;flex-direction:column;gap:8px"><canvas id="pk-servo" width="400" height="200" aria-label="Virtual servo horn"></canvas>
+        <div class="readout"><span>torque <b id="pk-tq">off</b></span><span>goal <b id="pk-goal">2048</b></span><span>position <b id="pk-pos">2048</b> ticks</span></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div class="out" id="pk-note">Send a Goal Position first. Then enable torque and send it again.</div><div class="out" id="pk-reply" style="color:var(--ink2)">reply: none yet</div></div>
+    </div>
+  </div></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 1.2 · Decode a packet</b><span class="pill" id="dc-pill">not solved</span></div>
+  <div class="lab-b">
+    <p style="margin:0">A Write Goal Position packet arrived at the bus. Read the bytes and fill in what it asked for. One tick is 360 / 4096 degrees, and the goal bytes are stored low byte first.</p>
+    <div class="hex" id="dc-hex"></div>
+    <div class="row">
+      <label>Servo ID<input type="number" id="dc-id" min="0" max="253" value="0"></label>
+      <label>Goal angle, degrees<input type="number" id="dc-deg" min="0" max="360" step="1" value="0"></label>
+      <button class="btn" id="dc-check">Check</button><button class="btn ghost" id="dc-new">New packet</button>
+    </div>
+    <div class="out" id="dc-fb">Answer within 1 degree.</div>
+  </div></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>Ten servos share three wires. How does one of them know a packet is meant for it, and what does it do when the CRC is wrong? Listen for: ID field, silence on error, no partial action.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="0">Back</button><button class="btn" data-go="2">Next: Describe a robot</button></div>
+</section>
+
+<!-- ================= MODULE 2 ================= -->
+<section class="mod" id="m2" hidden data-title="Describe a robot">
+  <div><div class="eyebrow">Module 2 of 11 · about 35 minutes</div><h2>Describe a robot in a file</h2></div>
+  <p class="lede">A URDF is a tree. Rigid parts are called links. Joints connect them. That is the whole format. Your 2-joint arm is three links and three joints.</p>
+  <div class="goal"><b>By the end:</b> read <span class="mono">arm2dof.urdf</span>, predict where the tip goes from two angles, and explain what the <span class="mono">axis</span> line controls.</div>
+
+  <div class="callout"><span class="eyebrow">In ATmega terms</span>
+    <p>Think of a struct that describes hardware, then a second struct that says how two pieces connect. The simulator, RViz, and Isaac Lab all read this one file, so a mistake in it shows up everywhere.</p>
+    <div class="row" style="font:13px var(--font-m);gap:6px"><span class="pill">base_link</span>→<span class="pill ok">joint1_yaw</span>→<span class="pill">bracket_link</span>→<span class="pill ok">joint2_pitch</span>→<span class="pill">tilt_link</span>→<span class="pill">tip_joint (fixed)</span>→<span class="pill">tip_link</span></div>
+  </div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 2.1 · Pose the arm and hit the target</b><span class="pill" id="fk-pill">pick a target</span></div>
+  <div class="lab-b">
+    <canvas id="fk-cv" width="900" height="360" aria-label="Three views of the arm"></canvas>
+    <div class="grid2">
+      <label><span>joint1_yaw <span class="v" id="fk-yawv"></span></span><input type="range" id="fk-yaw" min="-2.9" max="2.9" step="0.01" value="0"></label>
+      <label><span>joint2_pitch <span class="v" id="fk-pitchv"></span></span><input type="range" id="fk-pitch" min="-1.57" max="1.57" step="0.01" value="0"></label>
+    </div>
+    <div class="readout"><span>tip x <b id="fk-x"></b></span><span>y <b id="fk-y"></b></span><span>z <b id="fk-z"></b></span><span>distance to target <b id="fk-d">no target</b></span></div>
+    <div class="row"><button class="btn" id="fk-new">New target</button><span style="font-size:13px;color:var(--ink2)">Get within 4 mm. Drag the sliders and watch all three views.</span></div>
+  </div></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 2.2 · Break the axis line</b></div>
+  <div class="lab-b">
+    <label style="max-width:320px">Rotation axis of joint2_pitch<select id="fk-axis"><option value="y" selected>0 1 0 (what the file says)</option><option value="x">1 0 0</option><option value="z">0 0 1</option></select></label>
+    <pre class="code" id="fk-urdf"></pre>
+    <p style="margin:0">Change the axis, then move the pitch slider in Lab 2.1. The axis line decides which way the joint spins. A wrong axis is the most common URDF bug, and the arm will still load without an error.</p>
+    <p style="margin:0">The <span class="mono">effort="1.5"</span> and <span class="mono">velocity="6.39"</span> limits are the datasheet stall torque (N·m) and no-load speed (rad/s) of the XL430. Keep them in mind for Module 7.</p>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Exercise</span>
+    <p>Forward kinematics turns joint angles into a tip position. For this arm it is three lines. Paste this into Python, then compare it to the readout above at yaw 0.5, pitch 0.8. They should agree to within a millimeter.</p>
+<pre class="code">from math import sin, cos
+def tip(yaw, pitch):
+    x = 0.01175 + 0.035*sin(pitch)*cos(yaw) - 0.020*sin(yaw)
+    y = 0.035*sin(pitch)*sin(yaw) + 0.020*cos(yaw)
+    z = 0.067 + 0.035*cos(pitch)
+    return x, y, z          # meters, in base_link coordinates</pre>
+    <p>The <span class="mono">fk_error</span> line that <span class="mono">view_arm.py</span> prints is this same check against the simulator.</p>
+  </div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>Ask the student to change one number in the URDF and predict what moves in the picture. Good answers pick the origin offset of a joint or the axis, and name the unit (meters or radians).</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="1">Back</button><button class="btn" data-go="3">Next: Make nodes talk</button></div>
+</section>
+
+<!-- ================= MODULE 3 ================= -->
+<section class="mod" id="m3" hidden data-title="Make nodes talk">
+  <div><div class="eyebrow">Module 3 of 11 · about 40 minutes</div><h2>Make programs talk with ROS 2</h2></div>
+  <p class="lede">A robot runs many small programs. ROS 2 lets them exchange messages on named channels called topics. A program publishes to a topic, any number of programs subscribe, and the publisher never knows who is listening.</p>
+  <div class="goal"><b>By the end:</b> list nodes and topics, read live data, publish a command, and record a rosbag.</div>
+
+  <div class="callout"><span class="eyebrow">In ATmega terms</span>
+    <p>Imagine a UART where every message carries a name and a type, and any number of chips can listen. You already know publish and subscribe from Python. The commands below are how you inspect the same thing from a terminal.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 3.1 · Terminal sandbox</b><span class="pill" id="ros-pill">0 of 5 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:13px;color:var(--ink2)">This is a simulated terminal. It prints text in the same format as the real <span class="mono">ros2</span> tool, so the real one will look familiar. Click a chip to fill the command line, or type your own.</p>
+    <div class="grid2" style="align-items:start">
+      <div>
+        <div class="term" id="ros-term" role="log" aria-live="polite"></div>
+        <div class="termin"><span>$</span><input type="text" id="ros-in" placeholder="type a command, press Enter" autocomplete="off" spellcheck="false"><button class="chip" id="ros-stop">Ctrl+C</button></div>
+        <div class="row" style="margin-top:8px" id="ros-chips"></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div id="ros-missions"></div>
+        <div class="graph" id="ros-graph"></div>
+        <canvas id="ros-cv" width="400" height="190" aria-label="Arm responding to commands"></canvas>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">What a rosbag is</span>
+    <p>A rosbag is a recording of topic messages with timestamps. In Module 5 you will record the commanded and measured joint position of your real servo, then fit a model to it. Recording first and analyzing later means the experiment is repeatable.</p></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>Which node publishes <span class="mono">/joint_states</span>, and which one subscribes to it? What would happen if two nodes published to <span class="mono">/arm/joint_cmd</span> at once? Listen for: the driver publishes, the state publisher subscribes, and the last message wins at the driver.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="2">Back</button><button class="btn" data-go="4">Next: Close the loop</button></div>
+</section>
+
+<!-- ================= MODULE 4 ================= -->
+<section class="mod" id="m4" hidden data-title="Close the loop">
+  <div><div class="eyebrow">Module 4 of 11 · about 30 minutes</div><h2>Close the loop</h2></div>
+  <p class="lede">Every servo is a feedback loop. It measures where the horn is, compares it with the goal, and pushes with a torque that grows with the error. You will tune that loop on a simulated XL430 joint.</p>
+  <div class="goal"><b>By the end:</b> tune Kp and Kd to a fast, clean step, and explain what delay does to a loop.</div>
+
+  <div class="callout"><span class="eyebrow">In ATmega terms</span>
+    <p>This is the PID loop you already wrote, with the I term left out. Kp pushes toward the goal. Kd pushes against speed, so it acts like friction you can dial in. The XL430 stores these as Position P Gain and Position D Gain in its control table.</p>
+<pre class="code">err = goal - pos;
+tau = Kp * err - Kd * vel;      // D acts on measured speed
+if (tau >  TAU_MAX) tau =  TAU_MAX;
+if (tau < -TAU_MAX) tau = -TAU_MAX;</pre></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 4.1 · Tune the step response</b><span class="pill" id="pd-pill">not passing</span></div>
+  <div class="lab-b">
+    <canvas id="pd-cv" width="900" height="300" aria-label="Step response"></canvas>
+    <div class="grid3">
+      <label><span>Kp, N·m per rad <span class="v" id="pd-kpv"></span></span><input type="range" id="pd-kp" min="0" max="100" step="1" value="82"></label>
+      <label><span>Kd, N·m·s per rad <span class="v" id="pd-kdv"></span></span><input type="range" id="pd-kd" min="0" max="100" step="1" value="12"></label>
+      <label><span>Sensing delay <span class="v" id="pd-dv"></span></span><input type="range" id="pd-delay" min="0" max="25" step="1" value="10"></label>
+    </div>
+    <div class="readout" id="pd-metrics"></div>
+    <p style="margin:0;font-size:13px;color:var(--ink2)"><b>Pass:</b> overshoot 10 percent or less, settles within 2 percent in 0.25 s or less, and ends on target. The shaded band is the 2 percent zone.</p>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Try these, then say what you saw</span>
+    <p>1. Set Kd to zero. 2. Raise Kp to its maximum. Why does more Kp make it worse? 3. Raise the delay to 25 ms with the passing gains. What happened, and what would you change?</p>
+    <p>The torque limit and speed limit are from the XL430 datasheet, so the rise time cannot get faster than the motor allows. That limit comes back in Modules 5 and 7.</p></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>Why does a loop with plenty of gain and a small delay start to ring? Listen for: the correction arrives late, so it pushes when it should already be braking. Phase lag eats the damping.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="3">Back</button><button class="btn" data-go="5">Next: Measure your motor</button></div>
+</section>
+
+<!-- ================= MODULE 5 ================= -->
+<section class="mod" id="m5" hidden data-title="Measure your motor">
+  <div><div class="eyebrow">Module 5 of 11 · about 40 minutes</div><h2>Measure your motor</h2></div>
+  <p class="lede">A simulator is only as good as its motor model. Real servos lag, hesitate, and top out in speed. You can measure those numbers and put them in the simulator. This is how a lab earns trust in its simulation, and it is publishable work.</p>
+  <div class="goal"><b>By the end:</b> fit four numbers (delay, natural frequency, damping, speed limit) so a model matches logged data.</div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 5.1 · Match the model to the measurement</b><span class="pill" id="id-pill">not matched</span></div>
+  <div class="lab-b">
+    <canvas id="id-cv" width="900" height="320" aria-label="Measured and modeled position"></canvas>
+    <div class="legendline"><span class="sw" style="background:var(--t2)"></span>measured joint position (logged, noisy, 0.088 degree steps) &nbsp; <span class="sw" style="background:var(--t1)"></span>your model &nbsp; <span class="sw" style="background:var(--t4)"></span>command</div>
+    <div class="grid2">
+      <label><span>Delay <span class="v" id="id-delayv"></span></span><input type="range" id="id-delay" min="0" max="40" step="0.5" value="5"></label>
+      <label><span>Natural frequency wn <span class="v" id="id-wnv"></span></span><input type="range" id="id-wn" min="10" max="80" step="0.5" value="25"></label>
+      <label><span>Damping zeta <span class="v" id="id-zetav"></span></span><input type="range" id="id-zeta" min="0.2" max="1.5" step="0.01" value="1"></label>
+      <label><span>Speed limit <span class="v" id="id-vmaxv"></span></span><input type="range" id="id-vmax" min="2" max="8" step="0.1" value="6.4"></label>
+    </div>
+    <div class="readout"><span>error (RMS) <b id="id-rms"></b></span><span>target <b>0.010 rad or less</b></span></div>
+    <div class="row"><button class="btn" id="id-auto">Auto-fit</button><button class="btn ghost" id="id-reset">Reset sliders</button><span style="font-size:13px;color:var(--ink2)">Fit by hand first. Auto-fit is a random search, a cousin of the learning in Module 7.</span></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Take it to your real servo</span>
+    <p>Record the commanded and measured position into a CSV with columns time, cmd, pos. Then run the same fit on real data.</p>
+<pre class="code">import numpy as np
+from scipy.optimize import least_squares
+
+t, cmd, pos = np.loadtxt("step_log.csv", delimiter=",", skiprows=1, unpack=True)
+
+def model(p, t, cmd):
+    delay, wn, zeta, vmax = p
+    dt = t[1] - t[0]
+    th = np.zeros_like(t); w = 0.0
+    for k in range(1, len(t)):
+        c = np.interp(t[k] - delay, t, cmd)
+        w += (wn**2 * (c - th[k-1]) - 2*zeta*wn*w) * dt
+        w = np.clip(w, -vmax, vmax)
+        th[k] = th[k-1] + w*dt
+    return th
+
+fit = least_squares(lambda p: model(p, t, cmd) - pos,
+                    x0=[0.01, 30, 0.7, 6.0],
+                    bounds=([0, 5, 0.1, 1], [0.05, 100, 2.0, 8]))
+print(dict(zip(["delay", "wn", "zeta", "vmax"], fit.x)))</pre>
+    <p>Always plot the fit over the data before you trust the numbers.</p></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>Why log a step and a sine instead of only a step? Listen for: different inputs excite different behavior, and one test can hide a parameter. Ask what the fitted delay would mean for a controller running at 100 Hz.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="4">Back</button><button class="btn" data-go="6">Next: Read the simulator script</button></div>
+</section>
+
+<!-- ================= MODULE 6 ================= -->
+<section class="mod" id="m6" hidden data-title="Read the simulator">
+  <div><div class="eyebrow">Module 6 of 11 · about 45 minutes</div><h2>Read the simulator script</h2></div>
+  <p class="lede">Isaac Lab documentation assumes you know the vocabulary. You do not need all of it. The script that waves your arm, <span class="mono">view_arm.py</span>, is 97 lines. Open each block below and read it as a main loop with a timer.</p>
+  <div class="goal"><b>By the end:</b> point at the line that sets a target, the line that advances physics, and the line that reads results back.</div>
+
+  <div class="callout"><span class="eyebrow">Three files, one arm</span>
+    <div class="tw"><table>
+      <tr><td class="mono">arm2dof.urdf</td><td>The shape: links, joints, masses, limits (Module 2).</td></tr>
+      <tr><td class="mono">arm2dof_tasks/robot_cfg.py</td><td>Imports that URDF into Isaac Lab and sets up the motors. Open it and find where the URDF path is set and where the actuator gains are set.</td></tr>
+      <tr><td class="mono">scripts/view_arm.py</td><td>Builds a scene, then runs the loop. This is what you read below.</td></tr>
+    </table></div></div>
+
+  <div id="code-chunks" style="display:flex;flex-direction:column;gap:10px"></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 6.1 · Predict before you run</b><span class="pill" id="qz-pill">0 of 4 correct</span></div>
+  <div class="lab-b" id="quiz" style="gap:18px"></div></div>
+
+  <div class="callout"><span class="eyebrow">Now run it, then change it</span>
+<pre class="code">~/IsaacLab/isaaclab.sh -p ~/Desktop/Robotics/arm2dof/scripts/view_arm.py
+~/IsaacLab/isaaclab.sh -p .../view_arm.py --num_envs 4
+~/IsaacLab/isaaclab.sh -p .../view_arm.py --headless --steps 300</pre>
+    <div class="check"><span>1.</span><span>Make the yaw sweep faster by changing <span class="mono">0.25</span> in the target line. Predict the new tip positions first.</span></div>
+    <div class="check"><span>2.</span><span>Run with <span class="mono">--num_envs 64</span> and watch the frame rate. This is why simulators are fast at learning: many copies in parallel.</span></div>
+    <div class="check"><span>3.</span><span>Change the URDF's joint2_pitch axis to <span class="mono">1 0 0</span>, rerun, and watch <span class="mono">fk_error</span>. Explain what you see, then put it back.</span></div>
+  </div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>Where in this script would you add a sensor reading, and where would a learned policy plug in? Listen for: the line that builds <span class="mono">target</span> is the policy's slot, and <span class="mono">arm.data</span> is where observations come from.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="5">Back</button><button class="btn" data-go="7">Next: Teach it to walk</button></div>
+</section>
+
+<!-- ================= MODULE 7 ================= -->
+<section class="mod" id="m7" hidden data-title="Teach it to walk">
+  <div><div class="eyebrow">Module 7 of 11 · about 45 minutes</div><h2>Teach a toy robot to walk</h2></div>
+  <p class="lede">Reinforcement learning is trial and error with a score. A policy is a recipe that turns the situation into motor commands. Training nudges the recipe so the score goes up. Here the whole idea fits in a page.</p>
+  <div class="goal"><b>By the end:</b> train a gait, see a simulator mislead you, and use a motor model and a smoothness penalty to fix it.</div>
+
+  <div class="callout"><span class="eyebrow">What is real and what is a toy</span>
+    <p>The walker has one leg with a swing joint and a lift joint. The body moves forward when the foot is down and the leg sweeps back. The policy is four numbers: swing size, lift size, stride frequency, and the timing between the two joints. Training is random search, not the PPO that Isaac Lab uses, and Isaac Lab trains thousands of robots at once. The ideas carry over. The numbers do not. The motor model uses lag, delay, and a speed limit in the range you measured in Module 5.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 7.1 · Train, then deploy</b><span class="pill" id="rl-pill">0 of 3 goals</span></div>
+  <div class="lab-b">
+    <div class="grid3">
+      <label>Train in<select id="rl-env"><option value="ideal">Ideal simulator (perfect motors)</option><option value="model">Simulator with motor model</option></select></label>
+      <label><span>Smoothness penalty <span class="v" id="rl-lamv"></span></span><input type="range" id="rl-lam" min="0" max="1.2" step="0.05" value="0"></label>
+      <div style="display:flex;align-items:end"><button class="btn" id="rl-train">Train 60 rounds</button></div>
+    </div>
+    <div class="grid2" style="align-items:start">
+      <div><div class="legendline" style="margin-bottom:4px">Best score so far, by training round</div><canvas id="rl-curve" width="440" height="220" aria-label="Training curve"></canvas></div>
+      <div><div class="legendline" style="margin-bottom:4px">Watch the latest policy</div><canvas id="rl-anim" width="440" height="220" aria-label="Walker animation"></canvas>
+        <div class="row" style="margin-top:8px"><button class="chip" id="rl-psim">Play in training sim</button><button class="chip" id="rl-preal">Play on real robot model</button><label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="rl-slow"> slow motion</label></div></div>
+    </div>
+    <div class="tw"><table>
+      <thead><tr><th>#</th><th>Trained in</th><th>Penalty</th><th>Stride</th><th>Sim says</th><th>Real robot</th><th>Servo effort</th><th>Sim error</th></tr></thead>
+      <tbody id="rl-table"></tbody></table></div>
+    <div id="rl-goals" class="readout"></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">What to look for</span>
+    <p>1. Train in the ideal simulator with no penalty. The sim reports a huge distance. Play it on the real robot model and read the real number. 2. Train again with the motor model. The sim's claim now matches reality, so you can trust it. 3. Raise the penalty. Servo effort is how hard the commands whip the motor, which means heat and gear wear. 4. Push the penalty to 1.0 or higher. A score that punishes motion too hard teaches the robot to stand still.</p>
+    <p>The hand-coded creep gait in the first row of the table is the baseline a paper would have to beat.</p></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>The ideal-sim policy reports 4 times the distance the real model delivers. What did the policy exploit, and why does that matter for a real robot? Listen for: it learned a stride the motor cannot follow, so the simulator was rewarding behavior hardware cannot produce. Then ask which Module you would revisit to fix it.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="6">Back</button><button class="btn" data-go="8">Next: Map a hallway</button></div>
+</section>
+
+<!-- ================= MODULE 8 ================= -->
+<section class="mod" id="m8" hidden data-title="Map a hallway">
+  <div><div class="eyebrow">Module 8 of 11 · about 40 minutes</div><h2>Map a hallway</h2></div>
+  <p class="lede">A wheeled robot estimates where it is by counting wheel turns. Small errors add up. Draw a lidar map from that estimate and the walls smear. SLAM exists to fix exactly this.</p>
+  <div class="goal"><b>By the end:</b> explain why a map drifts, which sensor errors matter most, and what a Kalman filter and SLAM each add.</div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 8.1 · One lap of the hallway</b><span class="pill" id="mp-pill">press Run lap</span></div>
+  <div class="lab-b">
+    <canvas id="mp-cv" width="900" height="520" aria-label="Hallway map built from lidar"></canvas>
+    <div class="grid3">
+      <label><span>Wheel size mismatch <span class="v" id="mp-wev"></span></span><input type="range" id="mp-we" min="0" max="1" step="0.05" value="0.3"></label>
+      <label><span>Gyro drift <span class="v" id="mp-gbv"></span></span><input type="range" id="mp-gb" min="0" max="0.004" step="0.0002" value="0.002"></label>
+      <label><span>Trust in gyro <span class="v" id="mp-alv"></span></span><input type="range" id="mp-al" min="0" max="1" step="0.05" value="0.9"></label>
+    </div>
+    <div class="row">
+      <label>Draw the map using<select id="mp-src"><option value="od">Wheels only</option><option value="fu" selected>Wheels plus gyro</option><option value="tr">True position (what SLAM tries to find)</option></select></label>
+      <button class="btn" id="mp-run">Run lap</button>
+      <label style="flex-direction:row;align-items:center;gap:6px"><input type="checkbox" id="mp-fast"> skip animation</label>
+    </div>
+    <div class="legendline"><span class="sw" style="background:var(--t4)"></span>true walls &nbsp; <span class="sw" style="background:var(--t1)"></span>lidar hits placed using the chosen position &nbsp; <span class="sw" style="background:var(--t2)"></span>estimated path</div>
+    <div class="readout" id="mp-res"><span>Run a lap to see the end-of-lap position error for each source.</span></div>
+  </div></div>
+
+  <div class="grid2">
+    <div class="callout"><span class="eyebrow">The Kalman filter in one paragraph</span>
+      <p>It is a weighted average that picks the weight from how noisy each source is. If the gyro is steadier than the wheels, trust the gyro more. The "Trust in gyro" slider is that weight, set by hand. In ROS 2, the <span class="mono">robot_localization</span> package computes it for you.</p>
+<pre class="code">K = P / (P + R);        // P: how unsure we are, R: sensor noise
+x = x + K * (z - x);    // blend the new measurement in
+P = (1 - K) * P;</pre></div>
+    <div class="callout"><span class="eyebrow">What SLAM adds</span>
+      <p>Neither sensor sees the outside world, so their errors only grow. SLAM compares each lidar scan with the map built so far and pulls the position back into line. When the robot returns to a place it has seen, it spreads the leftover error back over the whole lap. In ROS 2 this is the <span class="mono">slam_toolbox</span> package.</p></div>
+  </div>
+
+  <div class="callout"><span class="eyebrow">Try this</span>
+    <p>Get the wheels-plus-gyro position error below 0.3 m by moving only the three sliders. Which slider mattered most? What would it take to reach zero on a real robot, and why can you not?</p></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>Why does the map look fine for the first corridor and bad by the last one? Listen for: error grows with distance and turning, and the map inherits the position error of every scan.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="7">Back</button><button class="btn" data-go="9">Next: Your first week</button></div>
+</section>
+
+<!-- ================= MODULE 9 ================= -->
+<section class="mod" id="m9" hidden data-title="Your first week">
+  <div><div class="eyebrow">Module 9 of 11 · about 4 hours</div><h2>Your first week on the real hardware</h2></div>
+  <p class="lede">Now do the same things on the bench. Each task produces one file or one plot you can show your mentor.</p>
+
+  <div class="lab"><div class="lab-h"><b>Checklist</b><span class="pill" id="wk-pill">0 of 7</span></div>
+  <div class="lab-b" id="wk-list"></div></div>
+
+  <div class="grid2">
+    <div class="callout"><span class="eyebrow">Show your mentor</span>
+      <p>A plot of commanded versus measured position from your real servo, with the fitted model drawn over it. Then one paragraph: what surprised you, and what would you measure next?</p></div>
+    <div class="callout"><span class="eyebrow">Where to read more</span>
+      <p style="margin:0 0 4px"><a href="https://emanual.robotis.com/docs/en/dxl/protocol2/" target="_blank" rel="noopener">DYNAMIXEL Protocol 2.0</a></p>
+      <p style="margin:0 0 4px"><a href="https://emanual.robotis.com/docs/en/dxl/x/xl430-w250/" target="_blank" rel="noopener">XL430-W250 e-Manual</a></p>
+      <p style="margin:0 0 4px"><a href="https://docs.ros.org/en/jazzy/Tutorials.html" target="_blank" rel="noopener">ROS 2 tutorials</a></p>
+      <p style="margin:0 0 4px"><a href="https://isaac-sim.github.io/IsaacLab/main/source/how-to/index.html" target="_blank" rel="noopener">Isaac Lab how-to guides</a></p>
+      <p style="margin:0 0 4px"><a href="https://github.com/SteveMacenski/slam_toolbox" target="_blank" rel="noopener">slam_toolbox</a></p>
+      <p style="margin:0"><a href="https://docs.nav2.org" target="_blank" rel="noopener">Nav2 documentation</a></p></div>
+  </div>
+  <div class="row"><button class="btn ghost" id="reset-all">Reset my progress</button><span style="font-size:13px;color:var(--ink2)">Clears checkmarks saved in this browser.</span></div>
+  <div class="nav2"><button class="btn ghost" data-go="8">Back</button><span></span></div>
+</section>
+
+
+<!-- ================= MODULE 10 ================= -->
+<section class="mod" id="m10" hidden data-title="Same arm in MuJoCo">
+  <div><div class="eyebrow">Module 10 of 11 · about 45 minutes</div><h2>The same arm in a second simulator</h2></div>
+  <p class="lede">MuJoCo is a free physics engine from Google DeepMind. It installs with one pip command, runs on an ordinary laptop CPU, and appears in many robot-learning papers and tutorials. You will load your arm into it, fix two bugs in the model file, tune its motor, and break its timestep on purpose.</p>
+  <div class="goal"><b>By the end:</b> read a MuJoCo model file, run it from Python, and explain why a simulator can blow up.</div>
+
+  <div class="callout"><span class="eyebrow">Why use a second simulator</span>
+    <p><b>Reach.</b> Isaac Lab needs an NVIDIA RTX GPU and a large install. MuJoCo runs anywhere Python runs, so you can try an idea on a laptop in a few minutes.</p>
+    <p><b>Cross-check.</b> If your fitted motor gives the same step response in two simulators, a mistake in your files is unlikely. If they disagree, one file is wrong. People call this sim-to-sim checking, and it costs an afternoon instead of a broken gearbox.</p>
+    <p><b>Shared models.</b> MuJoCo Menagerie is a public collection of ready-made robot models, and MuJoCo MJX runs the same engine on GPUs for training. Check each project's repository for what is current before you build on it.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 10.1 · One robot, two file formats</b><span class="pill" id="mj-rs-pill">8 rows</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:13px;color:var(--ink2)">The left column is the URDF you met in Module 2. The right column is the same arm in MuJoCo's format, called MJCF. Tick the box to hide the right column, guess each row first, then click to reveal.</p>
+    <label style="flex-direction:row;align-items:center;gap:8px"><input type="checkbox" id="mj-hide"> Hide the MuJoCo column so I can guess first</label>
+    <div class="tw"><table id="mj-rs"><thead><tr><th>URDF</th><th>MuJoCo (MJCF)</th><th>What changed</th></tr></thead><tbody></tbody></table></div>
+  </div></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 10.2 · Fix the file, tune the motor, break the timestep</b><span class="pill" id="mj-pill">0 of 4 goals</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:13px;color:var(--ink2)">The text on the left is a real MuJoCo model of your arm. Edit it, press Run, and read what comes back. The error messages are copied from MuJoCo 3.x. The motion comes from a one-joint copy of MuJoCo's own step arithmetic, checked against the real engine on this exact file. It models the pitch joint only, with no sensing delay.</p>
+    <div class="grid2" style="align-items:start">
+      <div>
+        <textarea id="mj-xml" class="edit" rows="26" spellcheck="false" autocomplete="off" autocapitalize="off" aria-label="MuJoCo model file"></textarea>
+        <div class="row" style="margin-top:8px"><button class="btn" id="mj-run">Run: load and step 1 second</button><button class="chip" id="mj-reset">Reset file</button></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;min-width:0">
+        <div class="term" id="mj-term" role="log" aria-live="polite" style="height:220px"></div>
+        <canvas id="mj-cv" width="440" height="220" aria-label="Pitch joint response"></canvas>
+        <div class="readout" id="mj-met"></div>
+        <div id="mj-goals"></div>
+      </div>
+    </div>
+    <details class="ask"><summary>Stuck? Hints, one at a time</summary>
+      <p><b>1.</b> Read the last line of the error. It names a joint and a line. Compare the name with the joint lines near the top of the file.</p>
+      <p><b>2.</b> Loaded, but the arm stalls near 0.07 rad with no error? Look at the unit of every number on the joint line. A model file has a setting for how it reads angles, and its default is not the one the URDF used.</p>
+      <p><b>3.</b> Overshooting and ringing? The motor line has a velocity gain, kv. It is the D term from Module 4, written as a motor property. Try values between 0.02 and 0.1.</p>
+      <p><b>4.</b> To break it, raise timestep above 0.02. To see MuJoCo's own warning instead of a thrashing arm, also delete the forcerange text from both motor lines.</p></details>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Run it for real</span>
+    <p>Save the fixed file as <span class="mono">arm2dof.xml</span>, then:</p>
+<pre class="code">pip install mujoco
+python -m mujoco.viewer --mjcf=arm2dof.xml     # window with sliders for each motor</pre>
+    <p>The same model driven from a script:</p>
+<pre class="code">import mujoco
+
+m = mujoco.MjModel.from_xml_path("arm2dof.xml")   # parse the file, build the model
+d = mujoco.MjData(m)                               # all the changing numbers live here
+d.ctrl[1] = 0.6                                    # goal for pitch_motor, in radians
+for _ in range(500):                               # 500 steps x 0.002 s = 1 s
+    mujoco.mj_step(m, d)
+print(d.qpos)                                      # joint angles after one second</pre>
+    <p>Compare with Module 6: <span class="mono">d.ctrl</span> plays the role of <span class="mono">set_joint_position_target</span>, <span class="mono">mj_step</span> is <span class="mono">sim.step</span>, and <span class="mono">d.qpos</span> is <span class="mono">arm.data.joint_pos</span>. The structure of the loop is the same in every simulator you will meet.</p></div>
+
+  <div class="callout"><span class="eyebrow">Three habits this lab was built to teach</span>
+    <p><b>Units first.</b> When a number in a model file looks right and the motion looks wrong, check units before you check physics.</p>
+    <p><b>Armature.</b> A servo's gearbox makes its rotor feel like a much heavier part than the link it moves. MuJoCo's <span class="mono">armature</span> field carries that reflected inertia. Set it to 0 and the simulated joint becomes unrealistically light and touchy.</p>
+    <p><b>A clamp can hide a fire.</b> The force limit kept the arm from producing NaN at a huge timestep, but the arm was still thrashing. Look at the motion, not only at the absence of errors.</p></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>The arm loads with no error but stalls at about 0.07 rad. What do you check first, and why does the simulator not complain? Listen for: units, because a degree-valued range of 1.57 is legal. Then ask what the simulator would do differently if the model file had no motor line at all.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="9">Back</button><button class="btn" data-go="11">Next: Quadruped gaits</button></div>
+</section>
+
+<!-- ================= MODULE 11 ================= -->
+<section class="mod" id="m11" hidden data-title="Quadruped gaits">
+  <div><div class="eyebrow">Module 11 of 11 · about 50 minutes</div><h2>Walk before you learn: quadruped gaits</h2></div>
+  <p class="lede">A gait is a schedule that says which feet are on the ground and when. Before you hand a robot to reinforcement learning, you build one gait by hand. It becomes the baseline the learned policy has to beat, and it teaches you what the policy is really searching for.</p>
+  <div class="goal"><b>By the end:</b> design a gait that cannot tip over, explain why a trot needs motion to stay up, and turn one moment of the gait into the packet that moves all eight servos.</div>
+
+  <div class="callout"><span class="eyebrow">Six words, then the lab</span>
+    <div class="tw"><table>
+      <tr><td><b>Stance</b></td><td>A foot is on the ground and pushes the body along.</td></tr>
+      <tr><td><b>Swing</b></td><td>A foot is in the air, moving to where the next stance starts.</td></tr>
+      <tr><td><b>Duty factor</b></td><td>The fraction of one cycle a foot spends in stance. 0.75 means three quarters on the ground.</td></tr>
+      <tr><td><b>Phase offset</b></td><td>How far into the cycle a leg is, compared with another leg. The offsets are the gait.</td></tr>
+      <tr><td><b>Support polygon</b></td><td>The shape you get by connecting the feet that are down, seen from above.</td></tr>
+      <tr><td><b>Static or dynamic</b></td><td>Static: the center of mass stays inside the polygon, so the robot could pause at any instant and not fall. Dynamic: it stays up only because it keeps moving.</td></tr>
+    </table></div></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 11.1 · Design a gait</b><span class="pill" id="gt-pill">0 of 3 goals</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:13px;color:var(--ink2)">Top view, robot facing right. Each leg is two joints, as on your arm: a hip that swings the foot forward and back, and a lift joint. A filled foot is on the ground and a ring is in the air. The shaded shape is the support polygon, and the cross is the center of mass.</p>
+    <div class="grid2" style="align-items:start">
+      <div><canvas id="gt-top" width="440" height="400" aria-label="Top view of the quadruped"></canvas>
+        <div class="row" style="margin-top:8px"><button class="btn" id="gt-play">Play</button><label style="flex:1;min-width:140px"><span>Cycle position <span class="v" id="gt-phv"></span></span><input type="range" id="gt-ph" min="0" max="1" step="0.005" value="0"></label></div></div>
+      <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+        <label>Start from<select id="gt-sel"></select></label>
+        <div class="grid2">
+          <label><span>Duty factor <span class="v" id="gt-dutyv"></span></span><input type="range" id="gt-duty" min="0.3" max="0.9" step="0.01" value="0.78"></label>
+          <label><span>Cycle time <span class="v" id="gt-Tv"></span></span><input type="range" id="gt-T" min="0.6" max="4" step="0.1" value="2"></label>
+          <label><span>Stride, half length <span class="v" id="gt-Sv"></span></span><input type="range" id="gt-S" min="1" max="5" step="0.5" value="3"></label>
+          <label><span>Lift height <span class="v" id="gt-Hv"></span></span><input type="range" id="gt-H" min="0.5" max="3" step="0.5" value="1.5"></label>
+          <label style="grid-column:1/-1"><span>Weight shift before lift-off <span class="v" id="gt-leanv"></span></span><input type="range" id="gt-lean" min="0" max="4" step="0.5" value="0"></label>
+        </div>
+        <div class="legendline">Phase offset of each leg, as a fraction of the cycle</div>
+        <div class="grid2" id="gt-offs"></div>
+      </div>
+    </div>
+    <div class="grid2" style="align-items:start">
+      <div><div class="legendline" style="margin-bottom:4px">Gait diagram: dark is stance, light is swing</div><canvas id="gt-diag" width="440" height="170" aria-label="Gait diagram"></canvas></div>
+      <div><div class="legendline" style="margin-bottom:4px">Stability margin over one cycle, in cm</div><canvas id="gt-mg" width="440" height="170" aria-label="Stability margin"></canvas></div>
+    </div>
+    <div class="readout" id="gt-stats"></div>
+    <div id="gt-goals"></div>
+    <div class="callout" id="gt-msg" style="margin:0"></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Try these, then say what you saw</span>
+    <p>1. Pick Crawl and press Play. Watch the cross cross the polygon edge when a leg lifts. Add weight shift until the margin curve stays above the green zone. 2. Pick Trot. Count the feet that are down. Why can a polygon not hold the robot? 3. Raise the duty factor on the crawl to 0.9 and watch the servo load. Why does a long stance make the swing faster? 4. Pick Pace and Bound and read each gait diagram. Which legs are paired?</p></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 11.2 · From a gait to eight servo goals</b><span class="pill" id="gt2-pill">not copied</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:13px;color:var(--ink2)">This freezes the gait at the cycle position set by the slider in Lab 11.1. Each leg becomes two goal positions, in the same ticks you decoded in Module 1. IDs 1 and 2 are the front left hip and lift, 3 and 4 are front right, 5 and 6 are rear left, and 7 and 8 are rear right. Change them to match your bus.</p>
+    <div class="tw"><table><thead><tr><th>ID</th><th>Joint</th><th>Angle</th><th>Goal ticks</th></tr></thead><tbody id="gt-tbl"></tbody></table></div>
+    <div class="legendline">One Sync Write packet carries all eight goals. It is addressed to ID 254, which means everyone listens:</div>
+    <div class="out" id="gt-pkt" style="max-height:120px;overflow:auto"></div>
+    <div class="row"><button class="btn" id="gt-copy">Copy goals as a Python dict</button><span style="font-size:13px;color:var(--ink2)" id="gt-copyfb"></span></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">What this lab simplifies</span>
+    <p><b>Leg geometry.</b> The lab commands each foot's forward and up motion directly and converts it to joint angles with a small-angle shortcut. On your leg the yaw joint swings the whole leg and the pitch joint tilts it, so lifting a foot also moves it sideways. Turning a wanted foot position into joint angles is the forward kinematics of Module 2 run backwards, called inverse kinematics. Replacing the shortcut with it is your first real piece of gait code.</p>
+    <p><b>Weight shift.</b> The lab slides the center of mass directly. On the robot you get the same effect by changing the other legs' stance positions, or by tilting the body. The idea is the same: be balanced before you lift.</p>
+    <p><b>No dynamics.</b> There is no friction, slipping, or body inertia. A gait that passes here can still fall on a real floor. That gap is the reason Modules 5 and 7 exist.</p></div>
+
+  <div class="callout"><span class="eyebrow">Where reinforcement learning comes in</span>
+    <p>A learned walking policy has the same job you just did by hand. Each step it reads the body's tilt and turn rates from the IMU, the joint angles, and the commanded speed. It outputs eight joint targets. It gets rewarded for tracking the commanded speed and penalized for effort and jerky commands, which is the smoothness penalty from Module 7. Statically stable crawls are easy to design but slow. Trots and bounds are faster and need balance feedback. That is the kind of behavior a learned policy can discover and a hand-built table cannot.</p>
+    <p>Your hand-built crawl has a speed, a stability margin, and a servo load. Those three numbers are the baseline to beat in a paper.</p></div>
+
+  <details class="ask"><summary>For the mentor: sign-off question</summary><p>A crawl at duty factor 0.75 always has three feet down and still tips. Why, and what does the robot do about it? Listen for: three feet down is not enough, the center of mass must be inside the triangle, and the triangle edge can pass right through it, so the robot shifts its weight before lifting each leg. Then ask what a trot does instead.</p></details>
+  <div class="nav2"><button class="btn ghost" data-go="10">Back</button><span></span></div>
+</section>
+
+</main>
+</div>
+<script>
+'use strict';
+/* core.js: pure logic, no DOM. Tested in node, then inlined into the page. */
+function clamp(x,a,b){return Math.min(b,Math.max(a,x));}
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function gauss(rng){let u=0;while(u===0)u=rng();const v=rng();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+/* ---------- Dynamixel Protocol 2.0 ---------- */
+function crc16(bytes){
+  let crc=0;
+  for(const b of bytes){
+    crc^=(b<<8);
+    for(let i=0;i<8;i++){crc=(crc&0x8000)?(((crc<<1)^0x8005)&0xFFFF):((crc<<1)&0xFFFF);}
+  }
+  return crc;
+}
+function stuff(params){
+  const out=[];
+  for(let i=0;i<params.length;i++){
+    out.push(params[i]);const n=out.length;
+    if(n>=3&&out[n-1]===0xFD&&out[n-2]===0xFF&&out[n-3]===0xFF)out.push(0xFD);
+  }
+  return out;
+}
+function buildPacket(id,inst,params){
+  const p=stuff(params);const len=p.length+3;
+  const body=[0xFF,0xFF,0xFD,0x00,id,len&0xFF,(len>>8)&0xFF,inst].concat(p);
+  const c=crc16(body);
+  return body.concat([c&0xFF,(c>>8)&0xFF]);
+}
+function pingCmd(id){return buildPacket(id,0x01,[]);}
+function readCmd(id,addr,size){return buildPacket(id,0x02,[addr&0xFF,(addr>>8)&0xFF,size&0xFF,(size>>8)&0xFF]);}
+function writeCmd(id,addr,size,value){
+  const d=[];for(let i=0;i<size;i++)d.push((value>>>(8*i))&0xFF);
+  return buildPacket(id,0x03,[addr&0xFF,(addr>>8)&0xFF].concat(d));
+}
+function statusPacket(id,err,params){return buildPacket(id,0x55,[err].concat(params));}
+function parsePacket(bytes){
+  if(bytes.length<10)return{ok:false,err:'packet is shorter than the 10-byte minimum'};
+  if(bytes[0]!==0xFF||bytes[1]!==0xFF||bytes[2]!==0xFD||bytes[3]!==0x00)return{ok:false,err:'header is not FF FF FD 00'};
+  const id=bytes[4],len=bytes[5]|(bytes[6]<<8);
+  if(bytes.length!==7+len)return{ok:false,err:'length field does not match the bytes received'};
+  const crc=bytes[bytes.length-2]|(bytes[bytes.length-1]<<8);
+  if(crc16(bytes.slice(0,bytes.length-2))!==crc)return{ok:false,err:'CRC does not match'};
+  const params=bytes.slice(8,bytes.length-2),out=[];
+  for(let i=0;i<params.length;i++){
+    out.push(params[i]);const n=out.length;
+    if(n>=3&&out[n-1]===0xFD&&out[n-2]===0xFF&&out[n-3]===0xFF&&params[i+1]===0xFD)i++;
+  }
+  return{ok:true,id,inst:bytes[7],params:out};
+}
+function makeServo(id){return{id:id,torque:0,goal:2048,pos:2048};}
+function le(arr){let v=0;for(let i=arr.length-1;i>=0;i--)v=v*256+arr[i];return v;}
+function servoReceive(sv,bytes){
+  const p=parsePacket(bytes);
+  if(!p.ok)return{reply:null,note:'Servo ignored the packet: '+p.err+'.'};
+  if(p.id!==sv.id&&p.id!==0xFE)return{reply:null,note:'Packet is addressed to ID '+p.id+'. This servo is ID '+sv.id+', so it stays silent.'};
+  if(p.inst===0x01)return{reply:statusPacket(sv.id,0,[0x24,0x04,38]),note:'Ping answered. The reply carries the model number and firmware version.'};
+  if(p.inst===0x03){
+    const addr=p.params[0]|(p.params[1]<<8),data=p.params.slice(2);
+    if(addr===64&&data.length===1){sv.torque=data[0]?1:0;return{reply:statusPacket(sv.id,0,[]),note:'Torque '+(sv.torque?'enabled. The motor now holds its position.':'disabled. The motor is limp.')};}
+    if(addr===116&&data.length===4){sv.goal=le(data)%4096;return{reply:statusPacket(sv.id,0,[]),note:'Goal stored: '+sv.goal+' ticks. '+(sv.torque?'The motor moves.':'Torque is off, so the motor does not move yet.')};}
+    return{reply:statusPacket(sv.id,0,[]),note:'Write accepted at address '+addr+' (this demo servo only models torque and goal position).'};
+  }
+  if(p.inst===0x02){
+    const addr=p.params[0]|(p.params[1]<<8),size=p.params[2]|(p.params[3]<<8);
+    if(addr===132&&size===4){const v=Math.round(sv.pos),d=[v&255,(v>>8)&255,(v>>16)&255,(v>>24)&255];return{reply:statusPacket(sv.id,0,d),note:'Present position read: '+v+' ticks.'};}
+    return{reply:statusPacket(sv.id,0,new Array(size).fill(0)),note:'Read of '+size+' byte(s) at address '+addr+'.'};
+  }
+  return{reply:null,note:'Unknown instruction.'};
+}
+function servoStep(sv,dt){
+  if(!sv.torque)return;
+  const maxStep=4166*dt,d=sv.goal-sv.pos;
+  sv.pos+=clamp(d,-maxStep,maxStep);
+}
+const toHex=b=>b.toString(16).toUpperCase().padStart(2,'0');
+const ticksToDeg=t=>t*360/4096, degToTicks=d=>Math.round(d*4096/360)%4096;
+
+/* ---------- 2-DoF arm forward kinematics, constants from arm2dof.urdf ---------- */
+const ARM={o1:[0.01175,0,0.034],o2:[0,0,0.033],tip:[0,0.020,0.035],
+  tiltC:[0,0.020,0.01175],tiltSize:[0.0285,0.034,0.0465],
+  baseC:[0,0,0.017],baseSize:[0.0465,0.0285,0.034],
+  brC:[0,0,0.0165],brSize:[0.030,0.030,0.033]};
+function rot(axis,th,v){
+  const c=Math.cos(th),s=Math.sin(th),x=v[0],y=v[1],z=v[2];
+  if(axis==='x')return[x,c*y-s*z,s*y+c*z];
+  if(axis==='y')return[c*x+s*z,y,-s*x+c*z];
+  return[c*x-s*y,s*x+c*y,z];
+}
+function vadd(a,b){return[a[0]+b[0],a[1]+b[1],a[2]+b[2]];}
+function tiltToBase(yaw,pitch,axis2,p){return vadd(ARM.o1,rot('z',yaw,vadd(ARM.o2,rot(axis2,pitch,p))));}
+function bracketToBase(yaw,p){return vadd(ARM.o1,rot('z',yaw,p));}
+function armTip(yaw,pitch,axis2){return tiltToBase(yaw,pitch,axis2||'y',ARM.tip);}
+function boxCorners(c,s){const o=[];for(const a of[-1,1])for(const b of[-1,1])for(const d of[-1,1])o.push([c[0]+a*s[0]/2,c[1]+b*s[1]/2,c[2]+d*s[2]/2]);return o;}
+const BOX_EDGES=(function(){const e=[];for(let i=0;i<8;i++)for(const b of[1,2,4])if(!(i&b))e.push([i,i|b]);return e;})();
+function dist3(a,b){return Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);}
+
+/* ---------- Servo control loop (Module 4) ---------- */
+function simPD(Kp,Kd,o){
+  o=Object.assign({J:6e-4,b:2e-3,tmax:1.5,vmax:6.39,delay:0.010,dt:0.001,T:1.0,r:0.6,t0:0.05},o||{});
+  const n=Math.round(o.T/o.dt),dly=Math.round(o.delay/o.dt);
+  const th=new Array(n).fill(0),om=new Array(n).fill(0),t=[],tq=[];
+  let a=0,w=0;
+  for(let k=0;k<n;k++){
+    const tt=k*o.dt,r=tt>=o.t0?o.r:0,j=Math.max(0,k-dly);
+    const sa=k>0?th[j]:0,sw=k>0?om[j]:0;
+    const tau=clamp(Kp*(r-sa)-Kd*sw,-o.tmax,o.tmax);
+    w+=((tau-o.b*w)/o.J)*o.dt;w=clamp(w,-o.vmax,o.vmax);a+=w*o.dt;
+    th[k]=a;om[k]=w;t.push(tt);tq.push(tau);
+  }
+  return{t:t,y:th,tau:tq,r:o.r,t0:o.t0,dt:o.dt};
+}
+function stepMetrics(s){
+  const r=s.r,y=s.y,t=s.t;let peak=-1e9;for(const v of y)if(v>peak)peak=v;
+  const overshoot=Math.max(0,(peak-r)/r*100);
+  let t10=null,t90=null;for(let k=0;k<y.length;k++){if(t10===null&&y[k]>=0.1*r)t10=t[k];if(t90===null&&y[k]>=0.9*r){t90=t[k];break;}}
+  const rise=(t10!==null&&t90!==null)?t90-t10:null;
+  let settle=null;for(let k=y.length-1;k>=0;k--){if(Math.abs(y[k]-r)>0.02*r){settle=(k===y.length-1)?null:t[k+1]-s.t0;break;}if(k===0)settle=0;}
+  const fin=Math.abs(y[y.length-1]-r)/r*100;
+  return{overshoot:overshoot,rise:rise,settle:settle,finalErr:fin};
+}
+
+/* ---------- Actuator identification (Module 5) ---------- */
+function cmdProfile(t){
+  if(t<0.1)return 0;if(t<0.7)return 0.5;if(t<1.2)return 0;if(t<1.5)return 0.25;
+  if(t<2.5)return 0.25+0.2*Math.sin(2*Math.PI*2.0*(t-1.5));
+  return 0.25;
+}
+function simModel(p,dt,T){
+  const n=Math.round(T/dt),th=[],t=[];let a=0,w=0;
+  for(let k=0;k<n;k++){
+    const tt=k*dt,c=cmdProfile(tt-p.delay);
+    w+=(p.wn*p.wn*(c-a)-2*p.zeta*p.wn*w)*dt;w=clamp(w,-p.vmax,p.vmax);a+=w*dt;
+    th.push(a);t.push(tt);
+  }
+  return{t:t,y:th};
+}
+const HIDDEN={delay:0.016,wn:38,zeta:0.62,vmax:5.2};
+function makeMeasured(){
+  const rng=mulberry32(7),s=simModel(HIDDEN,0.002,3.0),q=2*Math.PI/4096;
+  const y=s.y.map(v=>Math.round((v+0.004*gauss(rng))/q)*q);
+  return{t:s.t,y:y};
+}
+function rms(a,b){let s=0;for(let i=0;i<a.length;i++){const d=a[i]-b[i];s+=d*d;}return Math.sqrt(s/a.length);}
+const FIT_BOUNDS={delay:[0,0.04],wn:[10,80],zeta:[0.2,1.5],vmax:[2,8]};
+function autoFitStep(p,meas,rng,scale){
+  const keys=Object.keys(FIT_BOUNDS);let best=Object.assign({},p);
+  let bestE=rms(simModel(best,0.002,3.0).y,meas.y);
+  for(let i=0;i<14;i++){
+    const c=Object.assign({},best);
+    for(const k of keys){const lim=FIT_BOUNDS[k];c[k]=clamp(c[k]+gauss(rng)*scale*(lim[1]-lim[0]),lim[0],lim[1]);}
+    const e=rms(simModel(c,0.002,3.0).y,meas.y);if(e<bestE){bestE=e;best=c;}
+  }
+  return{p:best,e:bestE};
+}
+
+/* ---------- Toy walker + random-search RL (Module 7) ---------- */
+const ACT_IDEAL={lagS:0,lagL:0,vmax:1e9,delay:0};
+const ACT_MODEL={lagS:0.030,lagL:0.080,vmax:5.2,delay:0.016};
+const ACT_REAL ={lagS:0.036,lagL:0.095,vmax:4.8,delay:0.022};
+const POL_LO=[0,0,0.3,-Math.PI],POL_HI=[0.8,1,6,Math.PI];
+function rollout(th,act,lambda,keep){
+  const As=th[0],Al=th[1],f=th[2],ph=th[3],w=2*Math.PI*f,dt=0.005,T=4,n=Math.round(T/dt);
+  let s=0,l=0.3,body=0,pen=0,psc=0,plc=0,ground=0;
+  const kS=act.lagS>0?dt/(act.lagS+dt):1,kL=act.lagL>0?dt/(act.lagL+dt):1,tr=keep?[]:null;
+  for(let k=0;k<n;k++){
+    const t=k*dt,td=t-act.delay;
+    const sc=As*Math.sin(w*t),lc=0.3+0.3*Al*Math.sin(w*t+ph);
+    pen+=(((sc-psc)/dt)**2+((lc-plc)/dt)**2)*dt;psc=sc;plc=lc;
+    const sd=td<0?0:As*Math.sin(w*td),ld=td<0?0.3:0.3+0.3*Al*Math.sin(w*td+ph);
+    const ds=clamp(kS*(sd-s),-act.vmax*dt,act.vmax*dt);
+    const dl=clamp(kL*(ld-l),-act.vmax*dt,act.vmax*dt);
+    s+=ds;l+=dl;
+    const g=l<0.3;ground+=g?1:0;
+    if(g)body+=-ds*10;
+    if(tr)tr.push([body,s,l,g]);
+  }
+  return{dist:body,pen:pen,reward:body-lambda*pen,ground:ground/n,trace:tr};
+}
+function trainPolicy(act,lambda,seed,iters,pop,onIter){
+  const rng=mulberry32(seed),sig=[0.12,0.18,0.6,0.7];
+  let best=[0.3,0.6,1.0,0.0],bestR=rollout(best,act,lambda).reward;const hist=[bestR];
+  for(let it=0;it<iters;it++){
+    const sf=1-0.8*it/iters;
+    for(let j=0;j<pop;j++){
+      const c=best.map((v,i)=>v+gauss(rng)*sig[i]*sf);
+      for(let i=0;i<3;i++)c[i]=clamp(c[i],POL_LO[i],POL_HI[i]);
+      c[3]=((c[3]+Math.PI)%(2*Math.PI)+2*Math.PI)%(2*Math.PI)-Math.PI;
+      const r=rollout(c,act,lambda).reward;
+      if(r>bestR){bestR=r;best=c;}
+    }
+    hist.push(bestR);
+  }
+  return{theta:best,reward:bestR,hist:hist};
+}
+
+/* ---------- Hallway lap: odometry, gyro fusion, lidar (Module 8) ---------- */
+const WALLS=[[0,0,14,0],[14,0,14,8],[14,8,0,8],[0,8,0,0],[2,2,12,2],[12,2,12,6],[12,6,2,6],[2,6,2,2]];
+function rayHit(x,y,a,maxR){
+  const dx=Math.cos(a),dy=Math.sin(a);let best=maxR;
+  for(const w of WALLS){
+    const ex=w[2]-w[0],ey=w[3]-w[1],den=dx*ey-dy*ex;if(Math.abs(den)<1e-9)continue;
+    const t=((w[0]-x)*ey-(w[1]-y)*ex)/den,u=((w[0]-x)*dy-(w[1]-y)*dx)/den;
+    if(t>0.05&&u>=0&&u<=1&&t<best)best=t;
+  }
+  return best;
+}
+function buildLap(dt){
+  const c=[],V=0.6,W=0.6;
+  for(const L of[12,6,12,6]){
+    let n=Math.round((L/V)/dt);c.push({v:L/(n*dt),w:0,n:n});
+    n=Math.round(((Math.PI/2)/W)/dt);c.push({v:0,w:(Math.PI/2)/(n*dt),n:n});
+  }
+  return c;
+}
+function wrapPi(a){return Math.atan2(Math.sin(a),Math.cos(a));}
+function runLap(opt){
+  opt=Object.assign({wheelErr:0.3,gyroBias:0.002,alpha:0.9,seed:3,dt:0.05},opt||{});
+  const rng=mulberry32(opt.seed),dt=opt.dt,B=0.3,e=opt.wheelErr/100,eL=-e,eR=0.5*e;
+  const tr={x:1,y:1,th:0},od={x:1,y:1,th:0},fu={x:1,y:1,th:0};
+  const steps=[];
+  for(const seg of buildLap(dt)){
+    for(let i=0;i<seg.n;i++){
+      const vL=seg.v-seg.w*B/2,vR=seg.v+seg.w*B/2;
+      tr.x+=seg.v*Math.cos(tr.th)*dt;tr.y+=seg.v*Math.sin(tr.th)*dt;tr.th+=seg.w*dt;
+      const vLm=vL*(1+eL)+0.003*gauss(rng),vRm=vR*(1+eR)+0.003*gauss(rng);
+      const vo=(vLm+vRm)/2,wo=(vRm-vLm)/B,wg=seg.w+opt.gyroBias+0.01*gauss(rng),wf=opt.alpha*wg+(1-opt.alpha)*wo;
+      od.x+=vo*Math.cos(od.th)*dt;od.y+=vo*Math.sin(od.th)*dt;od.th+=wo*dt;
+      fu.x+=vo*Math.cos(fu.th)*dt;fu.y+=vo*Math.sin(fu.th)*dt;fu.th+=wf*dt;
+      steps.push({tr:{x:tr.x,y:tr.y,th:tr.th},od:{x:od.x,y:od.y,th:od.th},fu:{x:fu.x,y:fu.y,th:fu.th}});
+    }
+  }
+  return steps;
+}
+function scanAt(p,rng){
+  const pts=[];
+  for(let d=0;d<360;d+=4){
+    const a=p.th+d*Math.PI/180,r=rayHit(p.x,p.y,a,6);
+    if(r<6)pts.push([d*Math.PI/180,r+0.01*gauss(rng)]);
+  }
+  return pts;
+}
+
+if(typeof module!=='undefined')module.exports={clamp,mulberry32,gauss,crc16,buildPacket,pingCmd,readCmd,writeCmd,statusPacket,parsePacket,makeServo,servoReceive,servoStep,toHex,ticksToDeg,degToTicks,ARM,rot,vadd,tiltToBase,bracketToBase,armTip,boxCorners,BOX_EDGES,dist3,simPD,stepMetrics,cmdProfile,simModel,HIDDEN,makeMeasured,rms,FIT_BOUNDS,autoFitStep,ACT_IDEAL,ACT_MODEL,ACT_REAL,rollout,trainPolicy,POL_LO,POL_HI,WALLS,rayHit,buildLap,runLap,scanAt,wrapPi};
+
+/* core2.js: Module 10 (MuJoCo-style files and actuator) and Module 11 (quadruped gaits). Pure logic, tested in node. */
+
+/* ---------- Module 10: a tiny MJCF checker and a one-joint simulator ---------- */
+const MJ_START_XML=`<mujoco model="arm2dof">
+  <option timestep="0.002"/>
+  <worldbody>
+    <geom name="floor" type="plane" size="0.5 0.5 0.01"/>
+    <body name="base_link">
+      <geom type="box" size="0.02325 0.01425 0.017" pos="0 0 0.017" mass="0.0572"/>
+      <body name="bracket_link" pos="0.01175 0 0.034">
+        <joint name="joint1_yaw" type="hinge" axis="0 0 1" range="-2.9 2.9" damping="0.002" armature="0.0006"/>
+        <geom type="box" size="0.015 0.015 0.0165" pos="0 0 0.0165" mass="0.010" contype="0" conaffinity="0"/>
+        <body name="tilt_link" pos="0 0 0.033">
+          <joint name="joint2_pitch" type="hinge" axis="0 1 0" range="-1.57 1.57" damping="0.002" armature="0.0006"/>
+          <geom type="box" size="0.01425 0.017 0.02325" pos="0 0.020 0.01175" mass="0.0572" contype="0" conaffinity="0"/>
+          <site name="tip" pos="0 0.020 0.035"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <position name="yaw_motor"   joint="joint1_yaw"  kp="2.5" kv="0.02" forcerange="-1.5 1.5"/>
+    <position name="pitch_motor" joint="joint2_tilt" kp="2.5" kv="0.02" forcerange="-1.5 1.5"/>
+  </actuator>
+</mujoco>
+`;
+const MJ_SCHEMA={mujoco:{model:0},compiler:{angle:0},option:{timestep:1,integrator:0},worldbody:{},body:{name:0,pos:2},
+  geom:{name:0,type:0,size:2,pos:2,mass:1,contype:1,conaffinity:1},joint:{name:0,type:0,axis:2,range:2,damping:1,armature:1},
+  site:{name:0,pos:2},actuator:{},position:{name:0,joint:0,kp:1,kv:1,forcerange:2,ctrlrange:2}};
+const MJ_LINK_I=2.208e-5, MJ_GRAV_T=0.0572*9.81*0.01175;   // tilt-link inertia about the pitch axis, gravity torque amplitude
+function mjParse(xml){
+  const src=xml.replace(/<!--[\s\S]*?-->/g,m=>m.replace(/[^\n]/g,'')).replace(/<\?[\s\S]*?\?>/g,m=>m.replace(/[^\n]/g,''));
+  const lineAt=i=>src.slice(0,i).split('\n').length;
+  const tags=[],stack=[],re=/<(\/?)([A-Za-z_][\w.-]*)([^<>]*)>/g;let m,last=0;
+  const stray=s=>/[<>]/.test(s);
+  while((m=re.exec(src))){
+    if(stray(src.slice(last,m.index).replace(/[^<>]/g,'')))return{err:'XML parse error 2:\nError=XML_ERROR_PARSING_ELEMENT ErrorID=2 (0x2) Line number='+lineAt(last)+': Stray angle bracket'};
+    last=re.lastIndex;
+    const close=m[1]==='/',name=m[2];let rest=m[3],self=false;const line=lineAt(m.index);
+    if(!close&&/\/\s*$/.test(rest)){self=true;rest=rest.replace(/\/\s*$/,'');}
+    if(close){
+      const top=stack.pop();
+      if(!top||top.name!==name)return{err:'XML parse error 14:\nError=XML_ERROR_MISMATCHED_ELEMENT ErrorID=14 (0xe) Line number='+line+': XMLElement name='+(top?top.name:name)};
+      continue;
+    }
+    const attrs={};let rem=rest;
+    rem=rem.replace(/([A-Za-z_][\w.-]*)\s*=\s*"([^"]*)"/g,(_,k,v)=>{attrs[k]=v;return ' ';});
+    if(rem.trim()!=='')return{err:'XML parse error 7:\nError=XML_ERROR_PARSING_ATTRIBUTE ErrorID=7 (0x7) Line number='+line+': XMLElement name='+name};
+    tags.push({name:name,attrs:attrs,line:line,depth:stack.length});
+    if(!self)stack.push({name:name,line:line});
+  }
+  if(/[<>]/.test(src.slice(last).replace(/[^<>]/g,'')))return{err:'XML parse error 2:\nError=XML_ERROR_PARSING_ELEMENT ErrorID=2 (0x2) Line number='+lineAt(last)+': Stray angle bracket'};
+  if(stack.length){const t=stack[stack.length-1];return{err:'XML parse error 14:\nError=XML_ERROR_MISMATCHED_ELEMENT ErrorID=14 (0xe) Line number='+src.split('\n').length+': XMLElement name='+t.name};}
+  return{tags:tags};
+}
+function mjLoad(xml){
+  const P=mjParse(xml);if(P.err)return{ok:false,msg:P.err};
+  const T=P.tags;if(!T.length||T[0].name!=='mujoco')return{ok:false,msg:'XML Error: Schema violation: unrecognized element\nElement \''+(T[0]?T[0].name:'?')+'\', line '+(T[0]?T[0].line:1)};
+  for(const t of T){
+    const sch=MJ_SCHEMA[t.name];
+    if(!sch)return{ok:false,msg:'XML Error: Schema violation: unrecognized element\nElement \''+t.name+'\', line '+t.line};
+    for(const k in t.attrs){
+      if(!(k in sch))return{ok:false,msg:'XML Error: Schema violation: unrecognized attribute: \''+k+'\'\nElement \''+t.name+'\', line '+t.line};
+      const kind=sch[k],v=t.attrs[k].trim();
+      if(kind===1&&(v===''||!isFinite(Number(v))))return{ok:false,msg:'XML Error: bad format in attribute \''+k+'\'\nElement \''+t.name+'\', line '+t.line};
+      if(kind===2&&(v===''||v.split(/\s+/).some(x=>!isFinite(Number(x)))))return{ok:false,msg:'XML Error: bad format in attribute \''+k+'\'\nElement \''+t.name+'\', line '+t.line};
+    }
+  }
+  const comp=T.find(t=>t.name==='compiler'),opt=T.find(t=>t.name==='option');
+  const angle=comp&&comp.attrs.angle?comp.attrs.angle:'degree';
+  if(angle!=='radian'&&angle!=='degree')return{ok:false,msg:'XML Error: invalid keyword: \''+angle+'\'\nElement \'compiler\', line '+comp.line};
+  const dt=opt&&opt.attrs.timestep!==undefined?Number(opt.attrs.timestep):0.002;
+  if(!(dt>0))return{ok:false,msg:'Error: timestep must be positive\nElement \'option\', line '+(opt?opt.line:1)};
+  const joints=T.filter(t=>t.name==='joint'),acts=T.filter(t=>t.name==='position');
+  const seen={};
+  for(let i=0;i<acts.length;i++){
+    const a=acts[i],nm=a.attrs.name;
+    if(nm!==undefined){if(seen[nm])return{ok:false,msg:'XML Error: Error: repeated name \''+nm+'\' in actuator\nElement \'position\', line '+a.line};seen[nm]=1;}
+    const jn=a.attrs.joint;
+    if(jn===undefined||!joints.some(j=>j.attrs.name===jn))return{ok:false,msg:'Error: unknown transmission target \''+(jn||'')+'\' for actuator id = '+i+'\nElement name \''+(nm||'')+'\', id '+i+', line '+a.line};
+  }
+  const rad=angle==='radian',pj=joints.find(j=>j.attrs.name==='joint2_pitch'),pa=acts.find(a=>a.attrs.joint==='joint2_pitch');
+  const num=(o,k,d)=>o&&o.attrs[k]!==undefined?Number(o.attrs[k]):d;
+  const lst=(o,k)=>o&&o.attrs[k]!==undefined?o.attrs[k].trim().split(/\s+/).map(Number):null;
+  const cv=rad?1:Math.PI/180;
+  let rng=lst(pj,'range');if(rng&&rng.length!==2)return{ok:false,msg:'XML Error: attribute \'range\' requires 2 values\nElement \'joint\', line '+pj.line};
+  let fr=lst(pa,'forcerange'),cr=lst(pa,'ctrlrange');
+  if(fr&&fr.length!==2)return{ok:false,msg:'XML Error: attribute \'forcerange\' requires 2 values\nElement \'position\', line '+pa.line};
+  if(cr&&cr.length!==2)return{ok:false,msg:'XML Error: attribute \'ctrlrange\' requires 2 values\nElement \'position\', line '+pa.line};
+  return{ok:true,p:{dt:dt,angleRad:rad,hasPitchAct:!!pa,
+    kp:pa?num(pa,'kp',1):0,kv:pa?num(pa,'kv',0):0,
+    fmax:fr?Math.max(Math.abs(fr[0]),Math.abs(fr[1])):Infinity,
+    cLo:cr?cr[0]:-Infinity,cHi:cr?cr[1]:Infinity,
+    arm:num(pj,'armature',0),b:num(pj,'damping',0),
+    rlo:rng?rng[0]*cv:-Infinity,rhi:rng?rng[1]*cv:Infinity}};
+}
+/* One pitch joint with MuJoCo's Euler step: actuator force explicit, joint damping implicit, soft joint limit. */
+function simMJ(o){
+  o=Object.assign({dt:0.002,kp:2.5,kv:0,fmax:Infinity,cLo:-Infinity,cHi:Infinity,arm:6e-4,b:2e-3,rlo:-1.57,rhi:1.57,T:1.0,r:0.6,t0:0.05},o);
+  const M=o.arm+MJ_LINK_I,n=Math.round(o.T/o.dt),kl=31,cl=2*Math.sqrt(kl*M);
+  const t=[],y=[];let q=0,w=0,bad=null;
+  for(let k=0;k<n;k++){
+    const tt=k*o.dt;let u=tt>=o.t0?o.r:0;u=clamp(u,o.cLo,o.cHi);
+    let f=o.kp*(u-q)-o.kv*w;if(isFinite(o.fmax))f=clamp(f,-o.fmax,o.fmax);
+    f+=MJ_GRAV_T*Math.sin(q);
+    let cb=o.b,kk=0;
+    if(q>o.rhi&&q-o.rhi<0.3){f-=kl*(q-o.rhi);cb+=cl;kk=kl;}else if(q<o.rlo&&o.rlo-q<0.3){f-=kl*(q-o.rlo);cb+=cl;kk=kl;}   // the real solver gives up on large violations
+    const acc=(f-cb*w)/(M+o.dt*cb+o.dt*o.dt*kk);
+    if(!isFinite(acc)||Math.abs(acc)>1e10){bad=bad===null?tt:bad;y.push(NaN);t.push(tt);q=NaN;w=NaN;continue;}
+    w+=o.dt*acc;q+=o.dt*w;
+    if(!isFinite(q)||Math.abs(q)>1e10){bad=bad===null?tt:bad;}
+    t.push(tt);y.push(q);
+  }
+  return{t:t,y:y,r:o.r,t0:o.t0,dt:o.dt,badTime:bad};
+}
+function mjRun(xml){
+  const L=mjLoad(xml);if(!L.ok)return{loaded:false,msg:L.msg};
+  const s=simMJ(L.p),fin=s.y.filter(v=>isFinite(v));
+  const nan=s.badTime!==null||fin.length!==s.y.length;
+  const peak=fin.reduce((a,v)=>Math.max(a,Math.abs(v)),0);
+  const last=s.y[s.y.length-1];
+  const unstable=nan||peak>2.5;
+  const met=nan?null:stepMetrics(s);
+  const reaches=!nan&&Math.abs(last-s.r)/s.r<=0.05;
+  const pass=!!met&&reaches&&met.overshoot<=10&&met.settle!==null&&met.settle<=0.25&&met.finalErr<=2;
+  return{loaded:true,p:L.p,sim:s,nan:nan,peak:peak,unstable:unstable,met:met,final:last,reaches:reaches,pass:pass};
+}
+
+/* ---------- Module 11: quadruped gait generator ---------- */
+const GA={hx:0.06,hy:0.05,yo:0.03,rho:0.06,legL:0.10,vmax:6.39};   // hip positions, foot offset from hip axis, arc radius, leg length, servo speed limit
+const LEG_NAMES=['FL','FR','RL','RR'];
+const LEG_SIDE=[[1,1],[1,-1],[-1,1],[-1,-1]];                         // [front(+x)/rear(-x), left(+y)/right(-y)]
+const GAIT_PRESETS={
+  crawl:{duty:0.78,off:[0.25,0.75,0.0,0.5],label:'Crawl (one foot up at a time)'},
+  trot: {duty:0.5, off:[0.0,0.5,0.5,0.0], label:'Trot (diagonal pairs)'},
+  pace: {duty:0.5, off:[0.0,0.5,0.0,0.5], label:'Pace (same-side pairs)'},
+  bound:{duty:0.5, off:[0.0,0.0,0.5,0.5], label:'Bound (front pair, rear pair)'}
+};
+const frac1=x=>x-Math.floor(x);
+function legAt(g,i,ph){
+  const f=frac1(ph+g.off[i]),D=g.duty;let xo,lift=0,down,w=0;
+  if(f<D){down=true;xo=g.S*(1-2*f/D);}
+  else{down=false;const u=(f-D)/(1-D);xo=-g.S*Math.cos(Math.PI*u);lift=g.H*Math.sin(Math.PI*u);}
+  // weight-shift envelope: the body starts leaning before lift-off and returns after touchdown
+  const R=Math.min(0.10,(1-D)*0.9),ss=x=>{x=Math.min(1,Math.max(0,x));return x*x*(3-2*x);};
+  if(!down)w=1;else if(D-f<R)w=ss(1-(D-f)/R);else if(f<R)w=ss(1-f/R);
+  const sd=LEG_SIDE[i];
+  return{x:sd[0]*GA.hx+xo,y:sd[1]*(GA.hy+GA.yo),xo:xo,lift:lift,down:down,w:w};
+}
+function hull2(pts){
+  const p=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);if(p.length<3)return p;
+  const cr=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lo=[];for(const q of p){while(lo.length>=2&&cr(lo[lo.length-2],lo[lo.length-1],q)<=0)lo.pop();lo.push(q);}
+  const up=[];for(let i=p.length-1;i>=0;i--){const q=p[i];while(up.length>=2&&cr(up[up.length-2],up[up.length-1],q)<=0)up.pop();up.push(q);}
+  lo.pop();up.pop();return lo.concat(up);
+}
+function polyMargin(poly,c){
+  if(poly.length<3)return NaN;let m=Infinity;
+  for(let i=0;i<poly.length;i++){
+    const a=poly[i],b=poly[(i+1)%poly.length],ex=b[0]-a[0],ey=b[1]-a[1],len=Math.hypot(ex,ey);if(len<1e-9)continue;
+    m=Math.min(m,(ex*(c[1]-a[1])-ey*(c[0]-a[0]))/len);
+  }
+  return m;
+}
+function gaitState(g,ph){
+  const feet=[0,1,2,3].map(i=>legAt(g,i,ph));
+  let cx=0,cy=0;
+  feet.forEach((f,i)=>{if(!f.down){const sd=LEG_SIDE[i],nx=sd[0]*GA.hx,ny=sd[1]*GA.hy,nn=Math.hypot(nx,ny);cx-=g.lean*f.w*nx/nn;cy-=g.lean*f.w*ny/nn;}});
+  const downPts=feet.filter(f=>f.down).map(f=>[f.x,f.y]),poly=hull2(downPts);
+  const margin=polyMargin(poly,[cx,cy]);
+  return{feet:feet,com:[cx,cy],n:downPts.length,poly:poly,margin:margin};
+}
+function gaitSweep(g,N){
+  N=N||240;const mg=[],nd=[];let minM=Infinity,minN=4;
+  for(let k=0;k<N;k++){
+    const s=gaitState(g,k/N);nd.push(s.n);mg.push(s.margin);
+    const m=isNaN(s.margin)?-Infinity:s.margin;if(m<minM)minM=m;if(s.n<minN)minN=s.n;
+  }
+  const D=g.duty,speed=2*g.S/(D*g.T);
+  const swingV=Math.PI*g.S/((1-D)*g.T),hipW=Math.max(swingV,2*g.S/(D*g.T))/GA.rho;
+  const liftW=Math.PI*g.H/((1-D)*g.T)/GA.legL,peakW=Math.max(hipW,liftW);
+  return{margin:mg,nDown:nd,minMargin:minM,minDown:minN,speed:speed,peakW:peakW,frac:peakW/GA.vmax};
+}
+function gaitGoals(g,ph){
+  const out=[];
+  for(let i=0;i<4;i++){
+    const f=legAt(g,i,ph),sd=LEG_SIDE[i];
+    const hip=-sd[1]*f.xo/GA.rho,lift=f.lift/GA.legL;           // small-angle stand-ins for inverse kinematics
+    out.push({id:2*i+1,rad:hip},{id:2*i+2,rad:lift});
+  }
+  return out.map(o=>({id:o.id,rad:o.rad,ticks:((Math.round(o.rad*4096/(2*Math.PI))+2048)%4096+4096)%4096}));
+}
+function syncWritePacket(goals){
+  const params=[116,0,4,0];
+  for(const gl of goals){params.push(gl.id,gl.ticks&255,(gl.ticks>>8)&255,0,0);}
+  return buildPacket(0xFE,0x83,params);
+}
+if(typeof module!=='undefined')module.exports={MJ_START_XML,mjParse,mjLoad,simMJ,mjRun,GA,GAIT_PRESETS,LEG_NAMES,legAt,gaitState,gaitSweep,gaitGoals,syncWritePacket,hull2,polyMargin};
+
+/* ===== shared helpers, navigation, progress ===== */
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const redraws=[];
+function reg(fn){redraws.push(fn);}
+function redrawAll(){for(const f of redraws){try{f();}catch(e){console.error(e);}}}
+function fit(cv,aspect){
+  const w=cv.clientWidth;if(!w)return null;
+  const dpr=Math.min(window.devicePixelRatio||1,2),h=Math.round(w*aspect);
+  const pw=Math.round(w*dpr),ph=Math.round(h*dpr);
+  if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;}
+  cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.fillStyle=css('--plot-bg');ctx.fillRect(0,0,w,h);
+  return{ctx:ctx,w:w,h:h};
+}
+function niceStep(range,count){const raw=range/count,p=Math.pow(10,Math.floor(Math.log10(raw))),f=raw/p;return(f<1.5?1:f<3?2:f<7?5:10)*p;}
+function plotXY(cv,aspect,c){
+  const F=fit(cv,aspect);if(!F)return null;
+  const ctx=F.ctx,w=F.w,h=F.h,L=46,R=12,T=12,B=36,pw=w-L-R,ph=h-T-B;
+  const X=x=>L+(x-c.xr[0])/(c.xr[1]-c.xr[0])*pw,Y=y=>T+ph-(y-c.yr[0])/(c.yr[1]-c.yr[0])*ph;
+  ctx.font='11px '+css('--font-m');ctx.textBaseline='middle';ctx.lineWidth=1;
+  ctx.strokeStyle=css('--grid');ctx.fillStyle=css('--ink2');
+  const sx=niceStep(c.xr[1]-c.xr[0],6),sy=niceStep(c.yr[1]-c.yr[0],5);
+  ctx.textAlign='center';
+  for(let x=Math.ceil(c.xr[0]/sx-1e-9)*sx;x<=c.xr[1]+1e-9;x+=sx){ctx.beginPath();ctx.moveTo(X(x),T);ctx.lineTo(X(x),T+ph);ctx.stroke();ctx.fillText(String(+x.toFixed(4)),X(x),T+ph+11);}
+  ctx.textAlign='right';
+  for(let y=Math.ceil(c.yr[0]/sy-1e-9)*sy;y<=c.yr[1]+1e-9;y+=sy){ctx.beginPath();ctx.moveTo(L,Y(y));ctx.lineTo(L+pw,Y(y));ctx.stroke();ctx.fillText(String(+y.toFixed(4)),L-6,Y(y));}
+  ctx.textAlign='center';ctx.fillText(c.xlabel||'',L+pw/2,h-8);
+  ctx.save();ctx.translate(11,T+ph/2);ctx.rotate(-Math.PI/2);ctx.fillText(c.ylabel||'',0,0);ctx.restore();
+  ctx.save();ctx.beginPath();ctx.rect(L,T,pw,ph);ctx.clip();
+  for(const b of(c.bands||[])){ctx.fillStyle=b.color;ctx.globalAlpha=b.alpha||0.15;ctx.fillRect(L,Y(b.y1),pw,Y(b.y0)-Y(b.y1));ctx.globalAlpha=1;}
+  for(const s of c.series){
+    ctx.strokeStyle=s.color;ctx.fillStyle=s.color;ctx.lineWidth=s.width||2;ctx.setLineDash(s.dash||[]);
+    if(s.dots){for(let i=0;i<s.x.length;i+=(s.step||1)){ctx.fillRect(X(s.x[i])-1.2,Y(s.y[i])-1.2,2.4,2.4);}}
+    else{ctx.beginPath();for(let i=0;i<s.x.length;i++){const px=X(s.x[i]),py=Y(s.y[i]);if(i===0)ctx.moveTo(px,py);else ctx.lineTo(px,py);}ctx.stroke();}
+  }
+  ctx.restore();ctx.setLineDash([]);
+  ctx.strokeStyle=css('--rule');ctx.strokeRect(L,T,pw,ph);
+  return{ctx:ctx,X:X,Y:Y,L:L,T:T,pw:pw,ph:ph,w:w,h:h};
+}
+
+/* ---- arm drawing, shared by Modules 2 and 3 ---- */
+function armViews(cv,yaw,pitch,axis,target,views){
+  const narrow=cv.clientWidth<560&&views.length>2;
+  const F=fit(cv,narrow?0.55*views.length:(views.length>2?0.34:0.5*0.9));if(!F)return;
+  const ctx=F.ctx,w=F.w,h=F.h,n=views.length;
+  const pwid=narrow?w:w/n,phgt=narrow?h/n:h;
+  const geo={base:boxCorners(ARM.baseC,ARM.baseSize),
+    br:boxCorners(ARM.brC,ARM.brSize).map(p=>bracketToBase(yaw,p)),
+    tilt:boxCorners(ARM.tiltC,ARM.tiltSize).map(p=>tiltToBase(yaw,pitch,axis,p))};
+  const j1=ARM.o1,j2=bracketToBase(yaw,ARM.o2),tip=tiltToBase(yaw,pitch,axis,ARM.tip);
+  views.forEach((vw,i)=>{
+    const ox=narrow?0:i*pwid,oy=narrow?i*phgt:0;
+    const map=vw==='top'?(p=>[p[0],p[1]]):vw==='side'?(p=>[p[0],p[2]]):(p=>[p[1],p[2]]);
+    const ur=[-0.13,0.13],vr=vw==='top'?[-0.13,0.13]:[-0.015,0.145];
+    const pad=18,sc=Math.min((pwid-pad*2)/(ur[1]-ur[0]),(phgt-pad*2)/(vr[1]-vr[0]));
+    const cx=ox+pwid/2,cy=oy+phgt/2,um=(ur[0]+ur[1])/2,vm=(vr[0]+vr[1])/2;
+    const P=p=>{const q=map(p);return[cx+(q[0]-um)*sc,cy-(q[1]-vm)*sc];};
+    ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(ox+4,oy+4,pwid-8,phgt-8);
+    ctx.fillStyle=css('--ink2');ctx.font='11px '+css('--font-m');ctx.textAlign='left';ctx.textBaseline='top';
+    ctx.fillText(vw==='top'?'top (x right, y up)':vw==='side'?'side (x right, z up)':'front (y right, z up)',ox+10,oy+9);
+    if(vw!=='top'){const g=P([0,0,0]);ctx.strokeStyle=css('--grid');ctx.beginPath();ctx.moveTo(ox+8,g[1]);ctx.lineTo(ox+pwid-8,g[1]);ctx.stroke();}
+    const draw=(cs,col,wd)=>{ctx.strokeStyle=col;ctx.lineWidth=wd;ctx.beginPath();for(const e of BOX_EDGES){const a=P(cs[e[0]]),b=P(cs[e[1]]);ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);}ctx.stroke();};
+    draw(geo.base,css('--ink2'),1.4);draw(geo.br,css('--t4'),1.4);draw(geo.tilt,css('--t1'),1.8);
+    for(const j of[j1,j2]){const q=P(j);ctx.fillStyle=css('--ink');ctx.beginPath();ctx.arc(q[0],q[1],2.6,0,6.283);ctx.fill();}
+    const tq=P(tip);ctx.fillStyle=css('--t2');ctx.beginPath();ctx.arc(tq[0],tq[1],4,0,6.283);ctx.fill();
+    if(target){const g=P(target);ctx.strokeStyle=css('--ok');ctx.lineWidth=1.6;ctx.beginPath();ctx.arc(g[0],g[1],Math.max(4,0.004*sc),0,6.283);ctx.stroke();
+      ctx.beginPath();ctx.moveTo(g[0]-8,g[1]);ctx.lineTo(g[0]+8,g[1]);ctx.moveTo(g[0],g[1]-8);ctx.lineTo(g[0],g[1]+8);ctx.stroke();}
+  });
+}
+
+/* ---- progress ---- */
+const KEY='robotlab-onboarding-v1';
+let prog={done:{},wk:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.done)prog=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(prog));}catch(e){}}
+function markDone(i){if(!prog.done[i]){prog.done[i]=1;save();}updateRail();}
+
+/* ---- navigation ---- */
+const mods=Array.from(document.querySelectorAll('.mod'));
+let cur=0;
+function buildRail(){
+  const rail=$('rail');
+  rail.innerHTML='<div class="brand">Robot Lab<b>Onboarding</b></div><ol></ol><div class="prog"><span id="prog-t"></span><i><b id="prog-b"></b></i></div>';
+  const ol=rail.querySelector('ol');
+  mods.forEach((m,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML='<button type="button" data-i="'+i+'"><span class="n">'+i+'</span><span class="t"></span><span class="tick" aria-hidden="true">✓</span></button>';
+    li.querySelector('.t').textContent=m.dataset.title;
+    li.querySelector('button').addEventListener('click',()=>show(i));
+    ol.appendChild(li);
+  });
+}
+function updateRail(){
+  const btns=document.querySelectorAll('#rail button');
+  btns.forEach((b,i)=>{b.setAttribute('aria-current',i===cur?'true':'false');b.classList.toggle('done',!!prog.done[i]);});
+  const tot=mods.length-1;let n=0;for(let i=1;i<=tot;i++)if(prog.done[i])n++;
+  const t=$('prog-t'),b=$('prog-b');if(t)t.textContent=n+' of '+tot+' modules done';if(b)b.style.width=(n/tot*100)+'%';
+}
+function show(i,noHash){
+  cur=Math.max(0,Math.min(mods.length-1,i));
+  mods.forEach((m,j)=>{m.hidden=(j!==cur);});
+  updateRail();
+  try{window.scrollTo({top:0});}catch(e){}
+  try{if(!noHash)history.replaceState(null,'','#m'+cur);}catch(e){}
+  requestAnimationFrame(redrawAll);
+}
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-go]');if(g)show(+g.dataset.go);});
+window.addEventListener('resize',()=>requestAnimationFrame(redrawAll));
+try{new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redrawAll);}catch(e){}
+function visible(i){return !mods[i].hidden;}
+
+/* ===== Module 1: packets ===== */
+{
+  const servo=makeServo(1);let lastBad=-1,lastKind='goal';
+  const vals={goal:90,torque:1};
+  function labels(kind,n){
+    const L=['hdr','hdr','hdr','rsv','ID','LEN lo','LEN hi','INST'];
+    const pl=kind==='ping'?[]:kind==='read'?['addr lo','addr hi','size lo','size hi']:kind==='torque'?['addr lo','addr hi','data']:['addr lo','addr hi','d0','d1','d2','d3'];
+    return L.concat(pl,['CRC lo','CRC hi']).slice(0,n);
+  }
+  function build(){
+    const id=+$('pk-id').value||1,kind=$('pk-inst').value,v=+$('pk-val').value;
+    if(kind==='goal')vals.goal=v;if(kind==='torque')vals.torque=v;
+    if(kind==='ping')return pingCmd(id);
+    if(kind==='read')return readCmd(id,132,4);
+    if(kind==='torque')return writeCmd(id,64,1,v?1:0);
+    return writeCmd(id,116,4,degToTicks(v));
+  }
+  function syncControls(){
+    const kind=$('pk-inst').value,vr=$('pk-val'),wrap=$('pk-valwrap');
+    wrap.style.visibility=(kind==='ping'||kind==='read')?'hidden':'visible';
+    if(kind!==lastKind){
+      if(kind==='torque'){vr.min=0;vr.max=1;vr.step=1;vr.value=vals.torque;}
+      else if(kind==='goal'){vr.min=0;vr.max=360;vr.step=1;vr.value=vals.goal;}
+      lastKind=kind;
+    }
+    const v=+vr.value;
+    $('pk-valtxt').textContent=kind==='torque'?(v?'1 (on)':'0 (off)'):kind==='goal'?v+'° = '+degToTicks(v)+' ticks':'';
+  }
+  function renderHex(el,bytes,kind,bad){
+    const lab=labels(kind,bytes.length);
+    el.innerHTML=bytes.map((b,i)=>{
+      const n=bytes.length;
+      const cls=i<3?'f-hdr':i===3?'f-rsv':i===4?'f-id':i<7?'f-len':i===7?'f-inst':i>=n-2?'f-crc':'f-par';
+      return '<div class="b '+cls+(i===bad?' bad':'')+'"><span>'+toHex(b)+'</span><span>'+(lab[i]||'')+'</span></div>';
+    }).join('');
+  }
+  function refresh(){syncControls();lastBad=-1;renderHex($('pk-hex'),build(),$('pk-inst').value,-1);}
+  function drawServo(){
+    const F=fit($('pk-servo'),0.5);if(!F)return;const ctx=F.ctx,w=F.w,h=F.h,cx=w/2,cy=h/2,r=Math.min(w,h)*0.38;
+    ctx.strokeStyle=css('--rule');ctx.lineWidth=2;ctx.beginPath();ctx.arc(cx,cy,r,0,6.283);ctx.stroke();
+    ctx.fillStyle=css('--ink2');ctx.font='11px '+css('--font-m');ctx.textAlign='center';ctx.textBaseline='middle';
+    [['0',0],['1024',90],['2048',180],['3072',270]].forEach(a=>{const t=a[1]*Math.PI/180,x=cx+Math.sin(t)*(r+16),y=cy-Math.cos(t)*(r+16);ctx.fillText(a[0],x,y);
+      ctx.beginPath();ctx.moveTo(cx+Math.sin(t)*(r-6),cy-Math.cos(t)*(r-6));ctx.lineTo(cx+Math.sin(t)*r,cy-Math.cos(t)*r);ctx.stroke();});
+    const ang=t=>t/4096*2*Math.PI,gx=cx+Math.sin(ang(servo.goal))*r,gy=cy-Math.cos(ang(servo.goal))*r;
+    ctx.fillStyle=css('--t2');ctx.beginPath();ctx.arc(gx,gy,5,0,6.283);ctx.fill();
+    const hx=cx+Math.sin(ang(servo.pos))*(r-4),hy=cy-Math.cos(ang(servo.pos))*(r-4);
+    ctx.strokeStyle=servo.torque?css('--accent'):css('--t4');ctx.lineWidth=6;ctx.lineCap='round';ctx.setLineDash(servo.torque?[]:[2,8]);
+    ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(hx,hy);ctx.stroke();ctx.setLineDash([]);ctx.lineCap='butt';
+    ctx.fillStyle=css('--ink');ctx.beginPath();ctx.arc(cx,cy,5,0,6.283);ctx.fill();
+    $('pk-tq').textContent=servo.torque?'on':'off';$('pk-goal').textContent=servo.goal;$('pk-pos').textContent=Math.round(servo.pos);
+  }
+  function send(){
+    const bytes=build().slice(),kind=$('pk-inst').value;lastBad=-1;
+    if($('pk-corrupt').checked){lastBad=Math.min(bytes.length-3,8);bytes[lastBad]^=1;}
+    renderHex($('pk-hex'),bytes,kind,lastBad);
+    const res=servoReceive(servo,bytes);
+    $('pk-note').textContent=(lastBad>=0?'One bit was flipped in byte '+(lastBad+1)+' on the wire. ':'')+res.note;
+    $('pk-reply').textContent='reply: '+(res.reply?res.reply.map(toHex).join(' '):'none (silence)');
+    drawServo();
+  }
+  ['pk-id','pk-inst','pk-val'].forEach(i=>$(i).addEventListener('input',refresh));
+  $('pk-send').addEventListener('click',send);
+  reg(drawServo);
+  setInterval(()=>{if(!visible(1))return;if(servo.torque&&Math.abs(servo.goal-servo.pos)>0.5){servoStep(servo,0.03);drawServo();}},30);
+  refresh();
+
+  /* decode lab */
+  let ans={id:0,deg:0};
+  function newPacket(){
+    const id=1+Math.floor(Math.random()*20),ticks=Math.floor(Math.random()*4096);
+    ans={id:id,deg:ticks*360/4096};
+    const b=writeCmd(id,116,4,ticks);renderHex($('dc-hex'),b,'goal',-1);
+    $('dc-fb').textContent='Answer within 1 degree.';$('dc-pill').textContent='not solved';$('dc-pill').className='pill';
+    $('dc-id').value=0;$('dc-deg').value=0;
+  }
+  $('dc-new').addEventListener('click',newPacket);
+  $('dc-check').addEventListener('click',()=>{
+    const id=+$('dc-id').value,deg=+$('dc-deg').value,okId=id===ans.id,okDeg=Math.abs(deg-ans.deg)<=1;
+    if(okId&&okDeg){$('dc-fb').textContent='Correct. ID '+ans.id+', goal '+Math.round(ans.deg*10)/10+'°. Byte 5 is the ID, and the last four parameter bytes are the goal, low byte first.';
+      $('dc-pill').textContent='solved';$('dc-pill').className='pill ok';markDone(1);}
+    else $('dc-fb').textContent=(okId?'ID is right. ':'ID is not right: it is the fifth byte. ')+(okDeg?'Angle is right.':'Angle is off: join the last four parameter bytes high byte first, then multiply by 360 / 4096.');
+  });
+  newPacket();
+}
+
+/* ===== Module 2: URDF and forward kinematics ===== */
+{
+  let target=armTip(1.1,-0.6,'y');
+  const st={yaw:0,pitch:0,axis:'y'};
+  function snippet(){
+    const ax={x:'1 0 0',y:'0 1 0',z:'0 0 1'}[$('fk-axis').value];
+    $('fk-urdf').innerHTML='&lt;joint name="joint2_pitch" type="revolute"&gt;\n  &lt;parent link="bracket_link"/&gt;\n  &lt;child link="tilt_link"/&gt;\n  &lt;origin xyz="0 0 0.033" rpy="0 0 0"/&gt;\n<span class="hl">  &lt;axis xyz="'+ax+'"/&gt;</span>\n  &lt;limit lower="-1.57" upper="1.57" effort="1.5" velocity="6.39"/&gt;\n&lt;/joint&gt;';
+  }
+  function draw(){
+    st.yaw=+$('fk-yaw').value;st.pitch=+$('fk-pitch').value;st.axis=$('fk-axis').value;
+    $('fk-yawv').textContent=st.yaw.toFixed(2)+' rad ('+(st.yaw*57.2958).toFixed(0)+'°)';
+    $('fk-pitchv').textContent=st.pitch.toFixed(2)+' rad ('+(st.pitch*57.2958).toFixed(0)+'°)';
+    const tip=armTip(st.yaw,st.pitch,st.axis);
+    $('fk-x').textContent=(tip[0]*1000).toFixed(1)+' mm';$('fk-y').textContent=(tip[1]*1000).toFixed(1)+' mm';$('fk-z').textContent=(tip[2]*1000).toFixed(1)+' mm';
+    const d=dist3(tip,target)*1000;$('fk-d').textContent=d.toFixed(1)+' mm';
+    const hit=d<=4;$('fk-pill').textContent=hit?'target hit':'target at '+d.toFixed(0)+' mm';$('fk-pill').className='pill'+(hit?' ok':'');
+    if(hit)markDone(2);
+    armViews($('fk-cv'),st.yaw,st.pitch,st.axis,target,['top','side','front']);
+  }
+  ['fk-yaw','fk-pitch','fk-axis'].forEach(i=>$(i).addEventListener('input',()=>{snippet();draw();}));
+  $('fk-new').addEventListener('click',()=>{
+    const ax=$('fk-axis').value,yw=(Math.random()*2-1)*2.2,pt=(Math.random()*2-1)*1.2;
+    target=armTip(yw,pt,ax);draw();
+  });
+  reg(draw);snippet();draw();
+}
+
+/* ===== Module 3: ROS 2 terminal sandbox ===== */
+{
+  const term=$('ros-term'),inp=$('ros-in');
+  const arm={p:[0,0],v:[0,0],cmd:[0,0]};
+  const missions=[
+    {k:'nodes',t:'List the running nodes'},
+    {k:'topics',t:'List the topics'},
+    {k:'echo',t:'Read live joint positions with echo'},
+    {k:'pub',t:'Publish a command that turns joint1_yaw past 1.0 rad'},
+    {k:'bag',t:'Record a bag for 3 seconds or more, stop it with Ctrl+C, then run ros2 bag info on it'}
+  ];
+  const done={};let rec=null;const bags={};const hist=[];let hi=0;let cmdCount=0;
+  function print(t,c){const s=document.createElement('span');if(c)s.className=c;s.textContent=t+'\n';term.appendChild(s);term.scrollTop=term.scrollHeight;}
+  function renderMissions(){
+    $('ros-missions').innerHTML=missions.map(m=>'<div class="mission'+(done[m.k]?' done':'')+'"><span class="box">'+(done[m.k]?'✓':'')+'</span><span>'+m.t+'</span></div>').join('');
+    const n=missions.filter(m=>done[m.k]).length;$('ros-pill').textContent=n+' of '+missions.length+' missions';$('ros-pill').className='pill'+(n===missions.length?' ok':'');
+    if(n===missions.length)markDone(3);
+  }
+  function ok(k){if(!done[k]){done[k]=1;renderMissions();}}
+  const fmt=x=>(Math.round(x*1e6)/1e6).toString();
+  function jsMsg(){
+    const j=Math.random()*1e-4;
+    return 'header:\n  stamp:\n    sec: '+Math.floor(Date.now()/1000)+'\n    nanosec: '+Math.floor(Math.random()*1e9)+"\n  frame_id: ''\nname:\n- joint1_yaw\n- joint2_pitch\nposition:\n- "+fmt(arm.p[0]+j)+'\n- '+fmt(arm.p[1]+j)+'\nvelocity:\n- '+fmt(arm.v[0])+'\n- '+fmt(arm.v[1])+'\neffort:\n- 0.0\n- 0.0\n---';
+  }
+  const HELP='Commands this sandbox understands:\n  ros2 node list\n  ros2 topic list [-t]\n  ros2 topic info /joint_states\n  ros2 topic echo /joint_states\n  ros2 topic hz /joint_states\n  ros2 topic pub --once /arm/joint_cmd std_msgs/msg/Float64MultiArray "{data: [1.2, 0.4]}"\n  ros2 interface show sensor_msgs/msg/JointState\n  ros2 bag record -o NAME /joint_states /arm/joint_cmd   (stop with Ctrl+C)\n  ros2 bag info NAME\n  clear, help';
+  function stopRec(){
+    if(!rec)return;const dur=(Date.now()-rec.t0)/1000;
+    bags[rec.name]={dur:dur,js:Math.floor(dur*50),cmds:cmdCount-rec.c0,topics:rec.topics};
+    print('[INFO] [rosbag2_recorder]: Recording stopped.','d');
+    print("[INFO] [rosbag2_storage]: Closing database '"+rec.name+"/"+rec.name+"_0.db3'",'d');rec=null;
+  }
+  function run(line){
+    const toks=line.match(/"[^"]*"|'[^']*'|\S+/g)||[];if(!toks.length)return;
+    if(toks[0]==='clear'){term.textContent='';return;}
+    if(toks[0]==='help'){print(HELP,'d');return;}
+    if(toks[0]!=='ros2'){print('bash: '+toks[0]+': command not found. Type help.','e');return;}
+    const a=toks[1],b=toks[2];
+    if(a==='node'&&b==='list'){print('/arm_driver\n/robot_state_publisher');ok('nodes');return;}
+    if(a==='topic'&&b==='list'){
+      const t=toks.includes('-t');
+      const L=[['/arm/joint_cmd','std_msgs/msg/Float64MultiArray'],['/joint_states','sensor_msgs/msg/JointState'],['/parameter_events','rcl_interfaces/msg/ParameterEvent'],['/rosout','rcl_interfaces/msg/Log'],['/tf','tf2_msgs/msg/TFMessage'],['/tf_static','tf2_msgs/msg/TFMessage']];
+      print(L.map(x=>x[0]+(t?' ['+x[1]+']':'')).join('\n'));ok('topics');return;}
+    if(a==='topic'&&b==='info'){
+      const tp=toks[3];
+      if(tp==='/joint_states')print('Type: sensor_msgs/msg/JointState\nPublisher count: 1\nSubscription count: 1');
+      else if(tp==='/arm/joint_cmd')print('Type: std_msgs/msg/Float64MultiArray\nPublisher count: 0\nSubscription count: 1');
+      else print('Unknown topic \''+(tp||'')+'\'','e');return;}
+    if(a==='topic'&&b==='hz'){print('average rate: 50.002\n  min: 0.019s max: 0.021s std dev: 0.00031s window: 51','');return;}
+    if(a==='topic'&&b==='echo'){
+      const tp=toks[3];
+      if(tp==='/joint_states'){print(jsMsg()+'\n'+jsMsg()+'\n'+jsMsg());print('(The sandbox stops after 3 messages. The real tool keeps printing until you press Ctrl+C.)','d');ok('echo');}
+      else print('WARNING: topic ['+(tp||'')+'] does not appear to be published yet\nCould not determine the type for passed topic','e');
+      return;}
+    if(a==='topic'&&b==='pub'){
+      const rest=toks.slice(3).filter(x=>x!=='--once'&&x!=='-1'),topic=rest[0],type=rest[1],body=rest.slice(2).join(' ');
+      if(!topic||!type||!body){print('usage: ros2 topic pub [--once] TOPIC TYPE "{data: [a, b]}"','e');return;}
+      if(type!=='std_msgs/msg/Float64MultiArray'&&topic==='/arm/joint_cmd'){print('The passed message type is invalid for this topic. Use std_msgs/msg/Float64MultiArray.','e');return;}
+      const m=body.match(/data:\s*\[([^\]]*)\]/);
+      if(!m){print('Could not parse the message. Use "{data: [1.2, 0.4]}".','e');return;}
+      const nums=m[1].split(',').map(s=>parseFloat(s)).filter(x=>!isNaN(x));
+      print('Waiting for at least 1 matching subscription(s)...\npublisher: beginning loop\npublishing #1: std_msgs.msg.Float64MultiArray(layout=std_msgs.msg.MultiArrayLayout(dim=[], data_offset=0), data=['+nums.join(', ')+'])\n');
+      cmdCount++;
+      if(topic!=='/arm/joint_cmd'){print('Nothing is subscribed to '+topic+', so nothing moves.','d');return;}
+      if(nums.length!==2){print('[arm_driver] ignored a command with '+nums.length+' value(s). It expects 2: yaw and pitch.','d');return;}
+      arm.cmd=[Math.max(-2.9,Math.min(2.9,nums[0])),Math.max(-1.57,Math.min(1.57,nums[1]))];
+      if(nums[0]>1.0&&nums[0]<=2.9)ok('pub');
+      return;}
+    if(a==='interface'&&b==='show'){
+      if(toks[3]==='sensor_msgs/msg/JointState')print('std_msgs/Header header\n\tbuiltin_interfaces/Time stamp\n\t\tint32 sec\n\t\tuint32 nanosec\n\tstring frame_id\nstring[] name\nfloat64[] position\nfloat64[] velocity\nfloat64[] effort\n(comments trimmed)','');
+      else print('Only sensor_msgs/msg/JointState is available in this sandbox.','e');return;}
+    if(a==='bag'&&b==='record'){
+      if(rec){print('A recording is already running. Press Ctrl+C first.','e');return;}
+      let name='rosbag2_'+Date.now();const i=toks.indexOf('-o');if(i>0&&toks[i+1])name=toks[i+1];
+      const topics=toks.filter((x,k)=>x.startsWith('/')&&toks[k-1]!=='-o');
+      if(!topics.length&&!toks.includes('-a')){print('Specify topics or use -a.','e');return;}
+      rec={name:name,t0:Date.now(),c0:cmdCount,topics:topics};
+      print("[INFO] [rosbag2_storage]: Opened database '"+name+"/"+name+"_0.db3' for READ_WRITE.\n[INFO] [rosbag2_recorder]: Recording... press Ctrl+C to stop.","d");return;}
+    if(a==='bag'&&b==='info'){
+      const bg=bags[toks[3]];
+      if(!bg){print("Bag '"+(toks[3]||'')+"' not found. Record one first.",'e');return;}
+      const total=(bg.topics.includes('/joint_states')?bg.js:0)+(bg.topics.includes('/arm/joint_cmd')?bg.cmds:0);
+      print('\nFiles:             '+toks[3]+'_0.db3\nBag size:          '+Math.max(1,Math.round(bg.js*0.19))+' KiB\nStorage id:        sqlite3\nDuration:          '+bg.dur.toFixed(1)+'s\nMessages:          '+total+'\nTopic information: '+bg.topics.map(t=>'Topic: '+t+' | Count: '+(t==='/joint_states'?bg.js:bg.cmds)).join('\n                   ')+'\n');
+      if(bg.dur>=3)ok('bag');else print('That bag is only '+bg.dur.toFixed(1)+' s long. Record at least 3 s.','d');return;}
+    print('ros2: that command is not in this sandbox. Type help.','e');
+  }
+  function submit(){
+    const line=inp.value.trim();if(!line)return;
+    print('$ '+line,'p');hist.push(line);hi=hist.length;inp.value='';
+    try{run(line);}catch(e){print('internal error: '+e.message,'e');}
+  }
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter')submit();
+    else if(e.key==='ArrowUp'&&hist.length){hi=Math.max(0,hi-1);inp.value=hist[hi];e.preventDefault();}
+    else if(e.key==='ArrowDown'&&hist.length){hi=Math.min(hist.length,hi+1);inp.value=hist[hi]||'';e.preventDefault();}
+  });
+  $('ros-stop').addEventListener('click',()=>{print('^C','d');stopRec();});
+  const chips=['ros2 node list','ros2 topic list -t','ros2 topic echo /joint_states','ros2 topic hz /joint_states','ros2 topic pub --once /arm/joint_cmd std_msgs/msg/Float64MultiArray "{data: [1.2, 0.4]}"','ros2 bag record -o run1 /joint_states /arm/joint_cmd','ros2 bag info run1','ros2 interface show sensor_msgs/msg/JointState'];
+  $('ros-chips').innerHTML=chips.map((c,i)=>'<button type="button" class="chip" data-c="'+i+'">'+c.replace(/ std_msgs.*$/,' …').replace(/ \/joint_states \/arm.*$/,' …')+'</button>').join('');
+  $('ros-chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(b){inp.value=chips[+b.dataset.c];inp.focus();}});
+  $('ros-graph').innerHTML='<span class="node you">your terminal</span><span class="topic">→<span>/arm/joint_cmd</span></span><span class="node">/arm_driver</span><span class="topic">→<span>/joint_states</span></span><span class="node">/robot_state_publisher</span><span class="topic">→<span>/tf</span></span>';
+  function draw(){armViews($('ros-cv'),arm.p[0],arm.p[1],'y',null,['side','top']);}
+  setInterval(()=>{
+    if(!visible(3))return;
+    for(let i=0;i<2;i++){const e=arm.cmd[i]-arm.p[i];arm.v[i]=Math.max(-6.39,Math.min(6.39,e*10));arm.p[i]+=arm.v[i]*0.02;}
+    draw();
+  },20);
+  reg(draw);renderMissions();
+  print('ROS 2 sandbox. Type help, or click a chip below the terminal.','d');
+}
+
+/* ===== Module 4: PD tuning ===== */
+{
+  const kpOf=v=>0.1*Math.pow(50,v/100),kdOf=v=>0.15*Math.pow(v/100,2);
+  function draw(){
+    const kp=kpOf(+$('pd-kp').value),kd=kdOf(+$('pd-kd').value),dl=+$('pd-delay').value;
+    $('pd-kpv').textContent=kp.toFixed(2);$('pd-kdv').textContent=kd.toFixed(4);$('pd-dv').textContent=dl+' ms';
+    const s=simPD(kp,kd,{delay:dl/1000}),m=stepMetrics(s);
+    const pass=m.overshoot<=10&&m.settle!==null&&m.settle<=0.25&&m.finalErr<=2;
+    const pl=plotXY($('pd-cv'),0.34,{xr:[0,1],yr:[-0.1,1.0],xlabel:'time (s)',ylabel:'joint angle (rad)',
+      bands:[{y0:0.6*0.98,y1:0.6*1.02,color:css('--ok'),alpha:0.22}],
+      series:[{x:[0,0.05,0.05,1],y:[0,0,0.6,0.6],color:css('--t4'),width:1.5,dash:[5,4]},{x:s.t,y:s.y,color:css('--t1'),width:2.4}]});
+    const pill=(ok,txt)=>'<span class="pill '+(ok?'ok':'bad')+'">'+txt+'</span>';
+    $('pd-metrics').innerHTML=pill(m.overshoot<=10,'overshoot '+m.overshoot.toFixed(1)+' %')+pill(m.settle!==null&&m.settle<=0.25,'settles in '+(m.settle===null?'never':(m.settle*1000).toFixed(0)+' ms'))
+      +pill(m.finalErr<=2,'final error '+m.finalErr.toFixed(1)+' %')+'<span class="pill">rise '+(m.rise===null?'never':(m.rise*1000).toFixed(0)+' ms')+'</span>';
+    $('pd-pill').textContent=pass?'passing':'not passing';$('pd-pill').className='pill'+(pass?' ok':'');
+    if(pass)markDone(4);
+    return pl;
+  }
+  ['pd-kp','pd-kd','pd-delay'].forEach(i=>$(i).addEventListener('input',draw));
+  reg(draw);draw();
+}
+
+/* ===== Module 5: fit a motor model ===== */
+{
+  const meas=makeMeasured();let busy=false;
+  const P=()=>({delay:+$('id-delay').value/1000,wn:+$('id-wn').value,zeta:+$('id-zeta').value,vmax:+$('id-vmax').value});
+  function setSliders(p){
+    $('id-delay').value=(p.delay*1000).toFixed(1);$('id-wn').value=p.wn.toFixed(1);$('id-zeta').value=p.zeta.toFixed(2);$('id-vmax').value=p.vmax.toFixed(1);
+  }
+  function draw(){
+    const p=P();$('id-delayv').textContent=(p.delay*1000).toFixed(1)+' ms';$('id-wnv').textContent=p.wn.toFixed(1)+' rad/s';$('id-zetav').textContent=p.zeta.toFixed(2);$('id-vmaxv').textContent=p.vmax.toFixed(1)+' rad/s';
+    const mod=simModel(p,0.002,3.0),e=rms(mod.y,meas.y),cmd=meas.t.map(cmdProfile);
+    plotXY($('id-cv'),0.36,{xr:[0,3],yr:[-0.1,0.9],xlabel:'time (s)',ylabel:'joint angle (rad)',
+      series:[{x:meas.t,y:cmd,color:css('--t4'),width:1.4,dash:[5,4]},{x:meas.t,y:meas.y,color:css('--t2'),dots:true,step:3},{x:mod.t,y:mod.y,color:css('--t1'),width:2.4}]});
+    const pass=e<=0.010;$('id-rms').textContent=e.toFixed(4)+' rad';$('id-rms').style.color=pass?css('--ok'):css('--ink');
+    $('id-pill').textContent=pass?'matched':'not matched';$('id-pill').className='pill'+(pass?' ok':'');
+    if(pass)markDone(5);
+  }
+  ['id-delay','id-wn','id-zeta','id-vmax'].forEach(i=>$(i).addEventListener('input',draw));
+  $('id-reset').addEventListener('click',()=>{if(busy)return;setSliders({delay:0.005,wn:25,zeta:1,vmax:6.4});draw();});
+  $('id-auto').addEventListener('click',()=>{
+    if(busy)return;busy=true;$('id-auto').disabled=true;const rng=mulberry32(Date.now()&0xffff);let k=0,cur=P();
+    const tick=()=>{
+      const o=autoFitStep(cur,meas,rng,0.06*(1-k/60));cur=o.p;setSliders(cur);draw();k++;
+      if(k<60)setTimeout(tick,50);else{busy=false;$('id-auto').disabled=false;}
+    };tick();
+  });
+  reg(draw);draw();
+}
+
+/* ===== Module 6: read view_arm.py ===== */
+{
+  const CH=[
+  {t:'1. Start the simulator first',l:'lines 11 to 24',code:
+`import argparse
+import os
+import sys
+
+from isaaclab.app import AppLauncher
+
+parser = argparse.ArgumentParser(description="View the 2-DoF XL430 arm.")
+parser.add_argument("--num_envs", type=int, default=1, help="Number of arms to spawn.")
+parser.add_argument("--steps", type=int, default=0, help="Stop after this many steps (0 = run until closed).")
+AppLauncher.add_app_launcher_args(parser)
+args_cli = parser.parse_args()
+
+app_launcher = AppLauncher(args_cli)
+simulation_app = app_launcher.app`,
+  why:['The two options are command-line flags, like argv in C. AppLauncher starts the Isaac Sim application in the background and gives you a handle called simulation_app. It also adds its own flags, such as --headless for no window.',
+       'ATmega version: configure clocks and pins before any other code runs. Isaac Lab modules cannot be loaded until this application is up, which is why the next block imports things late.']},
+  {t:'2. Imports that need the app',l:'lines 26 to 36',code:
+`# Everything below needs the simulator running, so import it after AppLauncher.
+import math
+
+import torch
+
+import isaaclab.sim as sim_utils
+from isaaclab.assets import AssetBaseCfg
+from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from arm2dof_tasks.robot_cfg import ARM2DOF_CFG, tip_position  # noqa: E402`,
+  why:['torch gives you tensors: arrays that can live on the GPU. The sys.path line adds the project folder so Python can find the arm2dof_tasks package.',
+       'ARM2DOF_CFG is the arm from Module 2 plus its motor settings, defined in robot_cfg.py. tip_position is the hand-written forward kinematics from Module 2. Open robot_cfg.py and find both.']},
+  {t:'3. Describe the scene',l:'lines 39 to 44',code:
+`class ArmSceneCfg(InteractiveSceneCfg):
+    ground = AssetBaseCfg(prim_path="/World/defaultGroundPlane", spawn=sim_utils.GroundPlaneCfg())
+    dome_light = AssetBaseCfg(
+        prim_path="/World/Light", spawn=sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
+    )
+    arm = ARM2DOF_CFG.replace(prim_path="{ENV_REGEX_NS}/Arm")`,
+  why:['A scene is a list of things that exist: a floor, a light, an arm. Nothing is built yet. This is a configuration, like a const table in flash.',
+       '{ENV_REGEX_NS} is a placeholder. Run with --num_envs 4 and the arm is stamped out four times, each in its own namespace. That copy-and-paste is what makes learning fast later.']},
+  {t:'4. Set up the loop',l:'lines 47 to 55',code:
+`def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
+    arm = scene["arm"]
+    tip_idx = arm.find_bodies("tip_link")[0][0]
+    sim_dt = sim.get_physics_dt()
+    sim_time = 0.0
+    count = 0
+
+    print(f"[INFO]: Joints: {arm.joint_names}")
+    print(f"[INFO]: Bodies: {arm.body_names}")`,
+  why:['scene["arm"] fetches the arm by name. find_bodies("tip_link") looks up which slot in the result arrays belongs to the tip marker from the URDF.',
+       'sim_dt is the time step. It is set to 0.005 s further down, so the loop runs 200 steps per second of robot time. It is the period of your timer. Check the printed joint and body names against the URDF.']},
+  {t:'5. Pick a target',l:'lines 57 to 65',code:
+`    while simulation_app.is_running():
+        if args_cli.steps and count >= args_cli.steps:
+            break
+
+        # Yaw sweeps +/-90 deg, pitch +/-45 deg at a different frequency.
+        target = torch.zeros_like(arm.data.default_joint_pos)
+        target[:, 0] = (math.pi / 2) * math.sin(2 * math.pi * 0.25 * sim_time)
+        target[:, 1] = (math.pi / 4) * math.sin(2 * math.pi * 0.5 * sim_time)
+        arm.set_joint_position_target(target)`,
+  why:['This is the main loop. target holds one goal angle per joint for every arm copy. Rows are copies and columns are joints. Column 0 swings yaw at 0.25 Hz. Column 1 swings pitch at 0.5 Hz.',
+       'set_joint_position_target hands the goals to the motor model. It is the simulated version of the goal position packet from Module 1. In Module 7, a learned policy replaces these two lines.']},
+  {t:'6. Advance physics',l:'lines 67 to 71',code:
+`        scene.write_data_to_sim()
+        sim.step()
+        sim_time += sim_dt
+        count += 1
+        scene.update(sim_dt)`,
+  why:['Three calls in a fixed order. Push your targets into the simulator. Advance physics one step: the motor model computes a torque and physics moves the joints. Refresh the Python-side copies of the results.',
+       'Skip the first call and the arm never hears your target. Skip the last and you read stale numbers.']},
+  {t:'7. Read the results back',l:'lines 73 to 82',code:
+`        if count % 50 == 0:
+            q = arm.data.joint_pos[0]
+            pos = arm.data.body_pos_w[0, tip_idx] - scene.env_origins[0]
+            print(
+                f"t={sim_time:5.2f}s  target=({target[0, 0]:+.2f}, {target[0, 1]:+.2f})  "
+                f"q=({q[0]:+.2f}, {q[1]:+.2f}) rad  tip_pos=({pos[0]:+.3f}, {pos[1]:+.3f}, {pos[2]:+.3f}) m"
+            )
+            # Sanity check: our hand-written forward kinematics should agree with the simulator.
+            fk = tip_position(q[0:1], q[1:2])[0]
+            print(f"          fk_error={torch.norm(fk - pos).item() * 1000:.3f} mm")`,
+  why:['Every 50 steps (0.25 s) it prints the first arm only, because of the [0] index. q is the measured joint angles. pos is the tip position in the world, minus that arm\'s origin, so it is comparable with Module 2.',
+       'Compare target with q in the printout. The gap between them is the motor model at work, which is what Module 5 measures on real hardware. If fk_error grows, your URDF and your equations disagree.']},
+  {t:'8. Build the world and go',l:'lines 85 to 97',code:
+`def main():
+    sim = sim_utils.SimulationContext(sim_utils.SimulationCfg(dt=0.005, device=args_cli.device))
+    # The arm is ~10 cm tall, so put the camera close.
+    sim.set_camera_view([0.25, 0.25, 0.2], [0.0, 0.0, 0.05])
+    scene = InteractiveScene(ArmSceneCfg(args_cli.num_envs, env_spacing=0.3))
+    sim.reset()
+    print("[INFO]: Setup complete...")
+    run_simulator(sim, scene)
+
+
+if __name__ == "__main__":
+    main()
+    simulation_app.close()`,
+  why:['dt=0.005 sets the physics step. set_camera_view only moves the viewing camera. env_spacing=0.3 places the copies 30 cm apart. sim.reset() initializes everything, then the loop runs.',
+       'When you close the window, the loop ends and simulation_app.close() shuts the application down. Same pattern as main() in C, with cleanup at the end.']}
+  ];
+  const box=$('code-chunks');
+  CH.forEach((c,i)=>{
+    const d=document.createElement('div');d.className='chunk';
+    const btn=document.createElement('button');btn.type='button';btn.setAttribute('aria-expanded',i===0?'true':'false');
+    btn.innerHTML='<span></span><span style="color:var(--ink2);font-weight:400"></span>';
+    btn.children[0].textContent=c.t;btn.children[1].textContent=c.l;
+    const body=document.createElement('div');body.hidden=i!==0;
+    const pre=document.createElement('pre');pre.className='code';pre.textContent=c.code;pre.style.borderRadius='0';
+    const why=document.createElement('div');why.className='why';why.innerHTML=c.why.map(()=>'<p></p>').join('');
+    why.querySelectorAll('p').forEach((p,k)=>{p.textContent=c.why[k];});
+    body.appendChild(pre);body.appendChild(why);d.appendChild(btn);d.appendChild(body);box.appendChild(d);
+    btn.addEventListener('click',()=>{const o=body.hidden;body.hidden=!o;btn.setAttribute('aria-expanded',o?'true':'false');});
+  });
+
+  const QZ=[
+    {q:'You run with --num_envs 4. How many arms does the printed fk_error line report on?',o:['Four, one per copy','One, because the code indexes [0]','None, it only prints in headless mode'],a:1,e:'The code reads joint_pos[0] and env_origins[0], so only the first copy is printed. The other three still move.'},
+    {q:'The step is dt = 0.005 s. How many simulation steps run per second of robot time?',o:['50','200','5000'],a:1,e:'1 / 0.005 = 200. That is a 200 Hz control loop.'},
+    {q:'You delete the line scene.write_data_to_sim(). What happens?',o:['Nothing. set_joint_position_target already moved the arm','The targets never reach the simulator, so the arm does not follow them','The script crashes on the next line'],a:1,e:'set_joint_position_target only stores the goals. write_data_to_sim sends them into the simulator.'},
+    {q:'Why do the isaaclab imports come after AppLauncher?',o:['Style only','Those modules need the simulator application to be running first','Python requires imports at the bottom'],a:1,e:'The application has to start before those modules can load. This ordering is normal in Isaac Lab scripts.'}
+  ];
+  const got=new Set();const qb=$('quiz');
+  QZ.forEach((z,i)=>{
+    const d=document.createElement('div');d.className='quiz';
+    const q=document.createElement('div');q.className='q';q.textContent=(i+1)+'. '+z.q;d.appendChild(q);
+    const fb=document.createElement('div');fb.className='fb';
+    z.o.forEach((o,k)=>{
+      const l=document.createElement('label');l.className='opt';l.style.flexDirection='row';
+      const r=document.createElement('input');r.type='radio';r.name='qz'+i;r.id='qz'+i+'_'+k;
+      r.addEventListener('change',()=>{
+        if(k===z.a){fb.textContent='Correct. '+z.e;fb.style.color=css('--ok');got.add(i);}
+        else{fb.textContent='Not quite. Read the matching code block again.';fb.style.color=css('--bad');got.delete(i);}
+        $('qz-pill').textContent=got.size+' of 4 correct';$('qz-pill').className='pill'+(got.size===4?' ok':'');
+        if(got.size===4)markDone(6);
+      });
+      const s=document.createElement('span');s.textContent=o;l.appendChild(r);l.appendChild(s);d.appendChild(l);
+    });
+    d.appendChild(fb);qb.appendChild(d);
+  });
+}
+
+/* ===== Module 7: toy RL walker ===== */
+{
+  const CREEP=[0.4,1,0.8,Math.PI/2];
+  const runs=[];let latest={theta:CREEP,act:ACT_IDEAL,label:'creep'};let raf=0,playing=null;
+  const COL=()=>[css('--t1'),css('--t2'),css('--t3'),css('--t4'),css('--h5'),css('--h4'),css('--h3')];
+  function stats(theta,act){const rs=rollout(theta,act,0),rr=rollout(theta,ACT_REAL,0);return{sim:rs.dist,real:rr.dist,eff:rr.pen,gap:Math.abs(rs.dist-rr.dist)/Math.max(1,Math.abs(rr.dist))*100};}
+  function row(r,i){
+    return '<tr><td>'+i+'</td><td>'+r.env+'</td><td>'+r.lam+'</td><td>'+r.f.toFixed(1)+' Hz</td><td>'+r.sim.toFixed(0)+' cm</td><td><b>'+r.real.toFixed(0)+' cm</b></td><td>'+r.eff.toFixed(0)+'</td><td>'+r.gap.toFixed(0)+' %</td></tr>';
+  }
+  function table(){
+    const b=stats(CREEP,ACT_IDEAL);
+    let h=row({env:'Hand-coded creep gait',lam:'none',f:CREEP[2],sim:b.sim,real:b.real,eff:b.eff,gap:b.gap},'base');
+    runs.forEach((r,i)=>{h+=row(r,i+1);});$('rl-table').innerHTML=h;
+  }
+  function goals(){
+    const el=$('rl-goals');
+    if(!runs.length){el.innerHTML='<span>Goals for one policy: walks 75 cm or more on the real robot, servo effort 400 or less, sim error 20 percent or less. Train to start.</span>';$('rl-pill').textContent='0 of 3 goals';$('rl-pill').className='pill';return;}
+    const r=runs[runs.length-1],g=[r.real>=75,r.eff<=400,r.gap<=20],n=g.filter(Boolean).length,pill=(ok,t)=>'<span class="pill '+(ok?'ok':'bad')+'">'+t+'</span>';
+    el.innerHTML=pill(g[0],'real distance '+r.real.toFixed(0)+' cm (need 75+)')+pill(g[1],'servo effort '+r.eff.toFixed(0)+' (need 400 or less)')+pill(g[2],'sim error '+r.gap.toFixed(0)+' % (need 20 or less)');
+    $('rl-pill').textContent=n+' of 3 goals';$('rl-pill').className='pill'+(n===3?' ok':'');if(n===3)markDone(7);
+  }
+  function curve(){
+    const cols=COL();let lo=0,hi=10;
+    runs.forEach(r=>{for(const v of r.hist){if(v<lo)lo=v;if(v>hi)hi=v;}});hi=Math.ceil(hi/50)*50||50;lo=lo<0?Math.floor(lo/10)*10:0;
+    plotXY($('rl-curve'),0.5,{xr:[0,60],yr:[lo,hi],xlabel:'training round',ylabel:'score',
+      series:runs.length?runs.map((r,i)=>({x:r.hist.map((_,k)=>k),y:r.hist,color:cols[i%cols.length],width:i===runs.length-1?2.6:1.3})):[{x:[0,60],y:[0,0],color:css('--t4'),width:1}]});
+  }
+  function frame(tr,i,dist,over){
+    const F=fit($('rl-anim'),0.5);if(!F)return;const ctx=F.ctx,w=F.w,h=F.h,gy=h*0.78,bx=w*0.38,pxcm=w/70;
+    ctx.strokeStyle=css('--ink2');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(w,gy);ctx.stroke();
+    ctx.fillStyle=css('--ink2');ctx.font='10px '+css('--font-m');ctx.textAlign='center';ctx.lineWidth=1;
+    const body=tr?tr[i][0]:0;
+    for(let c=-20;c<400;c+=10){const x=bx+(c-body)*pxcm;if(x<-10||x>w+10)continue;ctx.beginPath();ctx.moveTo(x,gy);ctx.lineTo(x,gy+(c%50===0?9:5));ctx.stroke();if(c%50===0&&c>=0)ctx.fillText(c+'',x,gy+20);}
+    const s=tr?tr[i][1]:0,l=tr?tr[i][2]:0.3,g=tr?tr[i][3]:true,L=h*0.3,hipx=bx,hipy=gy-L-h*0.05;
+    ctx.fillStyle=css('--accent');ctx.fillRect(bx-34,hipy-h*0.1,68,h*0.1);
+    const fx=hipx+Math.sin(s)*L,fy=gy-Math.max(0,(l-0.3))*L*1.8-(g?0:L*0.12);
+    ctx.strokeStyle=g?css('--ok'):css('--t2');ctx.lineWidth=5;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(hipx,hipy);ctx.lineTo(fx,Math.min(fy,gy));ctx.stroke();ctx.lineCap='butt';
+    ctx.fillStyle=css('--ink');ctx.textAlign='left';ctx.font='12px '+css('--font-m');
+    ctx.fillText((over||'')+'distance '+body.toFixed(0)+' cm   foot '+(g?'down':'up'),10,18);
+  }
+  function play(act,name){
+    cancelAnimationFrame(raf);const tr=rollout(latest.theta,act,0,true).trace,slow=$('rl-slow').checked?0.25:1,t0=performance.now();playing=name;
+    const step=()=>{
+      const i=Math.min(tr.length-1,Math.floor((performance.now()-t0)/5*slow));
+      frame(tr,i,tr[i][0],name+': ');
+      if(i<tr.length-1)raf=requestAnimationFrame(step);else playing=null;
+    };step();
+  }
+  $('rl-lam').addEventListener('input',()=>{$('rl-lamv').textContent=(+$('rl-lam').value).toFixed(2);});
+  $('rl-lamv').textContent='0.00';
+  $('rl-train').addEventListener('click',()=>{
+    const btn=$('rl-train');btn.disabled=true;btn.textContent='Training…';
+    setTimeout(()=>{
+      const envKey=$('rl-env').value,act=envKey==='ideal'?ACT_IDEAL:ACT_MODEL,lam=+$('rl-lam').value;
+      const t=trainPolicy(act,lam,100+runs.length,60,10),s=stats(t.theta,act);
+      runs.push({env:envKey==='ideal'?'Ideal sim':'Sim with motor model',lam:lam.toFixed(2),f:t.theta[2],sim:s.sim,real:s.real,eff:s.eff,gap:s.gap,hist:t.hist});
+      if(runs.length>6)runs.shift();
+      latest={theta:t.theta,act:act};btn.disabled=false;btn.textContent='Train 60 rounds';
+      table();curve();goals();play(ACT_REAL,'real robot model');
+    },30);
+  });
+  $('rl-psim').addEventListener('click',()=>play(latest.act||ACT_IDEAL,'training sim'));
+  $('rl-preal').addEventListener('click',()=>play(ACT_REAL,'real robot model'));
+  reg(()=>{table();curve();if(!playing)frame(null,0,0,'');});
+  table();goals();
+}
+
+/* ===== Module 8: odometry, gyro, lidar ===== */
+{
+  let steps=null,idx=0,pts=[],off=null,raf=0,rngS=mulberry32(5),res=null;
+  const W=14,Hh=8;
+  function geom(){const cv=$('mp-cv');const F=fit(cv,0.6);if(!F)return null;const m=16,sc=Math.min((F.w-2*m)/W,(F.h-2*m)/Hh);return{F:F,m:m,sc:sc,ox:(F.w-W*sc)/2,oy:(F.h-Hh*sc)/2};}
+  const PX=(g,x)=>g.ox+x*g.sc,PY=(g,y)=>g.oy+(Hh-y)*g.sc;
+  function paintPts(g,from,to){
+    const dpr=Math.min(window.devicePixelRatio||1,2),ow=Math.round(g.F.w*dpr),oh=Math.round(g.F.h*dpr);
+    if(!off||off.width!==ow||off.height!==oh){off=document.createElement('canvas');off.width=ow;off.height=oh;from=0;}
+    const c=off.getContext('2d');c.setTransform(dpr,0,0,dpr,0,0);if(from===0)c.clearRect(0,0,g.F.w,g.F.h);
+    c.fillStyle=css('--t1');
+    for(let i=from;i<to;i++){c.fillRect(PX(g,pts[i][0])-0.9,PY(g,pts[i][1])-0.9,1.8,1.8);}
+  }
+  function draw(){
+    const g=geom();if(!g)return;const ctx=g.F.ctx,src=$('mp-src').value;
+    ctx.strokeStyle=css('--t4');ctx.lineWidth=1.5;ctx.beginPath();for(const w of WALLS){ctx.moveTo(PX(g,w[0]),PY(g,w[1]));ctx.lineTo(PX(g,w[2]),PY(g,w[3]));}ctx.stroke();
+    if(steps){
+      {const dpr=Math.min(window.devicePixelRatio||1,2);if(!off||off.width!==Math.round(g.F.w*dpr)||off.height!==Math.round(g.F.h*dpr))paintPts(g,0,pts.length);}
+      ctx.drawImage(off,0,0,g.F.w,g.F.h);
+      ctx.strokeStyle=css('--t2');ctx.lineWidth=1.5;ctx.beginPath();
+      for(let i=0;i<=idx&&i<steps.length;i+=3){const p=steps[i][src];if(i===0)ctx.moveTo(PX(g,p.x),PY(g,p.y));else ctx.lineTo(PX(g,p.x),PY(g,p.y));}ctx.stroke();
+      const p=steps[Math.min(idx,steps.length-1)][src];
+      ctx.fillStyle=css('--accent');ctx.beginPath();ctx.arc(PX(g,p.x),PY(g,p.y),5,0,6.283);ctx.fill();
+      ctx.strokeStyle=css('--accent');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(PX(g,p.x),PY(g,p.y));ctx.lineTo(PX(g,p.x)+Math.cos(p.th)*14,PY(g,p.y)-Math.sin(p.th)*14);ctx.stroke();
+    }else{
+      ctx.fillStyle=css('--ink2');ctx.font='13px '+css('--font-b');ctx.textAlign='center';ctx.fillText('Press Run lap. The robot starts at the lower left and drives the hallway loop.',g.F.w/2,g.F.h/2);
+    }
+  }
+  function addScan(i){
+    const src=$('mp-src').value,t=steps[i].tr,e=steps[i][src],sc=scanAt(t,rngS);
+    for(const s of sc){pts.push([e.x+s[1]*Math.cos(e.th+s[0]),e.y+s[1]*Math.sin(e.th+s[0])]);}
+  }
+  function results(){
+    const L=steps[steps.length-1],pe=k=>Math.hypot(L[k].x-L.tr.x,L[k].y-L.tr.y),he=k=>Math.abs(wrapPi(L[k].th-L.tr.th))*57.2958;
+    res={od:pe('od'),fu:pe('fu')};
+    $('mp-res').innerHTML='<span>Wheels only <b>'+res.od.toFixed(2)+' m</b>, '+he('od').toFixed(1)+'° off</span><span>Wheels plus gyro <b>'+res.fu.toFixed(2)+' m</b>, '+he('fu').toFixed(1)+'° off</span><span>SLAM goal <b>a few cm</b></span><span style="flex-basis:100%">End-of-lap position error. The robot truly ends where it began.</span>';
+    const ok=res.fu<0.3;$('mp-pill').textContent='wheels + gyro error '+res.fu.toFixed(2)+' m';$('mp-pill').className='pill'+(ok?' ok':'');if(ok)markDone(8);
+  }
+  function run(){
+    cancelAnimationFrame(raf);
+    steps=runLap({wheelErr:+$('mp-we').value,gyroBias:+$('mp-gb').value,alpha:+$('mp-al').value,seed:3+Math.floor(Math.random()*50)});
+    rngS=mulberry32(5);pts=[];off=null;idx=0;
+    const fast=$('mp-fast').checked;
+    if(fast){for(let i=0;i<steps.length;i+=2)addScan(i);idx=steps.length-1;results();draw();return;}
+    $('mp-res').innerHTML='<span>Driving…</span>';
+    const tick=()=>{
+      const g=geom();if(!g){raf=requestAnimationFrame(tick);return;}
+      const from=pts.length;
+      for(let k=0;k<12&&idx<steps.length-1;k++){idx++;if(idx%2===0)addScan(idx);}
+      paintPts(g,from,pts.length);draw();
+      if(idx<steps.length-1)raf=requestAnimationFrame(tick);else results();
+    };tick();
+  }
+  const lbl=()=>{$('mp-wev').textContent=(+$('mp-we').value).toFixed(2)+' %';$('mp-gbv').textContent=(+$('mp-gb').value*57.2958).toFixed(2)+'°/s';$('mp-alv').textContent=(+$('mp-al').value).toFixed(2);};
+  ['mp-we','mp-gb','mp-al'].forEach(i=>$(i).addEventListener('input',()=>{lbl();if(steps)$('mp-pill').textContent='settings changed, run again';}));
+  $('mp-src').addEventListener('input',()=>{if(steps&&idx>=steps.length-1){pts=[];off=null;const g=geom();if(g){const rs=mulberry32(5);const keep=rngS;rngS=rs;for(let i=0;i<steps.length;i+=2)addScan(i);rngS=keep;}}draw();});
+  $('mp-run').addEventListener('click',run);
+  lbl();reg(draw);draw();
+}
+
+/* ===== Module 9: checklist and boot ===== */
+{
+  const items=[
+    'Run view_arm.py headless with --steps 300 and read the fk_error lines.',
+    'Measure the three ESTIMATES values in arm2dof.urdf with calipers, edit the file, and rerun.',
+    'Command one XL430 position from Python or ROS 2, without using Dynamixel Wizard.',
+    'Log commanded and measured position at the highest rate you can, and save it as a CSV.',
+    'Fit the Module 5 model to your CSV. Write down delay, wn, zeta, and vmax.',
+    'Put your fitted numbers in robot_cfg.py, rerun the simulation, and plot sim against real.',
+    'Write five sentences: what surprised you, and what would you measure next?'
+  ];
+  function render(){
+    const box=$('wk-list');box.innerHTML='';
+    items.forEach((t,i)=>{
+      const l=document.createElement('label');l.className='check';l.style.flexDirection='row';
+      const c=document.createElement('input');c.type='checkbox';c.id='wk'+i;c.checked=!!prog.wk[i];
+      c.addEventListener('change',()=>{if(c.checked)prog.wk[i]=1;else delete prog.wk[i];save();count();});
+      const s=document.createElement('span');s.textContent=t;l.appendChild(c);l.appendChild(s);box.appendChild(l);
+    });count();
+  }
+  function count(){const n=Object.keys(prog.wk).length;$('wk-pill').textContent=n+' of '+items.length;$('wk-pill').className='pill'+(n===items.length?' ok':'');
+    if(n===items.length)markDone(9);else{if(prog.done[9]){delete prog.done[9];save();}updateRail();}}
+  $('reset-all').addEventListener('click',()=>{prog={done:{},wk:{}};save();render();updateRail();});
+  buildRail();render();
+  const h=(location.hash||'').match(/^#m(\d+)$/);show(h?+h[1]:0,true);
+}
+
+/* ===== Module 10: MuJoCo ===== */
+{
+  /* --- Lab 10.1: URDF to MJCF table --- */
+  const RS=[
+    ['<link name="tilt_link">','<body name="tilt_link" pos="0 0 0.033">','A rigid part is a body. Bodies nest: a child\'s position is measured from its parent, which is the job the joint origin did in the URDF.'],
+    ['<joint name="joint2_pitch" type="revolute">','<joint name="joint2_pitch" type="hinge" ...>','Revolute is called hinge. The joint now sits inside the body it moves.'],
+    ['<axis xyz="0 1 0"/>','axis="0 1 0"','Same idea, same numbers.'],
+    ['<limit lower="-1.57" upper="1.57" effort="1.5" velocity="6.39"/>','range="-1.57 1.57" on the joint, and forcerange="-1.5 1.5" on the motor','One URDF line becomes two places. There is no direct field for the speed limit.'],
+    ['<mass value="0.0572"/> <inertia ixx="1.58e-05" .../>','<geom type="box" size="..." mass="0.0572"/>','Give MuJoCo a shape and a mass and it works out the inertia itself.'],
+    ['(nothing: a URDF has no motor)','<position name="pitch_motor" joint="joint2_pitch" kp="2.5" kv="0.05"/>','The URDF describes a body. MuJoCo wants the motor in the file: a stiffness kp and a damping kv, the P and D of Module 4.'],
+    ['(nothing: Module 5 kept this outside the URDF)','armature="0.0006" damping="0.002"','Reflected rotor inertia and joint friction. These are the numbers Module 5 fits from data.'],
+    ['angles are always radians','<compiler angle="radian"/>','MuJoCo reads angles in degrees unless you tell it otherwise. A URDF never needed this line.']
+  ];
+  const shown=new Array(RS.length).fill(false);
+  function renderRS(){
+    const tb=document.querySelector('#mj-rs tbody');tb.innerHTML='';const hide=$('mj-hide').checked;
+    RS.forEach((r,i)=>{
+      const tr=document.createElement('tr');
+      const a=document.createElement('td'),b=document.createElement('td'),c=document.createElement('td');
+      a.textContent=r[0];c.textContent=r[2];
+      if(hide&&!shown[i]){const bt=document.createElement('button');bt.type='button';bt.className='rv';bt.textContent='reveal';bt.addEventListener('click',()=>{shown[i]=true;renderRS();});b.appendChild(bt);c.style.visibility='hidden';c.dataset.h='1';}
+      else b.textContent=r[1];
+      tr.appendChild(a);tr.appendChild(b);tr.appendChild(c);tb.appendChild(tr);
+    });
+  }
+  $('mj-hide').addEventListener('change',()=>{shown.fill(false);renderRS();});
+  renderRS();
+
+  /* --- Lab 10.2: edit, run, plot --- */
+  const ta=$('mj-xml'),term=$('mj-term');ta.value=MJ_START_XML;
+  const st={loaded:false,reaches:false,pass:false,unstable:false,fixed:false};
+  let last=null;
+  function say(parts){
+    term.innerHTML='';
+    parts.forEach(p=>{const d=document.createElement('div');if(p.c)d.className=p.c;d.textContent=p.t;term.appendChild(d);});
+    term.scrollTop=term.scrollHeight;
+  }
+  function lineOf(msg){const m=msg.match(/[Ll]ine(?: number=| )(\d+)/);return m?+m[1]:null;}
+  function goals(){
+    const G=[
+      ['The file loads without an error',st.loaded],
+      ['The arm reaches 0.6 rad (within 5 percent)',st.reaches],
+      ['A clean step: overshoot 10 percent or less, settles in 0.25 s or less',st.pass],
+      ['Make the simulation unstable on purpose, then fix it and pass again',st.fixed]
+    ];
+    $('mj-goals').innerHTML=G.map(g=>'<div class="mission'+(g[1]?' done':'')+'"><span class="box">'+(g[1]?'✓':'')+'</span><span>'+g[0]+'</span></div>').join('');
+    const n=G.filter(g=>g[1]).length;$('mj-pill').textContent=n+' of 4 goals';$('mj-pill').className='pill'+(n===4?' ok':'');
+    if(n===4)markDone(10);
+  }
+  function draw(){
+    const R=last;const cv=$('mj-cv');
+    if(!R||!R.loaded){plotXY(cv,0.5,{xr:[0,1],yr:[-0.1,0.8],series:[],xlabel:'time (s)',ylabel:'pitch angle (rad)'});return;}
+    const s=R.sim,big=R.unstable;
+    const y=s.y.map(v=>isFinite(v)?Math.max(-3.2,Math.min(3.2,v)):NaN);
+    const yr=big?[-3.2,3.2]:[-0.1,Math.max(0.8,R.peak*1.08)];
+    plotXY(cv,0.5,{xr:[0,1],yr:yr,xlabel:'time (s)',ylabel:'pitch angle (rad)',
+      bands:[{y0:s.r*0.98,y1:s.r*1.02,color:css('--ok'),alpha:0.18}],
+      series:[{x:[0,s.t0,s.t0,1],y:[0,0,s.r,s.r],color:css('--t4'),dash:[5,4],width:1.4},{x:s.t,y:y,color:css('--t1'),width:2}]});
+  }
+  function run(){
+    const R=mjRun(ta.value);last=R;const out=[];
+    out.push({t:'>>> m = mujoco.MjModel.from_xml_string(text)',c:'p'});
+    if(!R.loaded){
+      out.push({t:'ValueError: '+R.msg,c:'e'});
+      const ln=lineOf(R.msg);if(ln!==null){const tx=ta.value.split('\n')[ln-1];if(tx!==undefined)out.push({t:'line '+ln+' of your file: '+tx.trim(),c:'d'});}
+      $('mj-met').innerHTML='';
+    }else{
+      const N=Math.round(1/R.p.dt);
+      out.push({t:'>>> d = mujoco.MjData(m); d.ctrl[1] = 0.6',c:'p'});
+      out.push({t:'>>> for _ in range('+N+'): mujoco.mj_step(m, d)',c:'p'});
+      if(R.nan){
+        out.push({t:'WARNING: Nan, Inf or huge value in QACC at DOF 0. The simulation is unstable. Time = '+R.sim.badTime.toFixed(4)+'.',c:'e'});
+        out.push({t:'MuJoCo stops the run and resets the data. Nothing here is a physical result.',c:'d'});
+      }else{
+        out.push({t:'>>> d.qpos[1]',c:'p'});out.push({t:R.final.toFixed(4)});
+        if(R.unstable)out.push({t:'No error was printed, but the joint swung as far as '+R.peak.toFixed(1)+' rad, past its 1.57 rad limit. The force limit stopped the numbers from overflowing and hid the explosion.',c:'e'});
+        else if(R.peak<0.5)out.push({t:'The goal was 0.6 rad and the joint stopped at '+R.final.toFixed(3)+'. No error was printed, so the file is legal. Something in it is stopping the joint.',c:'d'});
+      }
+      const m=R.met;
+      $('mj-met').innerHTML=m?('<span>overshoot <b>'+m.overshoot.toFixed(1)+' %</b></span><span>settles in <b>'+(m.settle===null?'never':(m.settle*1000).toFixed(0)+' ms')+'</b></span><span>final error <b>'+m.finalErr.toFixed(1)+' %</b></span><span>timestep <b>'+R.p.dt+' s</b></span><span>force limit <b>'+(isFinite(R.p.fmax)?R.p.fmax+' N·m':'none')+'</b></span>'):'<span>no usable trace</span>';
+      st.loaded=true;
+      if(R.reaches&&!R.unstable)st.reaches=true;
+      if(R.unstable)st.unstable=true;
+      if(R.pass){st.pass=true;if(st.unstable)st.fixed=true;}
+    }
+    say(out);goals();draw();
+  }
+  $('mj-run').addEventListener('click',run);
+  $('mj-reset').addEventListener('click',()=>{ta.value=MJ_START_XML;last=null;say([{t:'File reset to the starting version.',c:'d'}]);$('mj-met').innerHTML='';draw();});
+  reg(draw);goals();say([{t:'Press Run. The first run is expected to fail.',c:'d'}]);
+}
+
+/* ===== Module 11: quadruped gaits ===== */
+{
+  const sel=$('gt-sel'),LAB=['FL','FR','RL','RR'];
+  Object.keys(GAIT_PRESETS).forEach(k=>{const o=document.createElement('option');o.value=k;o.textContent=GAIT_PRESETS[k].label;sel.appendChild(o);});
+  {const o=document.createElement('option');o.value='custom';o.textContent='Custom (you changed an offset)';sel.appendChild(o);}
+  const offBox=$('gt-offs');
+  LAB.forEach((n,i)=>{
+    const l=document.createElement('label');l.innerHTML='<span>'+n+' <span class="v" id="gt-offv'+i+'"></span></span><input type="range" id="gt-off'+i+'" min="0" max="0.95" step="0.05" value="0">';
+    offBox.appendChild(l);
+  });
+  let ph=0,playing=false,usedCrawl=false;
+  const gm=()=>({duty:+$('gt-duty').value,off:LAB.map((n,i)=>+$('gt-off'+i).value),S:$('gt-S').value/100,H:$('gt-H').value/100,T:+$('gt-T').value,lean:$('gt-lean').value/100});
+  function applyPreset(k){
+    const p=GAIT_PRESETS[k];$('gt-duty').value=p.duty;p.off.forEach((v,i)=>{$('gt-off'+i).value=v;});
+  }
+  function labels(){
+    $('gt-dutyv').textContent=(+$('gt-duty').value).toFixed(2);$('gt-Tv').textContent=(+$('gt-T').value).toFixed(1)+' s';
+    $('gt-Sv').textContent=$('gt-S').value+' cm';$('gt-Hv').textContent=$('gt-H').value+' cm';$('gt-leanv').textContent=$('gt-lean').value+' cm';
+    LAB.forEach((n,i)=>{$('gt-offv'+i).textContent=(+$('gt-off'+i).value).toFixed(2);});
+    $('gt-phv').textContent=ph.toFixed(2);
+  }
+  function drawTop(g,S){
+    const F=fit($('gt-top'),0.9);if(!F)return;const ctx=F.ctx,w=F.w,h=F.h,sc=Math.min(w/0.27,h/0.25),cx=w/2,cy=h/2;
+    const P=p=>[cx+p[0]*sc,cy-p[1]*sc];
+    ctx.font='11px '+css('--font-m');ctx.textBaseline='middle';
+    // support polygon
+    if(S.poly.length>=3){ctx.beginPath();S.poly.forEach((p,i)=>{const q=P(p);if(i)ctx.lineTo(q[0],q[1]);else ctx.moveTo(q[0],q[1]);});ctx.closePath();
+      ctx.fillStyle=css('--accent-soft');ctx.fill();ctx.strokeStyle=css('--accent');ctx.lineWidth=1.5;ctx.stroke();}
+    else if(S.poly.length===2){const a=P(S.poly[0]),b=P(S.poly[1]);ctx.strokeStyle=css('--bad');ctx.lineWidth=2;ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.stroke();ctx.setLineDash([]);}
+    // body
+    const b0=P([-GA.hx,GA.hy]),b1=P([GA.hx,-GA.hy]);ctx.strokeStyle=css('--ink2');ctx.lineWidth=1.5;ctx.strokeRect(b0[0],b0[1],b1[0]-b0[0],b1[1]-b0[1]);
+    ctx.fillStyle=css('--ink2');ctx.textAlign='left';ctx.fillText('front →',b1[0]-44,b0[1]+10);
+    // legs
+    S.feet.forEach((f,i)=>{
+      const sd=LEG_SIDE[i],hp=P([sd[0]*GA.hx,sd[1]*GA.hy]),fp=P([f.x,f.y]);
+      ctx.strokeStyle=css('--t4');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(hp[0],hp[1]);ctx.lineTo(fp[0],fp[1]);ctx.stroke();
+      ctx.fillStyle=css('--ink');ctx.beginPath();ctx.arc(hp[0],hp[1],3,0,6.283);ctx.fill();
+      const r=7+f.lift*160;
+      ctx.beginPath();ctx.arc(fp[0],fp[1],r,0,6.283);
+      if(f.down){ctx.fillStyle=css('--t1');ctx.fill();}else{ctx.strokeStyle=css('--t2');ctx.lineWidth=2;ctx.stroke();}
+      ctx.fillStyle=f.down?css('--accent-ink'):css('--t2');ctx.textAlign='center';ctx.font='10px '+css('--font-m');ctx.fillText(LAB[i],fp[0],fp[1]);ctx.font='11px '+css('--font-m');
+    });
+    // center of mass
+    const c=P(S.com);ctx.strokeStyle=css('--ink');ctx.lineWidth=1.8;ctx.beginPath();ctx.arc(c[0],c[1],6,0,6.283);ctx.moveTo(c[0]-9,c[1]);ctx.lineTo(c[0]+9,c[1]);ctx.moveTo(c[0],c[1]-9);ctx.lineTo(c[0],c[1]+9);ctx.stroke();
+    ctx.fillStyle=css('--ink2');ctx.textAlign='left';
+    ctx.fillText(S.n<3?'feet down: '+S.n+' (no polygon)':'margin '+(S.margin*100).toFixed(1)+' cm'+(S.margin<0?' (outside)':''),10,h-12);
+  }
+  function drawDiag(g,sw){
+    const F=fit($('gt-diag'),0.38);if(!F)return;const ctx=F.ctx,w=F.w,h=F.h,L=34,R=8,T=6,B=32,rh=(h-T-B)/4,pw=w-L-R,N=200;
+    ctx.font='11px '+css('--font-m');ctx.textBaseline='middle';
+    for(let i=0;i<4;i++){
+      const y0=T+i*rh+3,hh=rh-6;
+      ctx.fillStyle=css('--ink2');ctx.textAlign='right';ctx.fillText(LAB[i],L-6,y0+hh/2);
+      ctx.strokeStyle=css('--rule');ctx.lineWidth=1;ctx.strokeRect(L,y0,pw,hh);
+      ctx.fillStyle=css('--t1');
+      let k=0;while(k<N){
+        const down=(((k+0.5)/N+g.off[i])%1)<g.duty;if(!down){k++;continue;}
+        let j=k;while(j<N&&((((j+0.5)/N)+g.off[i])%1)<g.duty)j++;
+        ctx.fillRect(L+k/N*pw,y0,(j-k)/N*pw,hh);k=j;
+      }
+    }
+    ctx.fillStyle=css('--ink2');ctx.textAlign='center';[0,0.5,1].forEach(v=>ctx.fillText(String(v),L+v*pw,h-B+10));ctx.fillText("cycle position",L+pw/2,h-7);
+    const x=L+ph*pw;ctx.strokeStyle=css('--t2');ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(x,T);ctx.lineTo(x,h-B);ctx.stroke();
+  }
+  function drawMargin(g,sw){
+    const xs=[],ys=[];sw.margin.forEach((m,k)=>{xs.push(k/sw.margin.length);const v=isNaN(m)?-3:m*100;ys.push(Math.max(-3,Math.min(4,v)));});
+    const Pl=plotXY($('gt-mg'),0.38,{xr:[0,1],yr:[-3,4],xlabel:'cycle position',ylabel:'cm',
+      bands:[{y0:1,y1:4,color:css('--ok'),alpha:0.14},{y0:-3,y1:0,color:css('--bad'),alpha:0.12}],
+      series:[{x:xs,y:ys,color:css('--t1'),width:2}]});
+    if(!Pl)return;const x=Pl.X(ph),c=Pl.ctx;c.strokeStyle=css('--t2');c.lineWidth=2;c.beginPath();c.moveTo(x,Pl.T);c.lineTo(x,Pl.T+Pl.ph);c.stroke();
+  }
+  function goalsAndText(sw){
+    const stable=sw.minDown>=3&&sw.minMargin>=0.01,sp=sw.speed>=0.035,lo=sw.frac<=0.5;
+    const G=[['Never tips: three or more feet down, and at least 1 cm of margin all cycle',stable],
+             ['Same, and walks at 3.5 cm/s or faster',stable&&sp],
+             ['Same, and keeps servo speed at 50 percent of the limit or lower',stable&&sp&&lo]];
+    $('gt-goals').innerHTML=G.map(g=>'<div class="mission'+(g[1]?' done':'')+'"><span class="box">'+(g[1]?'✓':'')+'</span><span>'+g[0]+'</span></div>').join('');
+    const n=G.filter(g=>g[1]).length;$('gt-pill').textContent=n+' of 3 goals';$('gt-pill').className='pill'+(n===3?' ok':'');
+    if(n===3)markDone(11);
+    const mc=(sw.minMargin*100);
+    let msg;
+    if(sw.minDown<3)msg='<span class="eyebrow">What this gait is</span><p style="margin:0">At some instant only '+sw.minDown+' feet are on the ground. Two feet make a line, not a polygon, so the center of mass cannot be inside one. A gait like this is dynamic: it stays up by keeping moving and by balance feedback from the IMU. A fixed table of joint angles rarely manages that. This is the kind of behavior a learned policy can find.</p>';
+    else if(sw.minMargin<0)msg='<span class="eyebrow">What this gait does</span><p style="margin:0">Three feet are always down, but for part of the cycle the center of mass is outside their triangle. The body would tip toward the lifting leg. Shift your weight before lift-off, or raise the duty factor.</p>';
+    else if(sw.minMargin<0.01)msg='<span class="eyebrow">What this gait does</span><p style="margin:0">Statically stable, but the margin is '+mc.toFixed(1)+' cm at its worst. Sag in the servos and a few degrees of sensing error will use that up. Aim for at least 1 cm.</p>';
+    else msg='<span class="eyebrow">What this gait does</span><p style="margin:0">Statically stable all cycle, with '+mc.toFixed(1)+' cm of margin at its worst. You could freeze it at any instant and the robot would stand.</p>';
+    $('gt-msg').innerHTML=msg;
+  }
+  let lastGoals=null;
+  function table(g){
+    const gl=gaitGoals(g,ph);lastGoals=gl;
+    const nm=['hip (yaw)','lift (pitch)'];
+    $('gt-tbl').innerHTML=gl.map((o,k)=>'<tr><td>'+o.id+'</td><td>'+LAB[k>>1]+' '+nm[k&1]+'</td><td>'+(o.rad*57.2958).toFixed(1)+'°</td><td>'+o.ticks+'</td></tr>').join('');
+    const pk=syncWritePacket(gl);
+    $('gt-pkt').textContent=pk.map(toHex).join(' ')+'   ('+pk.length+' bytes)';
+  }
+  function refresh(){
+    labels();const g=gm(),sw=gaitSweep(g,240),S=gaitState(g,ph);
+    drawTop(g,S);drawDiag(g,sw);drawMargin(g,sw);
+    const mm=isFinite(sw.minMargin)?(sw.minMargin*100).toFixed(1)+' cm':'no support polygon';
+    $('gt-stats').innerHTML='<span>fewest feet down <b>'+sw.minDown+'</b></span><span>worst margin <b>'+mm+'</b></span><span>speed <b>'+(sw.speed*100).toFixed(1)+' cm/s</b></span><span>peak servo speed <b>'+sw.peakW.toFixed(1)+' rad/s</b> ('+(sw.frac*100).toFixed(0)+'% of the '+GA.vmax+' limit)</span>';
+    goalsAndText(sw);table(g);
+  }
+  sel.addEventListener('change',()=>{if(sel.value!=='custom')applyPreset(sel.value);refresh();});
+  ['gt-duty','gt-T','gt-S','gt-H','gt-lean'].forEach(id=>$(id).addEventListener('input',()=>{
+    if(id==='gt-duty'&&sel.value!=='custom'){sel.value='custom';}
+    refresh();}));
+  LAB.forEach((n,i)=>$('gt-off'+i).addEventListener('input',()=>{sel.value='custom';refresh();}));
+  $('gt-ph').addEventListener('input',()=>{ph=+$('gt-ph').value;refresh();});
+  $('gt-play').addEventListener('click',()=>{playing=!playing;$('gt-play').textContent=playing?'Pause':'Play';});
+  setInterval(()=>{if(!playing||!visible(11))return;ph=(ph+0.03/(+$('gt-T').value))%1;$('gt-ph').value=ph;refresh();},30);
+  $('gt-copy').addEventListener('click',()=>{
+    if(!lastGoals)return;const txt='goals = {'+lastGoals.map(o=>o.id+': '+o.ticks).join(', ')+'}';
+    const done=()=>{$('gt2-pill').textContent='copied';$('gt2-pill').className='pill ok';$('gt-copyfb').textContent=txt;};
+    try{navigator.clipboard.writeText(txt).then(done,()=>{$('gt-copyfb').textContent='Copy blocked. Select this and copy it: '+txt;});}
+    catch(e){$('gt-copyfb').textContent='Copy blocked. Select this and copy it: '+txt;}
+  });
+  applyPreset('crawl');sel.value='crawl';
+  reg(refresh);refresh();
+}
+
+</script>
