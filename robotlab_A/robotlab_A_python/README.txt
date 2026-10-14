@@ -1,4 +1,8 @@
-Tutorial A scripts. Setup once, in this folder:
+Tutorial A scripts. 
+
+Follow the tutorial series at https://drharriswcu.github.io/robotlab_A to install everything correctly.
+
+Typical Linux setup once in this folder:
 
   python3 -m venv robotlab-a-env            (Windows PowerShell:  py -m venv robotlab-a-env)
   source robotlab-a-env/bin/activate        (Windows PowerShell:  robotlab-a-env\Scripts\Activate.ps1)
@@ -39,3 +43,52 @@ Optional modules (they work on one servo at a time)
   set_gains.py       Optional A   change position P, I, D gains
   log_step.py        Optional A and B   record a step response to a CSV
   fit_log.py         Optional B   fit a model to that CSV
+
+3D-printed parts (the quad_scad folder)
+  The parts are drawn in OpenSCAD, a free program that builds 3D models from a short text script
+  instead of by dragging shapes with the mouse. Every size is a named number near the top of the file,
+  so you change a number, preview, and export a new STL for your slicer.
+  Download it (Windows, macOS, Linux) from  https://openscad.org/downloads.html
+  On Ubuntu/Debian you can also use:  sudo apt install openscad
+
+  Using a file: open it in OpenSCAD, press F5 to preview, F6 to render, then File > Export > Export as STL.
+  Or from a terminal:  openscad -o part.stl file.scad
+  Files with a "part" setting export one piece at a time:  openscad -o fit_ring.stl -D 'part="fit_ring"' xl430_test_pieces.scad
+  Keep ALL the .scad files in one folder: most of them load xl430.scad (and each other) with include/use.
+  All sizes are in millimetres and all servo sizes come from the ROBOTIS XL430-W250 drawing.
+
+  Shared servo model (draws nothing by itself)
+    xl430.scad              XL430-W250 dimensions, screw positions and a simple stand-in servo (xl430_dummy)
+                            used by every other file. Also defines the servo axes the other files use.
+    xl430_preview.scad      opens xl430.scad and shows the stand-in servo; red dots mark the two
+                            top-corner case screws that the printed parts bolt to
+
+  Bench arm (one servo clamped to the desk)
+    xl430_arm.scad          Step 4   a lever arm that bolts to the servo horn       (export: xl430_arm.stl)
+    xl430_base.scad         Step 4   a desk-clamp mount that holds the servo upright (export: xl430_desk_mount.stl)
+    xl430_test_pieces.scad  Step 4   two quick fit-check pieces: a ring with the servo-shaped opening and a disc with
+                            the horn screw pattern. Print these FIRST to check your printer's fit before the
+                            full parts. part = "all", "fit_ring" or "horn_plate". Sizes come from the two files above.
+
+  Quadruped (Steps 8-13, eight servos). Parts to print for one robot:
+    body_plates.scad        the body plate that holds the 4 hip servos, one per corner.   Print 2
+                            (one on top of the servos, one flipped underneath; the servos are the spacers).
+                            Has a centre window with a cross brace and a hub for the IMU / boards. No supports.
+                            Screws per plate: 8 x M2.5 flat-head x 12 and 8 x M2.5 flat-head x 14
+                            (they replace the M2.5 x 10 case screws; swap one at a time).
+    hip_bracket.scad        joins a hip servo to its knee servo: flat ears clamp the hip horn and idler,
+                            upright ears clamp the knee horn and idler.                   Print 4
+                            The file draws it already lying on one knee ear, the way it goes on the
+                            print bed, so export it as is. Use supports "everywhere", not "build plate only":
+                            the hip ears and the top knee ear both need them.
+                            A wide web and a tapered rib on each hip ear make the joint between the hip ears
+                            and the middle block stronger.
+                            Screws per bracket: 16 x M2 x 6. When rendered it prints "knee axis is ... mm"
+                            in the console; copy that number into knee_x in leg_assembly_preview.scad.
+    leg.scad                the lower leg, screwed to the knee servo's case by two thin plates,
+                            ending in a tapered blade and foot.                           Print 4
+                            Print lying on the back plate, as it comes out of the file.
+                            Screws per leg: 4 x M2.5 flat-head x 12.
+  Preview-only files (nothing here gets printed; change the angles and press F5 to check for collisions)
+    leg_assembly_preview.scad  one complete leg: hip servo, hip bracket, knee servo and leg, at hip_angle and knee_angle
+    robot_preview.scad      the whole walker: both body plates and all four legs at the same angles

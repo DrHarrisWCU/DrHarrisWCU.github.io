@@ -217,7 +217,8 @@ textarea.edit{width:100%;font:12.5px/1.5 var(--font-m);padding:10px 12px;border:
     <h2 style="margin-bottom:10px">What you need</h2>
     <div class="tw"><table>
       <tr><th>Part</th><th>What it is</th></tr>
-      <tr><td>Two DYNAMIXEL XL430-W250</td><td>Smart servos. Each has its own microcontroller, encoder and serial bus</td></tr>
+       <tr><td>quad</td><td>Smart servos. Each has its own microcontroller, encoder and serial bus</td></tr>
+      <tr><td><a href="robotlab_A_python.zip">robotlab_A_python.zip</a></td><td>All of the associatd code and 3D models for this tutorial series.</td></tr>
       <tr><td>Either: U2D2 plus U2D2 Power Hub Board</td><td>USB to servo-bus adapter, and the board that feeds power into the bus. A U2D2 alone carries data only</td></tr>
       <tr><td>Or: OpenCR 1.0</td><td>A controller board that doubles as the adapter once it runs the passthrough sketch, and takes the power input itself</td></tr>
       <tr><td>12 V supply, 5 A is plenty</td><td>Powers the servos through the board above. USB never powers them</td></tr>
@@ -342,7 +343,9 @@ robotlab-a-env\Scripts\Activate.ps1      # Windows PowerShell</pre></li>
     <p style="margin-bottom:0;font-size:13px;color:var(--ink2)">Module 2 has a short Python script, <span class="mono">scan_bus.py</span>, that finds servos the same way. Use it to confirm that Python sees what Wizard set.</p></div>
 
   <div class="callout"><span class="eyebrow">Try these, then say what you saw</span>
-    <p>1. Before you rename anything, plug in both new servos together and scan. What does Wizard show, and why? (Both answer to ID 1 at the same moment.) Unplug one again. 2. In Wizard, switch Torque Enable on and look at the ID row. What changed, and why would the maker lock it? (Hint: the ID is stored in non-volatile memory, and a half-finished write while the motor is driving would be a bad time to lose power.) 3. Which servo is the yaw joint and which is the pitch joint? Say how you can tell by moving each one by hand.</p></div>
+    <p><ol><li>Before you rename anything, plug in both new servos together and scan. What does Wizard show, and why? (Both answer to ID 1 at the same moment.) Unplug one again.</li>
+      <li>In Wizard, switch Torque Enable on and look at the ID row. What changed, and why would the maker lock it? (Hint: the ID is stored in non-volatile memory, and a half-finished write while the motor is driving would be a bad time to lose power.) </li>
+      <li>Which servo is the yaw joint and which is the pitch joint? Say how you can tell by moving each one by hand.</li></ol></p></div>
 
   <details class="ask"><summary>For the mentor: sign-off question</summary><p>Why can the servos share three wires, and what breaks when two share an ID? Listen for: every servo hears every packet, only the addressed ID answers, and two answers overlap into a bad CRC.</p></details>
   <div class="nav2"><button class="btn ghost" data-go="m0">Back</button><button class="btn" data-go="m1">Next: Talk to a servo</button></div>
@@ -2821,7 +2824,7 @@ const MJ_SCHEMA={mujoco:{model:0},compiler:{angle:0},option:{timestep:1,integrat
   site:{name:0,pos:2},actuator:{},position:{name:0,joint:0,kp:1,kv:1,forcerange:2,ctrlrange:2}};
 const MJ_LINK_I=2.208e-5, MJ_GRAV_T=0.0572*9.81*0.01175;   // tilt-link inertia about the pitch axis, gravity torque amplitude
 function mjParse(xml){
-  const src=xml.replace(/<!--[\s\S]*?-->/g,m=>m.replace(/[^\n]/g,'')).replace(/<\?[\s\S]*?\?>/g,m=>m.replace(/[^\n]/g,''));
+  const src=xml.replace(/<!-{2}[\s\S]*?-{2}>/g,m=>m.replace(/[^\n]/g,'')).replace(/<\?[\s\S]*?\?>/g,m=>m.replace(/[^\n]/g,''));
   const lineAt=i=>src.slice(0,i).split('\n').length;
   const tags=[],stack=[],re=/<(\/?)([A-Za-z_][\w.-]*)([^<>]*)>/g;let m,last=0;
   const stray=s=>/[<>]/.test(s);
