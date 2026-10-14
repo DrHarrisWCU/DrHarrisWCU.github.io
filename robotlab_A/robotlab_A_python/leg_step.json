@@ -1,0 +1,11 @@
+{
+ "joint_names": ["hip_A", "knee_A"],
+ "units": "deg",
+ "points": [
+  {"time_from_start": 0.0, "positions": [12.0, 40.0]},
+  {"time_from_start": 0.4, "positions": [12.0, 15.0]},
+  {"time_from_start": 0.9, "positions": [-12.0, 15.0]},
+  {"time_from_start": 1.3, "positions": [-12.0, 40.0]},
+  {"time_from_start": 2.0, "positions": [12.0, 40.0]}
+ ]
+}

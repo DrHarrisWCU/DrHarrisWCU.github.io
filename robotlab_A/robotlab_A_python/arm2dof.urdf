@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<!--
+  2-DoF pan/tilt arm: 2x DYNAMIXEL XL430-W250-T joined by an FR11-H101K bracket.
+
+  Frame convention: base_link origin = center of the bottom face of the base motor,
+  resting on the table. +z up, +x along the base motor's long axis toward its horn.
+
+  Datasheet values (XL430-W250-T, ROBOTIS e-Manual):
+    case 28.5 x 46.5 x 34 mm, mass 57.2 g
+    stall torque 1.5 N*m @ 12 V, no-load speed 61 rpm (6.39 rad/s) @ 12 V
+    position mode: 0..4095 ticks = 360 deg (0.088 deg/tick), 2048 = 0 rad here
+
+  ESTIMATES - measure on the real arm and update:
+    HORN_FROM_END  = 11.5 mm  horn axis distance from the horn-side end of the case
+    BRACKET_HEIGHT = 33.0 mm  base-motor top face -> tilt axis
+    HORN_STACK     =  3.0 mm  tilt horn face -> tilt motor case
+    bracket + horn + screws mass = 10 g
+    tilt joint limit +/-1.57 rad (clearance against the base motor)
+  Derived:
+    yaw axis x offset    = 46.5/2 - 11.5 = 11.75 mm
+    tilt-motor center    = 11.75 mm above the tilt axis, 3.0 + 34/2 = 20 mm along +y
+    tip (top of motor)   = 11.75 + 46.5/2 = 35 mm above the tilt axis
+  Joint damping/friction are left at 0: identify them on hardware and put them in the
+  Isaac Lab actuator config rather than here.
+-->
+<robot name="arm2dof">
+
+  <material name="dxl_black"><color rgba="0.12 0.12 0.12 1.0"/></material>
+  <material name="bracket_gray"><color rgba="0.35 0.35 0.38 1.0"/></material>
+
+  <!-- Base XL430 lying horn-up; its case is fixed to the world. -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0 0 0.017" rpy="0 0 0"/>
+      <mass value="0.0572"/>
+      <inertia ixx="9.382e-06" ixy="0" ixz="0" iyy="1.582e-05" iyz="0" izz="1.418e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.017" rpy="0 0 0"/>
+      <geometry><box size="0.0465 0.0285 0.034"/></geometry>
+      <material name="dxl_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.017" rpy="0 0 0"/>
+      <geometry><box size="0.0465 0.0285 0.034"/></geometry>
+    </collision>
+  </link>
+
+  <!-- Yaw: base motor horn, vertical axis on the top face. -->
+  <joint name="joint1_yaw" type="revolute">
+    <parent link="base_link"/>
+    <child link="bracket_link"/>
+    <origin xyz="0.01175 0 0.034" rpy="0 0 0"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-2.9" upper="2.9" effort="1.5" velocity="6.39"/>
+  </joint>
+
+  <!-- FR11-H101K bracket + base horn. -->
+  <link name="bracket_link">
+    <inertial>
+      <origin xyz="0 0 0.0165" rpy="0 0 0"/>
+      <mass value="0.010"/>
+      <inertia ixx="1.658e-06" ixy="0" ixz="0" iyy="1.658e-06" iyz="0" izz="1.500e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0.0165" rpy="0 0 0"/>
+      <geometry><box size="0.030 0.030 0.033"/></geometry>
+      <material name="bracket_gray"/>
+    </visual>
+    <!-- No bracket collision: it would overlap the tilt motor at the joint. -->
+  </link>
+
+  <!-- Pitch: tilt motor horn is fixed to the bracket; the tilt motor case rotates. -->
+  <joint name="joint2_pitch" type="revolute">
+    <parent link="bracket_link"/>
+    <child link="tilt_link"/>
+    <origin xyz="0 0 0.033" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+    <limit lower="-1.57" upper="1.57" effort="1.5" velocity="6.39"/>
+  </joint>
+
+  <!-- Tilt XL430 case, standing up with its horn near the bottom end. -->
+  <link name="tilt_link">
+    <inertial>
+      <origin xyz="0 0.020 0.01175" rpy="0 0 0"/>
+      <mass value="0.0572"/>
+      <inertia ixx="1.582e-05" ixy="0" ixz="0" iyy="1.418e-05" iyz="0" izz="9.382e-06"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0.020 0.01175" rpy="0 0 0"/>
+      <geometry><box size="0.0285 0.034 0.0465"/></geometry>
+      <material name="dxl_black"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0.020 0.01175" rpy="0 0 0"/>
+      <geometry><box size="0.0285 0.034 0.0465"/></geometry>
+    </collision>
+  </link>
+
+  <!-- End-effector frame at the top center of the tilt motor (target for reach tasks). -->
+  <joint name="tip_joint" type="fixed">
+    <parent link="tilt_link"/>
+    <child link="tip_link"/>
+    <origin xyz="0 0.020 0.035" rpy="0 0 0"/>
+  </joint>
+  <link name="tip_link"/>
+
+</robot>
