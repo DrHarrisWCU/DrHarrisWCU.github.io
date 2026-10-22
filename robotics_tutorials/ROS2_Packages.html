@@ -1,0 +1,1862 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Robot Lab Tutorial B2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: a lab notebook. Left rail of numbered modules, one working column, each lab sits in a ruled "bench" panel with its own readouts. */
+:root{
+  --paper:#f0eef4; --panel:#fbfafd; --ink:#1e1a2a; --ink2:#5b5469; --rule:#d8d3e2;
+  --accent:#5a2d86; --accent-ink:#ffffff; --accent-soft:#ece4f6; --gold:#b9800a;
+  --ok:#1b7a4b; --warn:#9a6100; --bad:#b3261e;
+  --plot-bg:#ffffff; --grid:#e7e3ef; --t1:#5a2d86; --t2:#d1650f; --t3:#1c6e8c; --t4:#8a8697;
+  --code-bg:#ebe8f2; --term-bg:#17141f; --term-fg:#e6e1f0; --term-dim:#8d86a1; --term-acc:#d9b3ff;
+  --h1:#5a2d86; --h2:#1c6e8c; --h3:#b9800a; --h4:#2f7d4f; --h5:#b0357a; --h6:#8a6a1f;
+  --font-d:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-b:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --font-m:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#14111b; --panel:#1c1826; --ink:#ece8f5; --ink2:#a7a0b9; --rule:#342f48;
+  --accent:#b88ce8; --accent-ink:#1a1226; --accent-soft:#2b2240; --gold:#e8b23a;
+  --ok:#5fd09a; --warn:#f0b44a; --bad:#ff8a80;
+  --plot-bg:#120f19; --grid:#2a2640; --t1:#c39cf0; --t2:#f0913a; --t3:#5cc0e0; --t4:#8d86a1;
+  --code-bg:#241f33; --term-bg:#0e0c14;
+  --h1:#c39cf0; --h2:#5cc0e0; --h3:#e8b23a; --h4:#6fd49a; --h5:#f08ac0; --h6:#d3b45a;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#14111b; --panel:#1c1826; --ink:#ece8f5; --ink2:#a7a0b9; --rule:#342f48;
+  --accent:#b88ce8; --accent-ink:#1a1226; --accent-soft:#2b2240; --gold:#e8b23a;
+  --ok:#5fd09a; --warn:#f0b44a; --bad:#ff8a80;
+  --plot-bg:#120f19; --grid:#2a2640; --t1:#c39cf0; --t2:#f0913a; --t3:#5cc0e0; --t4:#8d86a1;
+  --code-bg:#241f33; --term-bg:#0e0c14;
+  --h1:#c39cf0; --h2:#5cc0e0; --h3:#e8b23a; --h4:#6fd49a; --h5:#f08ac0; --h6:#d3b45a;
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 var(--font-b);padding-inline:16px}
+.wrap{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:232px minmax(0,1fr);gap:36px;padding-block:22px 72px}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--font-d);text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.08;font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(22px,3vw,28px);line-height:1.15;font-weight:700;letter-spacing:-.005em}
+h3{font-size:16px;font-weight:600;font-family:var(--font-b)}
+p{margin:0 0 .8em;max-width:68ch}
+code,.mono{font-family:var(--font-m);font-size:.9em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+
+.railtog{all:unset;box-sizing:border-box;float:right;width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:6px;cursor:pointer;font-size:11px;color:var(--ink2);background:var(--panel)}
+.railtog:hover{background:var(--accent-soft);color:var(--ink)}
+.railtog:focus-visible,.railopen:focus-visible{outline:2px solid var(--accent)}
+.railopen{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:30;width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:8px;cursor:pointer;font-size:18px;line-height:1;color:var(--ink);background:var(--panel)}
+.railopen:hover{background:var(--accent-soft)}
+.railopen[hidden]{display:none}
+.wrap.railoff{grid-template-columns:minmax(0,1fr)}
+.wrap.railoff .rail{display:none}
+.wrap.railoff main{padding-left:44px}
+@media(max-width:900px){.railtog,.railopen{display:none!important}}
+/* rail */
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);align-self:start;min-width:0}
+.brand{font:600 12px/1.2 var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin-bottom:14px}
+.brand b{display:block;font:700 19px/1.15 var(--font-d);letter-spacing:0;text-transform:none;color:var(--ink);margin-top:4px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:26px 1fr 16px;align-items:center;gap:8px;width:100%;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--ink2)}
+.rail button:hover{background:var(--accent-soft);color:var(--ink)}
+.rail button:focus-visible{outline:2px solid var(--accent)}
+.rail button[aria-current="true"]{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.rail .n{font:500 12px var(--font-m);width:24px;height:24px;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center;background:var(--panel);color:var(--ink2)}
+.rail [aria-current="true"] .n{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.rail .tick{font-size:13px;color:var(--ok);opacity:0}
+.rail .done .tick{opacity:1}
+.prog{margin-top:14px;font:12px var(--font-m);color:var(--ink2)}
+.prog i{display:block;height:4px;border-radius:2px;background:var(--rule);margin-top:6px;overflow:hidden}
+.prog i b{display:block;height:100%;width:0;background:var(--accent)}
+
+/* module chrome */
+main{min-width:0}
+.mod{display:flex;flex-direction:column;gap:20px}
+.mod[hidden]{display:none!important}
+.eyebrow{font:500 12px var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:17px;max-width:62ch;color:var(--ink)}
+.goal{font-size:14px;color:var(--ink2)}
+.goal b{color:var(--ink)}
+.callout{border:1px solid var(--rule);background:var(--panel);border-radius:8px;padding:12px 14px}
+.callout .eyebrow{display:block;margin-bottom:4px;color:var(--gold)}
+.callout p:last-child{margin-bottom:0}
+.lab{border:1px solid var(--rule);background:var(--panel);border-radius:8px;overflow:hidden}
+.lab-h{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--accent-soft)}
+.lab-h b{font:600 13px var(--font-m);letter-spacing:.03em;color:var(--ink)}
+.lab-b{padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--font-m);padding:2px 9px;border-radius:99px;border:1px solid var(--rule);color:var(--ink2);background:var(--panel)}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);max-width:calc(100% - 24px);padding:8px 16px;border-radius:99px;background:var(--panel);color:var(--ink);border:2px solid var(--ok);font:600 14px var(--font-s,system-ui);box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .4s ease;text-align:center}
+.toast.show{opacity:1}
+@keyframes pillfade{0%{opacity:0;transform:scale(1.2)}100%{opacity:1;transform:scale(1)}}
+.pill.flash{animation:pillfade 2s ease-out;border-color:var(--ok);color:var(--ok)}
+@media (prefers-reduced-motion:reduce){.pill.flash{animation:none}.toast{transition:none}}
+
+.pill.bad{color:var(--bad);border-color:var(--bad)}
+.pill.warn{color:var(--warn);border-color:var(--warn)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:14px}.rail{position:static}.rail ol{flex-direction:row;overflow-x:auto;padding-bottom:6px}.rail button{width:auto;grid-template-columns:24px auto 14px;white-space:nowrap}.rail .t{display:none}.rail [aria-current="true"] .t{display:inline}.prog{display:none}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+label{font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:4px;min-width:0}
+label .v{font:500 13px var(--font-m);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number],input[type=text],select{font:14px var(--font-m);padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg);color:var(--ink);min-width:0;max-width:100%}
+.btn{font:600 14px var(--font-b);padding:7px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{font:500 12px var(--font-m);padding:3px 9px;border-radius:99px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+canvas{width:100%;display:block;background:var(--plot-bg);border:1px solid var(--rule);border-radius:6px}
+pre.code{margin:0;padding:12px 14px;background:var(--code-bg);border-radius:6px;overflow-x:auto;font:13px/1.55 var(--font-m);color:var(--ink);tab-size:2}
+pre.code .hl{background:color-mix(in srgb,var(--gold) 28%,transparent);display:inline-block;width:100%}
+.out{font:13px/1.5 var(--font-m);background:var(--code-bg);border-radius:6px;padding:8px 12px;min-height:2.6em;overflow-wrap:anywhere}
+.readout{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px var(--font-m);color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:500 12px var(--font-m);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.tw{overflow-x:auto}
+details.ask{border:1px dashed var(--rule);border-radius:8px;padding:10px 14px;background:transparent}
+details.ask summary{cursor:pointer;font:500 12px var(--font-m);letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+details.ask p{margin:8px 0 0}
+.nav2{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:6px;border-top:1px solid var(--rule)}
+
+/* packet bytes */
+.hex{display:flex;flex-wrap:wrap;gap:5px;font:500 15px var(--font-m)}
+.hex .b{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hex .b span:first-child{padding:3px 6px;border-radius:4px;border-bottom:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel))}
+.hex .b span:last-child{font:10px var(--font-m);color:var(--ink2);letter-spacing:.04em}
+.hex .bad span:first-child{outline:2px solid var(--bad)}
+.f-hdr{--c:var(--h1)}.f-rsv{--c:var(--h6)}.f-id{--c:var(--h2)}.f-len{--c:var(--h3)}.f-inst{--c:var(--h5)}.f-par{--c:var(--h4)}.f-crc{--c:var(--t4)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font:11px var(--font-m);color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:5px;vertical-align:-1px}
+
+/* terminal */
+.term{background:var(--term-bg);color:var(--term-fg);border-radius:6px;padding:10px 12px;font:13px/1.45 var(--font-m);height:300px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--rule)}
+.term .p{color:var(--term-acc)}.term .d{color:var(--term-dim)}.term .e{color:#ff9d94}
+.termin{display:flex;gap:8px;align-items:center;background:var(--term-bg);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;margin-top:-8px}
+.termin span{font:13px var(--font-m);color:var(--term-acc)}
+.termin input{flex:1;min-width:0;background:transparent;border:0;color:var(--term-fg);font:13px var(--font-m);outline:none;padding:4px}
+.mission{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:5px 0}
+.mission .box{flex:none;width:18px;height:18px;border:1.5px solid var(--rule);border-radius:4px;display:grid;place-items:center;font-size:12px;color:var(--accent-ink);margin-top:2px}
+.mission.done .box{background:var(--ok);border-color:var(--ok)}
+.mission.done span:last-child{color:var(--ink2);text-decoration:line-through}
+.graph{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font:12px var(--font-m);padding:10px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg)}
+.graph .node{border:1.5px solid var(--accent);border-radius:6px;padding:5px 9px;color:var(--ink);background:var(--accent-soft)}
+.graph .topic{color:var(--t2);display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.graph .you{border-color:var(--t2);background:transparent}
+
+/* code reading */
+.chunk{border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--panel)}
+.chunk>button{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;gap:12px;width:100%;padding:9px 14px;cursor:pointer;font:600 13px var(--font-m);color:var(--ink);background:var(--accent-soft)}
+.chunk>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.chunk .why{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.chunk .why p{margin:0}
+.quiz{display:flex;flex-direction:column;gap:8px}
+.quiz .q{font-weight:600}
+.quiz .opt{flex-direction:row;display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer;color:var(--ink)}
+.quiz .fb{font-size:13px;min-height:1.2em}
+.check{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:14px}
+.check input{margin-top:4px;accent-color:var(--accent)}
+.legendline{font:12px var(--font-m);color:var(--ink2)}
+.sw{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+textarea.edit{width:100%;font:12.5px/1.5 var(--font-m);padding:10px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg);color:var(--ink);resize:vertical;tab-size:2;white-space:pre;overflow:auto;min-width:0}
+.rv{background:transparent;border:1px dashed var(--rule);color:var(--ink2);cursor:pointer;font:12px var(--font-m);padding:2px 10px;border-radius:99px}
+.rv:hover{border-color:var(--accent);color:var(--accent)}
+#mj-rs td{vertical-align:top}#mj-rs td:nth-child(1),#mj-rs td:nth-child(2){font:12.5px/1.45 var(--font-m);overflow-wrap:anywhere}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#arch-steps li{font-size:14px;color:var(--ink2)}#arch-steps li.on{color:var(--ink);font-weight:600}
+
+/* ---- Tutorial B additions ---- */
+.tl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+@media(max-width:900px){.tl{grid-template-columns:minmax(0,1fr)}}
+.tl canvas{width:100%;border-radius:6px;border:1px solid var(--rule)}
+.panes{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pane{border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--term-bg)}
+.pane.focus{outline:2px solid var(--accent);outline-offset:-1px}
+.pane-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 8px;font:11px var(--font-m);color:var(--term-dim);border-bottom:1px solid #2c2740}
+.pane .term{height:150px;border:0;border-radius:0}
+.pane .termin{margin:0;border:0;border-top:1px solid #2c2740;border-radius:0}
+.pane .termin.busy span{color:var(--term-dim)}
+.pane .chip{padding:1px 8px;font-size:11px}
+.tl .chips{display:flex;flex-wrap:wrap;gap:6px}
+.wire{width:100%;height:auto;background:var(--plot-bg);border:1px solid var(--rule);border-radius:6px}
+.wire text{font:12px var(--font-m);fill:var(--ink)}
+.wire .dim{fill:var(--ink2);font-size:11px}
+.wire .nodebox{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.wire .topicbox{fill:var(--panel);stroke:var(--t2);stroke-width:1.5}
+.wire .flow{stroke:var(--ok);stroke-width:2.5;fill:none}
+.wire .cut{stroke:var(--bad);stroke-width:2.5;fill:none;stroke-dasharray:6 5}
+.wire .off{stroke:var(--rule);stroke-width:2;fill:none;stroke-dasharray:3 4}
+.plan td input[type=number]{width:100%;min-width:60px}
+.plan td{vertical-align:middle}
+.dl{display:block;margin:6px 0;padding:8px 12px;border:1px dashed var(--rule);border-radius:6px;font-size:14px;color:var(--ink2)}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:6px 18px}
+.keys div{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:baseline;font-size:14px}.keys div span{flex:1 1 180px}
+.callout table{display:block;overflow-x:auto}
+kbd{font:12px var(--font-m);border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 6px;background:var(--panel)}
+ol.steps{padding-left:22px;display:flex;flex-direction:column;gap:8px}
+
+/* B2: file tree and editor */
+.d{color:var(--ink2);font-size:12px}
+.ftree-h{font:500 12px var(--font-m);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin:12px 0 4px}
+.ftree{font:12.5px/1.45 var(--font-m);background:var(--code-bg);border-radius:6px;padding:8px 10px;max-height:440px;overflow:auto;white-space:pre;color:var(--ink)}
+.ftree div{white-space:pre}
+.ftree .new{background:color-mix(in srgb,var(--gold) 30%,transparent);border-radius:3px}
+.editor{border:1px solid var(--accent);border-radius:8px;padding:10px 12px;background:var(--panel)}
+.editor-h{display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:6px}
+.editor textarea{width:100%;box-sizing:border-box;font:13px/1.5 var(--font-m);background:var(--code-bg);color:var(--ink);border:1px solid var(--rule);border-radius:6px;padding:8px 10px;tab-size:4;resize:vertical}
+.layer{display:flex;flex-direction:column;gap:6px;max-width:520px}
+.layer div{border:1.5px solid var(--accent);border-radius:6px;padding:8px 12px;font:13px var(--font-m);background:var(--accent-soft)}
+.layer div.top{border-color:var(--t2);background:transparent}
+.layer .arrow{border:0;background:transparent;padding:0 12px;color:var(--ink2)}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media(max-width:700px){.cards{grid-template-columns:minmax(0,1fr)}}
+.card{border:1px solid var(--rule);border-radius:8px;padding:10px 12px;background:var(--panel)}
+.card h4{margin:0 0 4px;font:600 15px var(--font-b)}
+.card p{margin:4px 0 0;font-size:14px}
+.tag{display:inline-block;font:500 11px var(--font-m);letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);border:1px solid var(--rule);border-radius:99px;padding:1px 8px;margin-right:6px}
+
+/* ---- B2 v2: wizard, mock VS Code window, order lab ---- */
+.wiz{border:1px solid var(--rule);border-radius:8px;background:var(--panel);overflow:hidden}
+.wiz-h{display:flex;justify-content:space-between;gap:8px;padding:7px 12px;background:var(--accent-soft);border-bottom:1px solid var(--rule);font:600 12px var(--font-m)}
+.wiz-b{padding:12px 14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.wiz-step{border-left:3px solid var(--rule);padding:2px 0 2px 12px;display:flex;flex-direction:column;gap:6px}
+.wiz-step.on{border-left-color:var(--accent)}
+.wiz-step h4{margin:0;font:600 14px var(--font-b)}
+.wiz-step.lock{opacity:.45;pointer-events:none}
+.opt2{display:flex;gap:8px;align-items:flex-start;font-size:14px;color:var(--ink);cursor:pointer;flex-direction:row}
+.msg{font-size:13px;min-height:1.3em}
+.msg.ok{color:var(--ok)}.msg.bad{color:var(--bad)}.msg.hint{color:var(--ink2)}
+.tree{font:13px/1.55 var(--font-m);background:var(--code-bg);border-radius:6px;padding:8px 10px;overflow:auto}
+.tree button{all:unset;cursor:pointer;display:block;white-space:pre;width:100%;box-sizing:border-box;border-radius:3px}
+.tree button:hover{background:color-mix(in srgb,var(--accent) 14%,transparent)}
+.tree button:focus-visible{outline:2px solid var(--accent)}
+.tree button.mine{background:color-mix(in srgb,var(--gold) 30%,transparent);font-weight:500}
+.tree button.sel{outline:1px solid var(--accent)}
+.vsw{border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--panel);min-width:0}
+.vsw-h{display:flex;align-items:center;gap:8px;padding:5px 10px;background:#2a2740;color:#d7d2e8;font:12px var(--font-m)}
+.vsw-h i{width:9px;height:9px;border-radius:50%;background:#6b6585;display:inline-block}
+.vsw-tab{display:inline-flex;gap:8px;align-items:center;padding:5px 12px;font:12px var(--font-m);background:var(--code-bg);border-bottom:2px solid var(--accent);color:var(--ink)}
+.vsw-tab .dot{color:var(--gold)}
+.vsw-ed{margin:0;padding:8px 12px;font:12.5px/1.5 var(--font-m);background:var(--code-bg);color:var(--ink);white-space:pre;overflow:auto;max-height:190px}
+.vsw .term{height:210px;border-radius:0;border-width:1px 0 0 0}
+.keycap{font:600 14px var(--font-m);padding:8px 14px;border-radius:8px;border:1px solid var(--rule);border-bottom-width:3px;background:var(--panel);color:var(--ink);cursor:pointer}
+.keycap:hover{border-color:var(--accent);color:var(--accent)}
+.keycap:disabled{opacity:.5;cursor:default}
+.order{display:flex;flex-direction:column;gap:6px}
+.order button{all:unset;cursor:pointer;display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border:1px solid var(--rule);border-radius:6px;font-size:14px;background:var(--panel);box-sizing:border-box;width:100%}
+.order button:hover{border-color:var(--accent)}
+.order button:focus-visible{outline:2px solid var(--accent)}
+.order button.used{opacity:.55;border-color:var(--ok)}
+.order .no{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--rule);display:grid;place-items:center;font:12px var(--font-m);color:var(--ink2)}
+.order .used .no{background:var(--ok);color:var(--accent-ink);border-color:var(--ok)}
+.snip{margin:0;padding:10px 12px;background:var(--term-bg);color:var(--term-fg);border-radius:6px;font:12.5px/1.5 var(--font-m);overflow:auto;white-space:pre}
+.snip .e{color:#ff9d94}.snip .d{color:var(--term-dim)}
+.fig{margin:14px 0 4px;overflow-x:auto}.fig svg{display:block;width:100%;min-width:600px;height:auto;max-width:760px;color:var(--ink)}.fig .fm{font:13px var(--font-m);fill:currentColor}.fig .fb{font:14px var(--font-b);fill:currentColor}.fig .fs{font:12.5px var(--font-b);fill:var(--ink2)}.fig figcaption{font-size:13.5px;color:var(--ink2);margin-top:8px;max-width:70ch}
+</style>
+<div class="wrap">
+<nav class="rail" id="rail" aria-label="Modules"></nav>
+<main id="main">
+
+<section class="mod" id="m0" data-title="What is a package?">
+  <div><div class="eyebrow">Module 0 of 10 · about 10 minutes</div><h2>What is a package, and why do you need one?</h2></div>
+  <p class="lede">In Tutorial B you saved one Python file and ran it with <span class="mono">python3</span>. That works for one file on one computer. ROS wants code delivered a different way, as a <b>package</b>. Before you make one, you should know what it is and what you get for the extra trouble.</p>
+  <div class="goal"><b>By the end of the tutorial:</b> you made a package, ran your Tutorial B script from it, changed the numbers, saw the same program written as a class and as a feedback loop, and you can start a new project on your own.</div>
+
+  <div class="callout"><span class="eyebrow">You already use packages</span>
+    <p>In Tutorial B you started the simulator with this command:</p>
+    <div class="row" style="gap:6px;font:15px var(--font-m);margin:4px 0 8px"><span class="tag" style="font-size:13px">ros2 run</span><span style="border:1.5px solid var(--accent);border-radius:6px;padding:2px 10px;background:var(--accent-soft)">turtlesim</span><span style="border:1.5px solid var(--t2);border-radius:6px;padding:2px 10px">turtlesim_node</span></div>
+    <p><span class="mono">ros2 run</span> is the command. <span class="mono">turtlesim</span> is the <b>package</b>, a bundle someone else wrote. <span class="mono">turtlesim_node</span> is a <b>program</b> inside that bundle. ROS finds the package by its name, from any folder, with no path to type. By the end of this tutorial your own script works the same way: your package has a name, your script is a program inside it, and ROS can find it.</p></div>
+
+  <div class="callout"><span class="eyebrow">What a package is</span>
+    <p>A package is a folder that holds three things:</p>
+    <ol class="steps">
+      <li><b>Your code</b>, the Python file with your script in it.</li>
+      <li><b>An ID card</b>, a file called <span class="mono">package.xml</span>. It gives the package its name, its version, who wrote it, and which other packages it needs.</li>
+      <li><b>Install instructions</b>, a file called <span class="mono">setup.py</span>. It tells the build tool which files to copy into place and which function starts each program.</li>
+    </ol>
+    <p>That is all. There is nothing magic in it. The wizard you will use writes the ID card and the install instructions for you, so the only file you ever type into is your own script.</p>
+    <figure class="fig">
+<svg viewBox="0 0 760 330" role="img" aria-label="A package is a folder holding three things: your code, an ID card called package.xml, and install instructions called setup.py. ROS finds it by name when you type ros2 run, package name, program name.">
+<defs><marker id="ar1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<path d="M10,34 V12 a4,4 0 0 1 4,-4 H126 a4,4 0 0 1 4,4 V34" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>
+<text x="20" y="26" class="fm" font-weight="500">my_shapes/</text>
+<rect x="10" y="34" width="520" height="288" rx="5" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>
+<g>
+<rect x="30" y="50" width="480" height="72" rx="4" fill="var(--paper)" stroke="var(--rule)"/><rect x="30" y="50" width="6" height="72" rx="2" style="fill:var(--t1)"/>
+<text x="48" y="72" class="fb" font-weight="600">1 · Your code</text><text x="48" y="92" class="fm" style="fill:var(--t1)">my_shapes/my_shapes_node.py</text><text x="48" y="112" class="fs">The Python script. The only file you type in.</text>
+<rect x="30" y="136" width="480" height="72" rx="4" fill="var(--paper)" stroke="var(--rule)"/><rect x="30" y="136" width="6" height="72" rx="2" style="fill:var(--t3)"/>
+<text x="48" y="158" class="fb" font-weight="600">2 · ID card</text><text x="48" y="178" class="fm" style="fill:var(--t3)">package.xml</text><text x="48" y="198" class="fs">Its name, its version, who wrote it, what else it needs.</text>
+<rect x="30" y="222" width="480" height="72" rx="4" fill="var(--paper)" stroke="var(--rule)"/><rect x="30" y="222" width="6" height="72" rx="2" style="fill:var(--t2)"/>
+<text x="48" y="244" class="fb" font-weight="600">3 · Install instructions</text><text x="48" y="264" class="fm" style="fill:var(--t2)">setup.py</text><text x="48" y="284" class="fs">Which files to install, and which function (main) starts it.</text>
+</g>
+<text x="30" y="313" class="fs" style="fill:var(--ink2)">Also written by the wizard: setup.cfg, resource/, test/. You can ignore them.</text>
+<line x1="534" y1="178" x2="584" y2="178" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar1)"/>
+<rect x="590" y="108" width="160" height="140" rx="5" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>
+<text x="670" y="134" text-anchor="middle" class="fs">In a terminal:</text>
+<text x="670" y="160" text-anchor="middle" class="fm">ros2 run</text>
+<text x="670" y="182" text-anchor="middle" class="fm" style="fill:var(--accent)" font-weight="500">my_shapes</text>
+<text x="670" y="204" text-anchor="middle" class="fm" style="fill:var(--t1)">my_shapes_node</text>
+<text x="670" y="232" text-anchor="middle" class="fs">name, then program</text>
+</svg>
+<figcaption>A package is a folder with three jobs covered: your code, an ID card, and install instructions. Because the ID card gives it a name, ROS can find it from any folder: you type the package name and the program name, and ROS calls <span class="mono">main()</span>.</figcaption>
+    </figure></div>
+
+  <div class="callout"><span class="eyebrow">Why not keep running loose files?</span>
+    <p>For one script on your own computer, a loose file is fine. Packages pay off as soon as you have a second program, a teammate, or a robot that is not your laptop.</p>
+    <div class="tw"><table>
+      <tr><th></th><th>A loose file</th><th>A package</th></tr>
+      <tr><td>Finding it</td><td>You must be in its folder, or type its full path.</td><td>ROS finds it by name from anywhere.</td></tr>
+      <tr><td>Starting it</td><td>One terminal and one <span class="mono">python3</span> command per file.</td><td><span class="mono">ros2 run</span>, and in the next tutorial one <b>launch file</b> that starts many programs at once.</td></tr>
+      <tr><td>Changing a setting</td><td>Edit the file.</td><td>Parameters and settings files, also in the next tutorial.</td></tr>
+      <tr><td>What it needs</td><td>You hope the other computer has the same libraries.</td><td><span class="mono">package.xml</span> lists them, and the build tool checks.</td></tr>
+      <tr><td>Sharing it</td><td>Email a file and hope.</td><td>A folder anyone can build with one command, and other packages can depend on it.</td></tr>
+    </table></div>
+    <p>Almost every ROS project you will find online is made of packages. To use them and to share your own, you need to be able to make one.</p></div>
+
+  <div class="callout"><span class="eyebrow">Workspace and build</span>
+    <p>A <b>workspace</b> is a folder that holds one or more packages. In this tutorial your project folder is the workspace. A <b>build</b> is the step that prepares a package so ROS can find it: a tool called <span class="mono">colcon</span> copies (or links) your files into a folder called <span class="mono">install</span>, which is where ROS looks. After the first build you will see three new folders beside your package: <span class="mono">build</span>, <span class="mono">install</span> and <span class="mono">log</span>. The build made them, so you can delete them any time and the next build makes them again.</p>
+    <figure class="fig">
+<svg viewBox="0 0 760 290" role="img" aria-label="ROS finds packages in two places. Packages installed with ROS, such as turtlesim, are already in the system folder. Your own package is built by colcon from your project folder into an install folder. ros2 run searches both.">
+<defs><marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="currentColor"/></marker></defs>
+<rect x="10" y="20" width="220" height="90" rx="5" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>
+<text x="24" y="46" class="fm" font-weight="500">/opt/ros/humble</text><text x="24" y="68" class="fs">Came with ROS. Holds</text><text x="24" y="86" class="fs">turtlesim and many more.</text>
+<rect x="10" y="170" width="220" height="100" rx="5" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>
+<text x="24" y="196" class="fb" font-weight="600">Your project folder</text><text x="24" y="218" class="fm" style="fill:var(--t1)">my_shapes/</text><text x="24" y="240" class="fs">Your source files.</text>
+<rect x="340" y="170" width="140" height="100" rx="5" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>
+<text x="354" y="196" class="fm" font-weight="500">install/</text><text x="354" y="218" class="fs">Made by the build.</text><text x="354" y="238" class="fs">The ready-to-find</text><text x="354" y="254" class="fs">copy.</text>
+<line x1="234" y1="220" x2="334" y2="220" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar2)"/>
+<text x="284" y="212" text-anchor="middle" class="fm">colcon build</text><text x="284" y="238" text-anchor="middle" class="fs">copies or links</text>
+<path d="M234,65 H525 V125 H554" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar2)"/><text x="390" y="57" text-anchor="middle" class="fs">already installed</text>
+<path d="M484,220 H525 V175 H554" fill="none" stroke="currentColor" stroke-width="1.5" marker-end="url(#ar2)"/>
+<rect x="560" y="95" width="190" height="110" rx="5" fill="var(--panel)" stroke="currentColor" stroke-width="1.5"/>
+<text x="575" y="120" class="fs">ROS searches both:</text>
+<text x="575" y="148" class="fm">ros2 run <tspan style="fill:var(--accent)" font-weight="500">turtlesim</tspan></text>
+<text x="575" y="172" class="fm">ros2 run <tspan style="fill:var(--t1)" font-weight="500">my_shapes</tspan></text>
+<text x="575" y="196" class="fs">Same kind of thing.</text>
+</svg>
+<figcaption>Both <span class="mono">turtlesim</span> and your <span class="mono">my_shapes</span> are packages. One arrived with ROS. The other you build, which puts a ready-to-find copy in <span class="mono">install/</span>. Either way, <span class="mono">ros2 run</span> finds it by name.</figcaption>
+    </figure></div>
+
+  <div class="callout"><span class="eyebrow">What you will do, in this order</span>
+    <ol class="steps">
+      <li>Make a new project folder.</li>
+      <li>Run the wizard (<span class="mono">turtle-nest</span>) to make your package inside that folder.</li>
+      <li>Open the folder in VS Code.</li>
+      <li>Give VS Code three small files so that <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> builds and runs your package.</li>
+      <li>Paste your Tutorial B script into the package.</li>
+      <li>Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> and watch the turtle.</li>
+    </ol></div>
+
+  <div class="callout"><span class="eyebrow">What you need</span>
+    <ul>
+      <li>The virtual machine from Tutorial B, with VS Code in it.</li>
+      <li>Your script from Tutorial B, <span class="mono">simple_draw_shape.py</span>. It is printed again in Module 3, Module 6 shows the same program written as a class, and Module 7 adds a version that uses feedback instead of the clock.</li>
+      <li>The wizard, a program called <span class="mono">turtle-nest</span>. Check it now. Open a terminal (the terminal app in the VM), type <span class="mono">turtle-nest</span> and press Enter. A window should open. Close it again for now.</li>
+    </ul>
+    <p>If the wizard window does not open, stop and ask your instructor. Everything after this needs it.</p></div>
+
+  <label class="check"><input type="checkbox" id="vm-ok"><span>In the VM, typing <span class="mono">turtle-nest</span> in a terminal opened the wizard window. (Tick this to mark the module done.)</span></label>
+
+  <div class="nav2"><span></span><button class="btn" data-go="1">Next: Make the package</button></div>
+</section>
+
+<section class="mod" id="m1" hidden data-title="Make the package">
+  <div><div class="eyebrow">Module 1 of 10 · about 15 minutes</div><h2>Make the project folder and the package</h2></div>
+  <p class="lede">The order matters here: first a folder, then the package inside it, and only then VS Code. The wizard, Turtle Nest, asks a few questions and writes every file a package needs.</p>
+  <div class="goal"><b>By the end:</b> you have a project folder with a package in it, open in VS Code, and you can point at the one file you will edit.</div>
+
+  <div class="callout"><span class="eyebrow">Step 1 · Make a project folder</span>
+    <p>Use the file manager in the VM. Open your Desktop, right-click an empty spot, choose <b>New Folder</b>, and name it. Use lowercase letters and underscores, with no spaces: <span class="mono">shapes_project</span> is fine. Every project gets its own folder, so projects never get in each other's way.</p></div>
+
+  <div class="callout"><span class="eyebrow">Step 2 · Run the wizard</span>
+    <ol class="steps">
+      <li>Open a terminal. A terminal is a window where you type a command and press Enter.</li>
+      <li>Type <span class="mono">turtle-nest</span> and press Enter. The wizard window opens.</li>
+      <li>Answer its questions the way you do in the practice below. When it asks where to put the package, choose the folder you just made.</li>
+      <li>When it finishes, close the wizard. Your package is now inside your project folder.</li>
+    </ol></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 1 · Practice wizard</b><span class="pill" id="w1-pill">0 of 5 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:14px;color:var(--ink2)">This is a practice copy, built from how the wizard looked on our VM. Your real screens may word things a little differently, but the choices are the same.</p>
+    <div class="grid2">
+      <div class="wiz" id="w1-wiz"><div class="wiz-h"><span>Turtle Nest (practice)</span><span id="w1-step">Step 1 of 4</span></div>
+        <div class="wiz-b" id="w1-body"></div></div>
+      <div style="min-width:0;display:flex;flex-direction:column;gap:10px">
+        <div id="w1-missions"></div>
+        <div id="w1-tree-wrap" hidden>
+          <div class="ftree-h">Your new package (click a file)</div>
+          <div class="tree" id="w1-tree"></div>
+          <div class="out" id="w1-info" style="margin-top:8px" aria-live="polite">Click a file to see what it is for.</div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Step 3 · Open the folder in VS Code</span>
+    <p>Now start VS Code. Choose <b>File</b>, then <b>Open Folder</b>, and pick your project folder. VS Code shows the folder's contents in the <b>Explorer</b> on the left. You should see your package folder there. If the wizard put the package inside a folder called <span class="mono">src</span>, open <span class="mono">src</span> to find it. Either way works.</p>
+    <p>If VS Code asks whether you trust the authors of the files in this folder, choose <b>Yes, I trust the authors</b>. It is your own folder.</p></div>
+
+  <div class="callout"><span class="eyebrow">Naming rules</span>
+    <p>A package name uses <b>lowercase letters, digits and underscores</b>, and starts with a letter: <span class="mono">shape_drawer</span> is fine, <span class="mono">Shape Drawer</span> and <span class="mono">3d-demo</span> are not. The wizard names your program after the package, with <span class="mono">_node</span> added. A package called <span class="mono">my_shapes</span> gets a program called <span class="mono">my_shapes_node</span>, in a file called <span class="mono">my_shapes_node.py</span>.</p></div>
+
+  <div class="callout"><span class="eyebrow">The two optional files</span>
+    <p>The wizard offers a <b>parameter file</b> and a <b>launch file</b>. A parameter file is a list of settings a program can read. A launch file is a recipe for starting several programs with one command. Both come in the next tutorial. You can leave them off for now. If you tick them, nothing breaks: you just get two extra files that this tutorial does not use.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 1</b><span class="pill" id="q1-pill">0 of 3 right</span></div><div class="lab-b" id="q1-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="0">Back</button><button class="btn" data-go="2">Next: Teach VS Code to build and run</button></div>
+</section>
+
+<section class="mod" id="m2" hidden data-title="Teach VS Code to build and run">
+  <div><div class="eyebrow">Module 2 of 10 · about 15 minutes</div><h2>Teach VS Code to build and run your package</h2></div>
+  <p class="lede">Your package is ready, but VS Code does not know how to build it or run it yet. You tell it by adding three small files to a folder named <span class="mono">.vscode</span>. You do this once per project, and then <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> (the three keys held down together) does the rest.</p>
+  <div class="goal"><b>By the end:</b> your project folder contains a <span class="mono">.vscode</span> folder with <span class="mono">run.sh</span>, <span class="mono">tasks.json</span> and <span class="mono">settings.json</span> in it, each one saved.</div>
+
+  <div class="callout"><span class="eyebrow">What each file does</span>
+    <div class="tw"><table>
+      <tr><th>File</th><th>What it is for</th></tr>
+      <tr><td><span class="mono">run.sh</span></td><td>The list of jobs: find your package, build it, open turtlesim, run your program. A <b>shell script</b> is a text file of terminal commands that run one after another. It is the same list of commands you would otherwise type by hand.</td></tr>
+      <tr><td><span class="mono">tasks.json</span></td><td>A <b>task</b> is a named job that VS Code can run for you. This file creates one task, "Build and run", that runs <span class="mono">run.sh</span>, and marks it as the default so that <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> starts it.</td></tr>
+      <tr><td><span class="mono">settings.json</span></td><td>Options for this project. Ours turns on <b>auto-save</b>, so your edits are saved a moment after you stop typing, and tells VS Code where the ROS libraries are, so it stops underlining <span class="mono">import rclpy</span> in red.</td></tr>
+    </table></div>
+    <p>You will not edit these files again. Paste each one and save it. The files are printed below, one block per file.</p></div>
+
+  <div class="callout"><span class="eyebrow">Read this before you start</span>
+    <p><b>There are three files, so there are three pastes.</b> Each grey block below is the entire content of <b>one</b> file. Never paste two blocks into the same file. Do the steps in order, and finish one file (named, pasted, saved) before you start the next.</p></div>
+
+  <div class="callout"><span class="eyebrow">Step 1 · Make the .vscode folder</span>
+    <ol class="steps">
+      <li>In VS Code's Explorer (the file list on the left), move the mouse over the name of your project folder. A few small icons appear to the right of it.</li>
+      <li>Click the <b>New Folder</b> icon (a folder with a plus sign).</li>
+      <li>Type <span class="mono">.vscode</span> and press <kbd>Enter</kbd>. The name <b>starts with a dot</b> and has no spaces. A name without the dot, such as <span class="mono">vscode</span>, does nothing.</li>
+    </ol>
+    <p>The new folder appears in the list. A folder whose name starts with a dot is a "hidden" folder in the file manager, but VS Code shows it.</p></div>
+
+  <div class="callout"><span class="eyebrow">Step 2 · File 1 of 3 · run.sh</span>
+    <ol class="steps">
+      <li>Click the <span class="mono">.vscode</span> folder once, so it is highlighted. That tells VS Code where the new file goes.</li>
+      <li>Move the mouse over the project name again and click the <b>New File</b> icon (a page with a plus sign).</li>
+      <li>Type <span class="mono">run.sh</span> and press <kbd>Enter</kbd>. The file opens, empty, in the editor.</li>
+      <li>Click the <b>Copy</b> button on the block below, click in the empty editor, and press <kbd>Ctrl</kbd>+<kbd>V</kbd> to paste.</li>
+      <li>Press <kbd>Ctrl</kbd>+<kbd>S</kbd> to save.</li>
+    </ol>
+<pre class="code" data-py="run.sh">#!/bin/bash
+# This is what happens when you press Ctrl+Shift+B.
+# You never need to edit this file. It finds your package, builds it, and runs it.
+
+cd &quot;$(dirname &quot;$0&quot;)/..&quot; || exit 1
+source /opt/ros/humble/setup.bash
+
+echo &quot;== 1. Looking for your package&quot;
+PKG_XML=$(find . -maxdepth 3 -name package.xml -not -path &#x27;./build/*&#x27; -not -path &#x27;./install/*&#x27; | head -n 1)
+if [ -z &quot;$PKG_XML&quot; ]; then
+  echo &quot;No package found in this folder.&quot;
+  echo &quot;Open a terminal here (Terminal menu, New Terminal), run:  turtle-nest&quot;
+  echo &quot;Make a package, then press Ctrl+Shift+B again.&quot;
+  exit 1
+fi
+PKG=$(basename &quot;$(dirname &quot;$PKG_XML&quot;)&quot;)
+echo &quot;Found package: $PKG&quot;
+
+echo &quot;== 2. Building it&quot;
+colcon build --symlink-install --packages-select &quot;$PKG&quot; || { echo &quot;The build failed. Read the red text above.&quot;; exit 1; }
+source install/setup.bash
+
+EXE=$(ros2 pkg executables &quot;$PKG&quot; | awk &#x27;NR==1{print $2}&#x27;)
+if [ -z &quot;$EXE&quot; ]; then
+  echo &quot;The package built, but it has no program to run.&quot;
+  echo &quot;Did the wizard finish? Look for a file ending in _node.py inside the package.&quot;
+  exit 1
+fi
+
+echo &quot;== 3. Opening the turtlesim window (if needed) and clearing the old drawing&quot;
+if ! pgrep -x turtlesim_node &gt; /dev/null; then
+  setsid ros2 run turtlesim turtlesim_node &gt; /dev/null 2&gt;&amp;1 &amp;
+  sleep 2
+fi
+ros2 service call /reset std_srvs/srv/Empty &gt; /dev/null 2&gt;&amp;1 || true
+
+echo &quot;== 4. Running $PKG $EXE&quot;
+ros2 run &quot;$PKG&quot; &quot;$EXE&quot;</pre>
+    <p>The line <span class="mono">source /opt/ros/humble/setup.bash</span> names the ROS release on our VM. It is the only thing in any of these files that could ever need to change, and only if your VM has a different release than Humble.</p></div>
+
+  <div class="callout"><span class="eyebrow">Step 3 · File 2 of 3 · tasks.json</span>
+    <ol class="steps">
+      <li>Click the <span class="mono">.vscode</span> folder once, then click the <b>New File</b> icon.</li>
+      <li>Type <span class="mono">tasks.json</span> and press <kbd>Enter</kbd>.</li>
+      <li>Copy the block below, paste it into the new empty file, and press <kbd>Ctrl</kbd>+<kbd>S</kbd>.</li>
+    </ol>
+<pre class="code" data-py="tasks.json">{
+  &quot;version&quot;: &quot;2.0.0&quot;,
+  &quot;tasks&quot;: [
+    {
+      &quot;label&quot;: &quot;Build and run&quot;,
+      &quot;type&quot;: &quot;process&quot;,
+      &quot;command&quot;: &quot;bash&quot;,
+      &quot;args&quot;: [&quot;${workspaceFolder}/.vscode/run.sh&quot;],
+      &quot;options&quot;: { &quot;cwd&quot;: &quot;${workspaceFolder}&quot; },
+      &quot;group&quot;: { &quot;kind&quot;: &quot;build&quot;, &quot;isDefault&quot;: true },
+      &quot;problemMatcher&quot;: []
+    }
+  ]
+}</pre></div>
+
+  <div class="callout"><span class="eyebrow">Step 4 · File 3 of 3 · settings.json</span>
+    <ol class="steps">
+      <li>Click the <span class="mono">.vscode</span> folder once, then click the <b>New File</b> icon.</li>
+      <li>Type <span class="mono">settings.json</span> and press <kbd>Enter</kbd>.</li>
+      <li>Copy the block below, paste it into the new empty file, and press <kbd>Ctrl</kbd>+<kbd>S</kbd>.</li>
+    </ol>
+<pre class="code" data-py="settings.json">{
+  &quot;files.autoSave&quot;: &quot;afterDelay&quot;,
+  &quot;python.analysis.extraPaths&quot;: [
+    &quot;/opt/ros/humble/lib/python3.10/site-packages&quot;,
+    &quot;/opt/ros/humble/local/lib/python3.10/dist-packages&quot;
+  ],
+  &quot;python.autoComplete.extraPaths&quot;: [
+    &quot;/opt/ros/humble/lib/python3.10/site-packages&quot;,
+    &quot;/opt/ros/humble/local/lib/python3.10/dist-packages&quot;
+  ]
+}</pre>
+    <p>If VS Code offers to install an extension for JSON or Python, you can ignore it.</p></div>
+
+  <div class="callout"><span class="eyebrow">Check your work</span>
+    <p>The Explorer should now look like this. The names must match exactly, and the three files must be <b>inside</b> <span class="mono">.vscode</span>.</p>
+<pre class="code">shapes_project/
+├── .vscode/
+│   ├── run.sh
+│   ├── settings.json
+│   └── tasks.json
+└── my_shapes/            (your package, made by the wizard)</pre>
+    <p>The package may sit inside a <span class="mono">src</span> folder instead. That is fine.</p></div>
+
+  <div class="callout"><span class="eyebrow">Common mistakes</span>
+    <ul>
+      <li><b>The folder is called <span class="mono">vscode</span>, without the dot.</b> Right-click it, choose Rename, and add the dot.</li>
+      <li><b>A file got the wrong name,</b> such as <span class="mono">run.sh.txt</span> or <span class="mono">task.json</span>. Right-click it and choose Rename.</li>
+      <li><b>The files are beside <span class="mono">.vscode</span>, not inside it.</b> Drag each one onto the <span class="mono">.vscode</span> folder.</li>
+      <li><b>Two blocks ended up in one file.</b> Select everything in the file with <kbd>Ctrl</kbd>+<kbd>A</kbd>, delete it, and paste just the right block.</li>
+      <li><b>You forgot to save.</b> A dot on a file's tab means "not saved". Press <kbd>Ctrl</kbd>+<kbd>S</kbd> in that tab.</li>
+      <li><b>VS Code asked "Do you trust the authors?" and you said no.</b> Tasks and settings are switched off in untrusted folders. Choose Manage Workspace Trust and trust the folder.</li>
+    </ul></div>
+
+  <label class="check"><input type="checkbox" id="vm-ok2"><span>My project folder has a <span class="mono">.vscode</span> folder with <span class="mono">run.sh</span>, <span class="mono">tasks.json</span> and <span class="mono">settings.json</span> inside it, and none of the tabs shows an unsaved dot. (Tick this to mark the module done.)</span></label>
+
+  <div class="nav2"><button class="btn ghost" data-go="1">Back</button><button class="btn" data-go="3">Next: Put your script in the package</button></div>
+</section>
+
+<section class="mod" id="m3" hidden data-title="Put your script in it">
+  <div><div class="eyebrow">Module 3 of 10 · about 10 minutes</div><h2>Put your own script in the package</h2></div>
+  <p class="lede">The wizard left a placeholder program that only says hello. You replace its contents with your Tutorial B script. That is the one file you edit in the whole package.</p>
+  <div class="goal"><b>By the end:</b> your script is in the package's node file and saved, and you know the one thing it must still contain.</div>
+
+  <div class="callout"><span class="eyebrow">Which file</span>
+    <p>In VS Code's Explorer, open your package folder. Inside it is a folder with the <b>same name again</b>. Inside that is <span class="mono">&lt;your_name&gt;_node.py</span>. For a package called <span class="mono">my_shapes</span> the path is <span class="mono">my_shapes/my_shapes/my_shapes_node.py</span>. Open it, press <kbd>Ctrl</kbd>+<kbd>A</kbd> to select everything, and paste your script over it.</p></div>
+
+  <div class="callout"><span class="eyebrow">What the wizard wrote (the placeholder)</span>
+<pre class="code" id="m3-stub"></pre>
+    <p>It builds a node and keeps it alive. You do not need to understand it. You are about to replace all of it.</p></div>
+
+  <div class="callout"><span class="eyebrow">Your script · simple_draw_shape.py</span>
+<pre class="code" data-py="simple_draw_shape.py">&quot;&quot;&quot;The simple version. Make the turtle draw a shape (square, triangle, star ...) by following a plan.
+
+Before you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node
+Then run this file:                                         python3 simple_draw_shape.py
+
+How it works, in four steps:
+  1. Build a PLAN. A plan is a list. Each item in the list is one instruction:
+         (forward speed, turn speed, how many seconds to keep doing it)
+  2. Connect to turtlesim. We make a ROS 2 node and a publisher, which is how we send messages.
+  3. Wait until turtlesim is listening.
+  4. Go through the plan one instruction at a time. For each instruction, send the same
+     command over and over (50 times a second) until its time is up.
+
+This is called OPEN LOOP: the program never looks at where the turtle really is.
+It only watches the clock and hopes the turtle did what it was told.
+&quot;&quot;&quot;
+import math
+import sys
+import time
+
+import rclpy
+from geometry_msgs.msg import Twist
+
+# ---------------- settings: change these and run again ----------------
+# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the
+# program, for example:  python3 simple_draw_shape.py turtle2
+TURTLE = sys.argv[1] if len(sys.argv) &gt; 1 else &#x27;turtle1&#x27;
+SIDES = 4            # 3 = triangle, 4 = square, 5 = pentagon, 6 = hexagon
+TURNS = 1            # 1 for an ordinary shape. SIDES = 5 with TURNS = 2 draws a five-point star
+SIDE_LENGTH = 2.0    # how long each side is, in turtlesim units
+SPEED = 2.0          # forward speed, in units per second
+TURN_RATE = 1.0      # turning speed, in radians per second (1 radian is about 57 degrees)
+SEND_EVERY = 0.02    # seconds between messages (0.02 means 50 messages a second)
+
+
+def make_plan():
+    &quot;&quot;&quot;Build the plan: a list of (forward speed, turn speed, seconds) instructions.&quot;&quot;&quot;
+    plan = []                                    # start with an empty list
+
+    # How far the turtle turns at each corner, in radians.
+    # A full circle is 2 * pi radians. For a square, SIDES is 4, so each turn is a quarter circle.
+    turn_angle = TURNS * 2 * math.pi / SIDES
+
+    # Repeat once for every side. side_number counts 0, 1, 2, 3 ... but we do not need
+    # its value. It is only there so the loop knows how many times to repeat.
+    for side_number in range(SIDES):
+        # Instruction 1: drive straight. Time = distance / speed.
+        plan.append((SPEED, 0.0, SIDE_LENGTH / SPEED))
+        # Instruction 2: turn on the spot. Time = angle / turn speed.
+        plan.append((0.0, TURN_RATE, turn_angle / TURN_RATE))
+
+    return plan
+
+
+def main():
+    # ---- Step 2: connect to ROS 2 ----
+    rclpy.init()                                                  # start ROS 2
+    node = rclpy.create_node(&#x27;shape_drawer&#x27;)                      # our program&#x27;s name in ROS 2
+    # A publisher sends messages to a topic. turtlesim listens on /turtle1/cmd_vel
+    # for messages of type Twist (a forward speed and a turn speed). The 10 is a queue size.
+    publisher = node.create_publisher(Twist, &#x27;/&#x27; + TURTLE + &#x27;/cmd_vel&#x27;, 10)
+
+    # ---- Step 3: wait until turtlesim is listening ----
+    # Programs need a moment to find each other. A message sent before turtlesim is
+    # connected is lost, and the first side of the shape would come out too short.
+    print(&#x27;Waiting for turtlesim...&#x27;)
+    while publisher.get_subscription_count() == 0:     # 0 means nobody is listening yet
+        time.sleep(0.1)                                # wait a tenth of a second, then check again
+
+    # ---- Step 4: follow the plan ----
+    plan = make_plan()
+    print(&#x27;Drawing... press Ctrl+C to stop.&#x27;)
+    try:
+        for line in plan:                              # take one instruction at a time
+            forward_speed, turn_speed, seconds = line  # split the three numbers into names
+
+            message = Twist()                          # an empty command: every value is 0.0
+            message.linear.x = forward_speed           # forward speed
+            message.angular.z = turn_speed             # turn speed (counter-clockwise is positive)
+
+            # Keep sending this same command until the time is up.
+            end_time = time.time() + seconds
+            while time.time() &lt; end_time:
+                publisher.publish(message)
+                time.sleep(SEND_EVERY)                 # pause, so we send 50 messages a second
+    except KeyboardInterrupt:                          # this happens when you press Ctrl+C
+        print(&#x27;Stopped.&#x27;)
+
+    publisher.publish(Twist())                         # a command of all zeros means &quot;stop&quot;
+    print(&#x27;Done.&#x27;)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre>
+    <p>This is the same script as in Tutorial B Module 4. If you wrote your own improved version, paste that instead. The notes at the top of the file say to run it with <span class="mono">python3</span>. Ignore that here, because you will use the keyboard shortcut instead.</p></div>
+
+  <div class="callout"><span class="eyebrow">The one rule: keep a function called main()</span>
+    <p>A file in the package called <span class="mono">setup.py</span>, which the wizard wrote and you never touch, contains this line:</p>
+<pre class="code">'my_shapes_node = my_shapes.my_shapes_node:main'</pre>
+    <p>Read it as: "to run <span class="mono">my_shapes_node</span>, go to the file <span class="mono">my_shapes_node.py</span> and call its <span class="mono">main()</span> function." Your file <b>must have a function called main</b>, or ROS has nothing to start. Your Tutorial B script has a <span class="mono">main()</span> at the bottom, so pasting the whole script keeps the rule. If you paste only part of a script, or delete the end, ROS stops with an <span class="mono">ImportError</span> that mentions <span class="mono">main</span>.</p></div>
+
+  <div class="callout"><span class="eyebrow">Unsaved files</span>
+    <p>VS Code shows a small dot on a file's tab while it has changes that are not saved. The <span class="mono">settings.json</span> you made saves files about a second after you stop typing, and the dot disappears. If you ever see the dot, wait a moment or press <kbd>Ctrl</kbd>+<kbd>S</kbd>. <b>Running before the file is saved runs the old code,</b> and the turtle does the old thing with no error. This is the most common reason for "I changed it and nothing happened."</p></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 3</b><span class="pill" id="q3-pill">0 of 3 right</span></div><div class="lab-b" id="q3-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="2">Back</button><button class="btn" data-go="4">Next: Build and run</button></div>
+</section>
+
+<section class="mod" id="m4" hidden data-title="Build and run">
+  <div><div class="eyebrow">Module 4 of 10 · about 15 minutes</div><h2>Build and run with Ctrl+Shift+B</h2></div>
+  <p class="lede">Click anywhere in the VS Code editor so it is the active window, then press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd>. The B is for Build. Holding those three keys together does everything that Tutorial B needed several terminals for.</p>
+  <div class="goal"><b>By the end:</b> you have run the placeholder and then your script from the package, you can read the four numbered lines the panel prints, and you know why the square comes out a little crooked.</div>
+
+  <div class="callout"><span class="eyebrow">What the shortcut does</span>
+    <p>A panel opens at the bottom of VS Code and prints four numbered steps:</p>
+    <ol class="steps">
+      <li><b>Looking for your package.</b> It finds the package the wizard made, so you never type its name.</li>
+      <li><b>Building it.</b> A tool called <span class="mono">colcon</span> gets the package ready. The line to look for is <span class="mono">Finished &lt;&lt;&lt; your_name</span>. Red text here means the build failed.</li>
+      <li><b>Opening the turtlesim window and clearing it.</b> If turtlesim is closed, it opens. Either way, the old drawing is wiped and the turtle goes back to the middle.</li>
+      <li><b>Running your program.</b> You see the same lines as in Tutorial B: <span class="mono">Waiting for turtlesim...</span>, <span class="mono">Drawing... press Ctrl+C to stop.</span>, then <span class="mono">Done.</span> (The class version in Module 6 prints only a <span class="mono">Done.</span> log line.)</li>
+    </ol>
+    <p>The very last line, <span class="mono">Terminal will be reused by tasks, press any key to close it</span>, is VS Code's normal way of saying the run is over.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 3 · Press Ctrl+Shift+B</b><span class="pill" id="r3-pill">0 of 3 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:14px;color:var(--ink2)">A practice copy of VS Code and turtlesim. It starts with the wizard's placeholder in the file, as in your project before Module 3. Press the shortcut once to see what the placeholder does, then paste your script and press again.</p>
+    <div id="r3-root"></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Why is the open-loop square crooked?</span>
+    <p>Your script only watches the clock. It never asks where the turtle is, so every small timing error adds up. This is the open loop idea from Tutorial B Module 4. How crooked it looks on your VM depends on how busy the VM is. Fixing it takes a script that listens to the turtle's position, which is a later tutorial.</p></div>
+
+  <div class="callout"><span class="eyebrow">Handy things to know</span>
+    <ul>
+      <li><b>Press Ctrl+Shift+B again</b> after an edit. Nothing else is needed. Each press wipes the old drawing and puts the turtle back in the middle, so you only ever see the newest run.</li>
+      <li><b>If you close the turtlesim window,</b> that is fine. The next press opens a new one.</li>
+      <li><b>To stop a run early,</b> click in the bottom panel and press <kbd>Ctrl</kbd>+<kbd>C</kbd>. The script catches it, stops the turtle and prints <span class="mono">Stopped.</span></li>
+    </ul></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="3">Back</button><button class="btn" data-go="5">Next: Change it, run again</button></div>
+</section>
+
+<section class="mod" id="m5" hidden data-title="Change it, run again">
+  <div><div class="eyebrow">Module 5 of 10 · about 15 minutes</div><h2>Change it and run it again</h2></div>
+  <p class="lede">The numbers you want to change sit at the top of your script, in the block marked "settings". Edit one, wait a second for the file to save, and press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>B</kbd> again. There is no other step.</p>
+  <div class="goal"><b>By the end:</b> you have drawn a triangle, a hexagon and a five-point star by changing numbers only.</div>
+
+  <div class="callout"><span class="eyebrow">The settings block</span>
+    <p>Your script starts with lines like these. Each one is a plain Python variable, and the comment after it says what it does:</p>
+<pre class="code">SIDES = 4            # 3 = triangle, 4 = square, 5 = pentagon, 6 = hexagon
+TURNS = 1            # 1 for an ordinary shape. SIDES = 5 with TURNS = 2 draws a five-point star
+SIDE_LENGTH = 2.0    # how long each side is, in turtlesim units</pre></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 4 · Change the numbers</b><span class="pill" id="r4-pill">0 of 3 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:14px;color:var(--ink2)">The box under the tab is the top of your file. Edit it, then press Ctrl+Shift+B. Missions tick when the turtle really draws the shape.</p>
+    <div id="r4-root"></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Two numbers that go wrong</span>
+    <p>A shape that runs off the edge of the window gets squashed against the wall, because turtlesim stops the turtle at the border. Shorten <span class="mono">SIDE_LENGTH</span> if that happens. And in your script, <span class="mono">SIDES</span> must be a whole number: <span class="mono">5</span> works, <span class="mono">5.5</span> stops with a <span class="mono">TypeError</span>, because Python cannot repeat something 5.5 times.</p></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="4">Back</button><button class="btn" data-go="6">Next: The same program as a class</button></div>
+</section>
+
+<section class="mod" id="m6" hidden data-title="Same program as a class">
+  <div><div class="eyebrow">Module 6 of 10 · about 15 minutes</div><h2>The same program, written as a class</h2></div>
+  <p class="lede">The placeholder the wizard wrote was a <b>class</b>, and so is most of the ROS code you will find online. In this module you paste the class version from Tutorial B into your package. It draws the same shape, but it is organised the way ROS programmers usually write it.</p>
+  <div class="goal"><b>By the end:</b> you have run both versions and seen that they draw the same shape, and you can say why the class version keeps its place in the plan on self.</div>
+
+  <div class="callout"><span class="eyebrow">Why bother, if it does the same thing?</span>
+    <p>You met this program at the end of Tutorial B Module 4: <span class="mono">draw_shape.py</span>, "the ROS way". A ROS node usually owns several things that belong together: a publisher, later subscribers, a timer, and notes about where it is in its job. A <b>class</b> keeps them together in one named place. There is a second reason, and it is the important one: the class version never waits inside a loop. ROS calls one method, <span class="mono">on_timer</span>, 50 times a second, and each call does a tiny amount of work and returns. Anything the node must remember from one call to the next, such as which line of the plan it is on, lives on <span class="mono">self</span>.</p></div>
+
+  <div class="callout"><span class="eyebrow">The class version · draw_shape.py</span>
+<pre class="code" data-py="draw_shape.py">&quot;&quot;&quot;The ROS way: the same program as simple_draw_shape.py, written as a class with a timer.
+
+Before you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node
+Then run this file:                                         python3 draw_shape.py
+
+Most ROS 2 programs are written like this. Instead of one long function that waits, we write a
+CLASS (a bundle of variables and functions that belong together) and ask ROS 2 to call one of its
+functions, on_timer, 50 times a second. Each call does a tiny amount of work and returns, so ROS 2
+stays free to do other things between calls.
+
+Because on_timer runs again and again, the class remembers where it is in a variable called phase:
+  &#x27;waiting&#x27;  - turtlesim is not connected yet. Check again next time.   (the first kind of waiting)
+  &#x27;drawing&#x27;  - follow the plan, one line at a time.                     (the second kind of waiting)
+  &#x27;finished&#x27; - everything is done.
+&quot;&quot;&quot;
+import math
+import sys
+
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+
+# ---------------- settings: change these and run again ----------------
+# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the
+# program, for example:  python3 draw_shape.py turtle2
+TURTLE = sys.argv[1] if len(sys.argv) &gt; 1 else &#x27;turtle1&#x27;
+SIDES = 4            # 3 = triangle, 4 = square, 5 = pentagon, 6 = hexagon
+TURNS = 1            # 1 for an ordinary shape. SIDES = 5 with TURNS = 2 draws a five-point star
+SIDE_LENGTH = 2.0    # how long each side is, in turtlesim units
+SPEED = 2.0          # forward speed, in units per second
+TURN_RATE = 1.0      # turning speed, in radians per second (1 radian is about 57 degrees)
+SEND_EVERY = 0.02    # seconds between messages (0.02 means 50 messages a second)
+
+
+def make_plan():
+    &quot;&quot;&quot;Build the plan: a list of (forward speed, turn speed, seconds) instructions.&quot;&quot;&quot;
+    plan = []                                    # start with an empty list
+    turn_angle = TURNS * 2 * math.pi / SIDES     # how far to turn at each corner, in radians
+    for side_number in range(SIDES):             # repeat once per side
+        plan.append((SPEED, 0.0, SIDE_LENGTH / SPEED))          # drive straight
+        plan.append((0.0, TURN_RATE, turn_angle / TURN_RATE))   # turn on the spot
+    return plan
+
+
+class ShapeDrawer(Node):
+    &quot;&quot;&quot;A node is a program that is part of ROS 2. Putting (Node) after the name means:
+    ShapeDrawer is a kind of Node, so it gets everything a Node can do (create publishers, timers ...).&quot;&quot;&quot;
+
+    def __init__(self):
+        &quot;&quot;&quot;__init__ runs once, when we create a ShapeDrawer. It sets up the variables the class remembers.
+        &#x27;self&#x27; means &#x27;this ShapeDrawer&#x27;. self.plan is the plan that belongs to this one.&quot;&quot;&quot;
+        super().__init__(&#x27;shape_drawer&#x27;)                 # let Node do its own set-up first, and name us
+        self.publisher = self.create_publisher(Twist, &#x27;/&#x27; + TURTLE + &#x27;/cmd_vel&#x27;, 10)
+        self.plan = make_plan()
+        self.line_number = 0                             # which line of the plan we are on
+        self.line_started = None                         # the time that line began
+        self.phase = &#x27;waiting&#x27;
+        self.done = False
+        self.timer = self.create_timer(SEND_EVERY, self.on_timer)   # call on_timer 50 times a second
+
+    def on_timer(self):
+        &quot;&quot;&quot;ROS 2 calls this by itself, again and again. It only decides which phase we are in.&quot;&quot;&quot;
+        if self.phase == &#x27;waiting&#x27;:
+            self.wait_for_turtlesim()
+        elif self.phase == &#x27;drawing&#x27;:
+            self.follow_plan()
+
+    def wait_for_turtlesim(self):
+        &quot;&quot;&quot;Phase 1. Is anyone listening yet? If not, do nothing and try again next time.&quot;&quot;&quot;
+        if self.publisher.get_subscription_count() == 0:
+            return                                       # not connected yet, so leave and wait for the next call
+        self.line_started = self.get_clock().now()       # the first line starts now
+        self.phase = &#x27;drawing&#x27;
+
+    def follow_plan(self):
+        &quot;&quot;&quot;Phase 2. Send the command for the current plan line. Move to the next line when its time is up.&quot;&quot;&quot;
+        now = self.get_clock().now()
+        forward_speed, turn_speed, seconds = self.plan[self.line_number]
+        elapsed = (now - self.line_started).nanoseconds * 1e-9     # seconds since this line began
+
+        if elapsed &gt;= seconds:                           # this line is finished
+            self.line_number = self.line_number + 1      # move on to the next one
+            self.line_started = now
+            if self.line_number == len(self.plan):       # that was the last line
+                self.finish()
+                return
+            forward_speed, turn_speed, seconds = self.plan[self.line_number]
+
+        message = Twist()
+        message.linear.x = forward_speed
+        message.angular.z = turn_speed
+        self.publisher.publish(message)
+
+    def finish(self):
+        self.publisher.publish(Twist())                  # all zeros means &quot;stop&quot;
+        self.phase = &#x27;finished&#x27;
+        self.done = True
+        self.get_logger().info(&#x27;Done.&#x27;)
+
+
+def main():
+    rclpy.init()
+    node = ShapeDrawer()                                 # make one ShapeDrawer: this runs __init__
+    try:
+        while rclpy.ok() and not node.done:
+            rclpy.spin_once(node)                        # let ROS 2 call on_timer when it is due
+    except KeyboardInterrupt:                            # this happens when you press Ctrl+C
+        node.publisher.publish(Twist())
+        print(&#x27;Stopped.&#x27;)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre>
+    <p>Paste it the same way as before: select everything in your node file with <kbd>Ctrl</kbd>+<kbd>A</kbd>, paste, and let it save. It still ends with a <span class="mono">main()</span>, so the rule from Module 3 is kept. This version prints only one line, <span class="mono">Done.</span>, inside a ROS log message, instead of the three lines you saw before.</p></div>
+
+  <div class="callout"><span class="eyebrow">What moved where</span>
+    <div class="tw"><table>
+      <tr><th>Function version</th><th>Class version</th></tr>
+      <tr><td>The settings at the top, and <span class="mono">make_plan()</span></td><td><b>Unchanged.</b> Same numbers, same plan.</td></tr>
+      <tr><td><span class="mono">node = rclpy.create_node('shape_drawer')</span></td><td><span class="mono">class ShapeDrawer(Node):</span> and, inside it, <span class="mono">super().__init__('shape_drawer')</span></td></tr>
+      <tr><td><span class="mono">publisher = node.create_publisher(...)</span></td><td><span class="mono">self.publisher = self.create_publisher(...)</span></td></tr>
+      <tr><td>The waiting loop that checks <span class="mono">get_subscription_count()</span></td><td>The method <span class="mono">wait_for_turtlesim</span>. <span class="mono">on_timer</span> calls it again and again while <span class="mono">self.phase</span> is <span class="mono">'waiting'</span>.</td></tr>
+      <tr><td>The <span class="mono">for</span> and <span class="mono">while</span> loops over the plan</td><td>The method <span class="mono">follow_plan</span>. Each call sends one command and checks the clock. <span class="mono">self.line_number</span> and <span class="mono">self.line_started</span> remember where it is.</td></tr>
+      <tr><td><span class="mono">print('Done.')</span></td><td>The method <span class="mono">finish</span>, which logs <span class="mono">Done.</span></td></tr>
+      <tr><td><span class="mono">main()</span></td><td>Still there. It makes one <span class="mono">ShapeDrawer</span> and keeps calling <span class="mono">rclpy.spin_once(node)</span>, which lets ROS call <span class="mono">on_timer</span> when it is due.</td></tr>
+    </table></div></div>
+
+  <div class="callout"><span class="eyebrow">Reading a class, one line at a time</span>
+    <ul>
+      <li><span class="mono">class ShapeDrawer(Node):</span> means "make a new kind of node called ShapeDrawer, starting with everything a ROS <span class="mono">Node</span> can already do." The wizard's placeholder had the same line, with a different name.</li>
+      <li><span class="mono">def __init__(self):</span> runs once, at the moment a ShapeDrawer is made. It is where the node sets itself up.</li>
+      <li><span class="mono">self</span> means "this node". <span class="mono">self.publisher</span> and <span class="mono">self.phase</span> are variables that belong to the node, so every method can use them.</li>
+      <li><span class="mono">self.create_timer(SEND_EVERY, self.on_timer)</span> asks ROS to call <span class="mono">on_timer</span> 50 times a second.</li>
+      <li><span class="mono">node = ShapeDrawer()</span> in <span class="mono">main()</span> makes one. The loop under it keeps going until <span class="mono">node.done</span> becomes true.</li>
+    </ul></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 6 · Same shape, two versions</b><span class="pill" id="r6-pill">0 of 3 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:14px;color:var(--ink2)">Paste each version in turn and press Ctrl+Shift+B. The two should draw the same shape.</p>
+    <div id="r6-root"></div>
+  </div></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 6</b><span class="pill" id="q6-pill">0 of 3 right</span></div><div class="lab-b" id="q6-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="5">Back</button><button class="btn" data-go="7">Next: Feedback instead of time</button></div>
+</section>
+
+<section class="mod" id="m7" hidden data-title="Feedback instead of time">
+  <div><div class="eyebrow">Module 7 of 10 · about 15 minutes</div><h2>Use feedback instead of the clock</h2></div>
+  <p class="lede">Both versions so far only watch the clock: drive for this many seconds, turn for that many. If a timer runs late, the error adds up and the square comes out crooked. This last version never looks at the clock. It listens to where the turtle really is, and it stops each side when the turtle has gone far enough.</p>
+  <div class="goal"><b>By the end:</b> you have run the feedback version from your package, compared its square with the open-loop square, and you can say which method is the control loop.</div>
+
+  <div class="callout"><span class="eyebrow">What is new</span>
+    <ul>
+      <li><b>A subscription.</b> Turtlesim publishes the turtle's position and heading, called its <b>pose</b>, about 60 times a second on <span class="mono">/turtle1/pose</span>. The line <span class="mono">self.create_subscription(Pose, '/turtle1/pose', self.on_pose, 10)</span> says "call my method <span class="mono">on_pose</span> every time one arrives."</li>
+      <li><b><span class="mono">on_pose</span> is the whole control loop.</b> Each time it is called it looks at the pose, decides what to do, and sends one command. There is no timer and no clock anywhere in the file.</li>
+      <li><b>Phases.</b> <span class="mono">self.phase</span> remembers what the node is doing: <span class="mono">'waiting'</span>, <span class="mono">'driving'</span>, <span class="mono">'turning'</span> or <span class="mono">'finished'</span>. The pose method hands each message to the right one.</li>
+    </ul>
+    <p>This is called <b>closed loop</b>: measure, compare with the goal, correct, repeat. You studied it in Tutorial B Module 5. Here you only run it as a package, and the class idea from Module 6 is what makes it tidy: the method that receives the pose and the variables it needs to remember sit together in one class.</p></div>
+
+  <div class="callout"><span class="eyebrow">The feedback version · draw_square_pose.py</span>
+<pre class="code" data-py="draw_square_pose.py">&quot;&quot;&quot;The ROS way: the same program as simple_draw_square_pose.py, written as a class with a callback.
+
+Before you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node
+Then run this file:                                         python3 draw_square_pose.py
+
+Turtlesim publishes the turtle&#x27;s pose (x, y, heading) about 60 times a second. This class
+subscribes to those messages. Each time one arrives, ROS 2 calls on_pose. That one function is
+the whole control loop: look at the pose, decide what to do, send a command.
+
+The class remembers where it is in a variable called phase:
+  &#x27;waiting&#x27;  - no pose has arrived yet, or turtlesim is not listening for commands yet.
+  &#x27;driving&#x27;  - go forward until we have travelled SIDE_LENGTH.
+  &#x27;turning&#x27;  - turn until we face the next direction.
+  &#x27;finished&#x27; - everything is done.
+This is CLOSED LOOP: every command is worked out from a measurement, never from a clock.
+&quot;&quot;&quot;
+import math
+import sys
+
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+
+try:
+    from turtlesim_msgs.msg import Pose      # newer ROS 2 releases keep the turtlesim messages here
+except ImportError:
+    from turtlesim.msg import Pose           # older releases
+
+# ---------------- settings: change these and run again ----------------
+# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the
+# program, for example:  python3 draw_square_pose.py turtle2
+TURTLE = sys.argv[1] if len(sys.argv) &gt; 1 else &#x27;turtle1&#x27;
+SIDES = 4                # 3 = triangle, 4 = square, 6 = hexagon ...
+SIDE_LENGTH = 2.0        # units
+MAX_SPEED = 2.0          # fastest forward speed, units per second
+MAX_TURN = 2.0           # fastest turning speed, radians per second
+SPEED_PER_UNIT = 3.0     # drive speed = this x the distance still to go, so it slows down near the goal
+TURN_PER_RADIAN = 4.0    # turn speed = this x the angle still to turn
+MIN_SPEED = 0.15         # never slower than this, or the turtle would crawl for ever
+MIN_TURN = 0.1
+DISTANCE_OK = 0.02       # close enough to the end of the side, in units
+ANGLE_OK = 0.01          # close enough to the new heading, in radians
+
+
+def wrap(angle):
+    &quot;&quot;&quot;Turn any angle into the range -pi to +pi, the same range the turtle reports.
+    Without this, a heading of +3.1 and a goal of -3.1 would look 6.2 radians apart
+    when they are really only 0.08 radians apart.&quot;&quot;&quot;
+    return angle - 2 * math.pi * math.floor((angle + math.pi) / (2 * math.pi))
+
+
+class SquareDrawer(Node):
+    &quot;&quot;&quot;A node is a program that is part of ROS 2. SquareDrawer is a kind of Node.&quot;&quot;&quot;
+
+    def __init__(self):
+        &quot;&quot;&quot;__init__ runs once, when we create a SquareDrawer. &#x27;self&#x27; means &#x27;this SquareDrawer&#x27;.&quot;&quot;&quot;
+        super().__init__(&#x27;square_drawer&#x27;)                # let Node do its own set-up first, and name us
+        self.publisher = self.create_publisher(Twist, &#x27;/&#x27; + TURTLE + &#x27;/cmd_vel&#x27;, 10)
+        self.subscription = self.create_subscription(Pose, &#x27;/&#x27; + TURTLE + &#x27;/pose&#x27;, self.on_pose, 10)
+        self.phase = &#x27;waiting&#x27;
+        self.side_number = 0         # how many sides are finished
+        self.start_x = 0.0           # where the current side began
+        self.start_y = 0.0
+        self.goal_heading = 0.0      # the direction the turtle should face
+        self.done = False
+
+    def on_pose(self, pose):
+        &quot;&quot;&quot;ROS 2 calls this by itself every time a Pose message arrives. &#x27;pose&#x27; is that message.&quot;&quot;&quot;
+        if self.phase == &#x27;waiting&#x27;:
+            self.wait_for_turtlesim(pose)
+        elif self.phase == &#x27;driving&#x27;:
+            self.drive(pose)
+        elif self.phase == &#x27;turning&#x27;:
+            self.turn(pose)
+
+    def wait_for_turtlesim(self, pose):
+        &quot;&quot;&quot;Phase 1. A pose has arrived. Is turtlesim also listening for commands?&quot;&quot;&quot;
+        if self.publisher.get_subscription_count() == 0:
+            return                                       # not yet: wait for the next pose
+        self.goal_heading = pose.theta                   # start from the way the turtle already faces
+        self.begin_side(pose)
+
+    def begin_side(self, pose):
+        &quot;&quot;&quot;Remember where this side starts, and switch to driving.&quot;&quot;&quot;
+        self.start_x = pose.x
+        self.start_y = pose.y
+        self.phase = &#x27;driving&#x27;
+
+    def drive(self, pose):
+        &quot;&quot;&quot;Phase 2. Go forward until we have travelled SIDE_LENGTH.&quot;&quot;&quot;
+        travelled = math.hypot(pose.x - self.start_x, pose.y - self.start_y)
+        remaining = SIDE_LENGTH - travelled
+        if remaining &lt;= DISTANCE_OK:                     # far enough: time to turn
+            self.goal_heading = wrap(self.goal_heading + 2 * math.pi / SIDES)
+            self.phase = &#x27;turning&#x27;
+            return
+        message = Twist()
+        speed = SPEED_PER_UNIT * remaining               # far away = fast, nearly there = slow
+        message.linear.x = min(MAX_SPEED, max(MIN_SPEED, speed))
+        self.publisher.publish(message)
+
+    def turn(self, pose):
+        &quot;&quot;&quot;Phase 3. Turn until the turtle faces the next direction.&quot;&quot;&quot;
+        error = wrap(self.goal_heading - pose.theta)     # how far we still have to turn (+ or -)
+        if abs(error) &lt; ANGLE_OK:                        # facing the right way
+            self.side_number = self.side_number + 1
+            if self.side_number == SIDES:
+                self.finish()
+            else:
+                self.begin_side(pose)
+            return
+        message = Twist()
+        rate = min(MAX_TURN, max(MIN_TURN, TURN_PER_RADIAN * abs(error)))
+        message.angular.z = math.copysign(rate, error)   # turn toward the goal, either way
+        self.publisher.publish(message)
+
+    def finish(self):
+        self.publisher.publish(Twist())                  # all zeros means &quot;stop&quot;
+        self.phase = &#x27;finished&#x27;
+        self.done = True
+        self.get_logger().info(&#x27;Done.&#x27;)
+
+
+def main():
+    rclpy.init()
+    node = SquareDrawer()                                # make one SquareDrawer: this runs __init__
+    try:
+        while rclpy.ok() and not node.done:
+            rclpy.spin_once(node)                        # let ROS 2 call on_pose when a pose arrives
+    except KeyboardInterrupt:                            # this happens when you press Ctrl+C
+        node.publisher.publish(Twist())
+        print(&#x27;Stopped.&#x27;)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre>
+    <p>Paste it into your node file the same way as before. It has a <span class="mono">main()</span>, so the rule from Module 3 is kept. It has no <span class="mono">TURNS</span> setting, so it draws regular shapes but not stars. The two lines near the top that import <span class="mono">Pose</span> cover releases of ROS that keep the turtle messages in different places.</p></div>
+
+  <div class="callout"><span class="eyebrow">Open loop and closed loop side by side</span>
+    <div class="tw"><table>
+      <tr><th></th><th>Open loop (Module 6)</th><th>Closed loop (this module)</th></tr>
+      <tr><td>What it watches</td><td>The clock</td><td>The turtle's pose</td></tr>
+      <tr><td>Who calls the method</td><td>A timer, 50 times a second: <span class="mono">on_timer</span></td><td>Each pose message: <span class="mono">on_pose</span></td></tr>
+      <tr><td>If the timing is a bit off</td><td>The error adds up, and the square is crooked</td><td>The next pose message shows the error and the next command corrects it</td></tr>
+      <tr><td>Stops a side when</td><td>The seconds are used up</td><td>The turtle has travelled <span class="mono">SIDE_LENGTH</span></td></tr>
+    </table></div></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 7 · Clock against feedback</b><span class="pill" id="r7-pill">0 of 3 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:14px;color:var(--ink2)">Paste each version in turn and press Ctrl+Shift+B. The readout says how far the end of the shape is from where it started.</p>
+    <div id="r7-root"></div>
+  </div></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 7</b><span class="pill" id="q7-pill">0 of 3 right</span></div><div class="lab-b" id="q7-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="6">Back</button><button class="btn" data-go="8">Next: When it goes wrong</button></div>
+</section>
+
+<section class="mod" id="m8" hidden data-title="When it goes wrong">
+  <div><div class="eyebrow">Module 8 of 10 · about 15 minutes</div><h2>When it goes wrong</h2></div>
+  <p class="lede">Sooner or later the panel prints something you did not expect. That is normal for everyone who writes code. The skill is knowing which kind of trouble you have, and where to look first.</p>
+  <div class="goal"><b>By the end:</b> you can sort a problem into one of three kinds and name the first thing to check for each.</div>
+
+  <div class="callout"><span class="eyebrow">Three kinds of trouble</span>
+    <div class="tw"><table>
+      <tr><th>What you see</th><th>What it means</th><th>Look first</th></tr>
+      <tr><td>Our own message, such as <span class="mono">No package found in this folder</span>, or <span class="mono">The build failed</span></td><td>The run script stopped before your code ran.</td><td>Read the line that says what to do. For a failed build, read the <b>first red line</b> above it.</td></tr>
+      <tr><td>A block of text starting <span class="mono">Traceback</span>, or a <span class="mono">SyntaxError</span></td><td>Your Python code has a mistake.</td><td>Read the <b>last line</b> first: it names the problem. The line above it gives the file and the line number.</td></tr>
+      <tr><td>No error at all, but the turtle does nothing, or does the old thing</td><td>The program ran fine, but not the one you think.</td><td>Is the file saved (no dot on the tab)? Does the panel say <span class="mono">Drawing...</span>? Is turtlesim open?</td></tr>
+    </table></div></div>
+
+  <div class="callout"><span class="eyebrow">A habit that saves hours</span>
+    <p>Change one thing, then press Ctrl+Shift+B. If you changed six things and it breaks, you have six suspects. If you changed one, you have one. When you are stuck, undo your last change with <kbd>Ctrl</kbd>+<kbd>Z</kbd> and check that the program works again before you try something else.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Error clinic</b><span class="pill" id="q5-pill">0 of 6 right</span></div><div class="lab-b">
+    <p style="margin:0;font-size:14px;color:var(--ink2)">Six panels, each with something wrong. These are typical messages. The exact wording on your screen can differ a little.</p>
+    <div id="q5-box"></div></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="7">Back</button><button class="btn" data-go="9">Next: Your next project</button></div>
+</section>
+
+<section class="mod" id="m9" hidden data-title="Your next project">
+  <div><div class="eyebrow">Module 9 of 10 · about 10 minutes</div><h2>Your next project</h2></div>
+  <p class="lede">Next semester you will start a project with nobody beside you. Here is the whole recipe. It is the same six steps every time, and the only command you type is turtle-nest.</p>
+  <div class="goal"><b>By the end:</b> you can put the steps in order from memory, and you know what is in the files the wizard wrote that you never opened.</div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 5 · Start a new project</b><span class="pill" id="o6-pill">0 of 6 steps</span></div>
+  <div class="lab-b">
+    <p style="margin:0;font-size:14px;color:var(--ink2)">Click the steps in the order you would do them. Two of the buttons are steps that other ROS tutorials tell you to do but that you do not need here. Click one to see why.</p>
+    <div class="order" id="o6-list"></div>
+    <div class="msg hint" id="o6-msg" aria-live="polite"></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Why one project per workspace?</span>
+    <p>Every project gets its own folder. That keeps projects from interfering with each other: a package in one cannot break a package in another, and you can delete a project by deleting its folder. It also means that "which package do I run?" always has one answer, because there is only one in the folder. The run script relies on that: it builds the first package it finds.</p></div>
+
+  <div class="callout"><span class="eyebrow">The files you never opened</span>
+    <p>The wizard wrote these. They matter, but you did not need to touch them:</p>
+    <div class="cards">
+      <div class="card"><h4><span class="mono">package.xml</span></h4><p>The package's ID card: its name, version, who made it, and what it needs.</p></div>
+      <div class="card"><h4><span class="mono">setup.py</span></h4><p>Tells the build tool which files to install and links your program's name to its <span class="mono">main()</span>.</p></div>
+      <div class="card"><h4><span class="mono">setup.cfg</span>, <span class="mono">resource/</span></h4><p>Two small bookkeeping pieces that let ROS find the package.</p></div>
+      <div class="card"><h4><span class="mono">test/</span></h4><p>Automatic style checks. Ignore them for now.</p></div>
+      <div class="card"><h4><span class="mono">config/</span> and <span class="mono">launch/</span></h4><p>Only if you ticked them. The settings file and the start-everything recipe. They are the next tutorial.</p></div>
+      <div class="card"><h4><span class="mono">build/</span>, <span class="mono">install/</span>, <span class="mono">log/</span></h4><p>Made by the build. Generated, so you can delete them any time and the next Ctrl+Shift+B makes them again.</p></div>
+    </div></div>
+
+  <details class="ask" id="inst"><summary>For instructors: a ready-made .vscode folder</summary>
+    <p>Module 2 has students create the three <span class="mono">.vscode</span> files by hand, once, so they see what is in them. For later projects, or to save time, a student can copy the <span class="mono">.vscode</span> folder from a finished project into a new project folder instead. The files are the same every time. Edit <span class="mono">humble</span> in two of them if your VM runs another ROS 2 release.</p>
+    <p><b>Status:</b> <span id="inst-status">written and tested against stand-ins for ROS and turtlesim, in four cases: package directly in the folder, package under <span class="mono">src</span>, no package yet, and a failed build. Not yet confirmed on the real VM.</span></p>
+    <p>The run script assumes one package per folder: it takes the first package it finds and the first program that package offers. A package made by the wizard has exactly one program.</p>
+  </details>
+
+  <div class="nav2"><button class="btn ghost" data-go="8">Back</button><button class="btn" data-go="10">Next: Sign off</button></div>
+</section>
+
+<section class="mod" id="m10" hidden data-title="Sign off">
+  <div><div class="eyebrow">Module 10 of 10 · about 10 minutes</div><h2>Sign off with your mentor</h2></div>
+  <p class="lede">The labs and quizzes on this page tick themselves off. The steps in the VM you tick by hand, because only you can say they happened. Show this page to your mentor when it reads full.</p>
+  <div class="lab"><div class="lab-h"><b>Checklist</b><span class="pill" id="wk-pill">0 of 17</span></div>
+  <div class="lab-b">
+    <div id="wk-auto"></div>
+    <p style="margin:14px 0 8px;font-size:14px;color:var(--ink2)"><b>In the VM</b> (tick when done)</p>
+    <div id="wk-list"></div>
+    <div class="row" style="margin-top:14px"><button type="button" class="btn ghost" id="reset-all">Reset my progress</button><span style="font-size:13px;color:var(--ink2)">Progress is saved in this browser only.</span></div>
+  </div></div>
+  <div class="nav2"><button class="btn ghost" data-go="9">Back</button><span></span></div>
+</section>
+
+</main>
+</div>
+<script>
+'use strict';
+/* bcore.js: the turtlesim model, a tiny YAML reader, shape detection, and the two controllers. No DOM. Tested in node, then inlined into the page.
+   The rules come from the turtlesim source (ros/ros_tutorials, turtle.cpp, turtle_frame.cpp):
+   - the world is a square about 11.09 units on a side, the turtle starts in the middle facing +x
+   - an update runs every 16 ms; heading is updated first, then position moves along the new heading
+   - a velocity command is forgotten after 1 s without a new one
+   - heading is kept between -pi and +pi; a wall clamps the position
+   - the rotate_absolute action turns at exactly +-1 rad/s until within 0.02 rad */
+const TS={SIZE:11.088888888888889,DT:0.016,TIMEOUT:1.0,START:5.544444444444445};
+const PI2=Math.PI*2;
+function normAng(a){return a-PI2*Math.floor((a+Math.PI)/PI2);}
+function clampv(x,a,b){return Math.min(b,Math.max(a,x));}
+function mulberryB(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---------- the world ---------- */
+function makeWorld(){
+  return{t:0,
+    turtle:{x:TS.START,y:TS.START,th:0,lin:0,ang:0,lastCmd:-1e9,rot:null,pen:{on:true,r:255,g:255,b:255,w:3}},
+    trails:[],runs:[],mark:0,wallHits:0,wallMark:0,wallNote:null,path:0,cmds:0,onCmd:null,rotDone:0};
+}
+function cmdVel(w,lin,ang){const T=w.turtle;T.lin=lin;T.ang=ang;T.lastCmd=w.t;w.cmds++;if(w.onCmd)w.onCmd(lin,ang);}
+function penColor(p){return'rgb('+p.r+','+p.g+','+p.b+')';}
+function addSeg(w,x0,y0,x1,y1){
+  const P=w.turtle.pen;if(!P.on)return;
+  let tr=w.trails[w.trails.length-1];
+  if(!tr||tr.open===false||tr.color!==penColor(P)||tr.width!==P.w||tr.pts.length===0||Math.hypot(tr.pts[tr.pts.length-1][0]-x0,tr.pts[tr.pts.length-1][1]-y0)>1e-9){
+    tr={pts:[[x0,y0]],color:penColor(P),width:P.w,open:true};w.trails.push(tr);
+  }
+  tr.pts.push([x1,y1]);
+}
+function logRun(w,lin,ang,ox,oy,dx,dy,dth){
+  const T=w.turtle,e=1e-9;
+  const kind=(Math.abs(lin)<e&&Math.abs(ang)<e)?'idle':(Math.abs(ang)<e?(lin>0?'straight':'reverse'):(Math.abs(lin)<e?'turn':'curve'));
+  let r=w.runs[w.runs.length-1];
+  if(!r||r.kind!==kind){r={kind:kind,dist:0,turn:0,x0:ox,y0:oy,x1:ox,y1:oy,t0:w.t};w.runs.push(r);}
+  r.dist+=Math.hypot(dx,dy);r.turn+=dth;r.x1=T.x;r.y1=T.y;r.t1=w.t;
+}
+function worldTick(w){
+  const T=w.turtle,dt=TS.DT;w.t+=dt;
+  if(T.rot){
+    if(Math.abs(normAng(T.th-T.rot.goal))<0.02){T.rot=null;T.lin=0;T.ang=0;w.rotDone++;}
+    else{T.lin=0;T.ang=normAng(T.rot.goal-T.th)<0?-1:1;}
+  }else if(w.t-T.lastCmd>TS.TIMEOUT){T.lin=0;T.ang=0;}
+  const ox=T.x,oy=T.y,lin=T.lin,ang=T.ang;
+  T.th=normAng(T.th+ang*dt);
+  T.x+=Math.cos(T.th)*lin*dt;T.y+=Math.sin(T.th)*lin*dt;
+  const cx=clampv(T.x,0,TS.SIZE),cy=clampv(T.y,0,TS.SIZE);
+  if(cx!==T.x||cy!==T.y){w.wallHits++;w.wallNote={x:T.x,y:T.y};T.x=cx;T.y=cy;}
+  const dx=T.x-ox,dy=T.y-oy;w.path+=Math.hypot(dx,dy);
+  if(dx||dy)addSeg(w,ox,oy,T.x,T.y);
+  logRun(w,lin,ang,ox,oy,dx,dy,ang*dt);
+}
+function worldAdvance(w,sec){const n=Math.round(sec/TS.DT);for(let i=0;i<n;i++)worldTick(w);}
+function clearTrail(w){w.trails=[];w.mark=w.runs.length;w.wallMark=w.wallHits;}
+function resetWorld(w){const keep=w.onCmd;const n=makeWorld();for(const k in n)w[k]=n[k];w.onCmd=keep;}
+function teleportAbs(w,x,y,th){const T=w.turtle;addSeg(w,T.x,T.y,x,y);T.x=clampv(x,0,TS.SIZE);T.y=clampv(y,0,TS.SIZE);T.th=normAng(th);}
+function setPen(w,o){const P=w.turtle.pen;P.on=!o.off;if(o.off)return;P.r=o.r|0;P.g=o.g|0;P.b=o.b|0;if(o.width)P.w=o.width;}
+function rotateAbs(w,goal){w.turtle.rot={goal:normAng(goal)};}
+function poseOf(w){const T=w.turtle;return{x:T.x,y:T.y,theta:T.th,linear_velocity:Math.abs(T.lin),angular_velocity:T.ang};}
+
+/* ---------- shape detection from the run log ---------- */
+function detectShape(w){
+  const bad=why=>({ok:false,why:why});
+  if(w.wallHits>w.wallMark)return bad('the turtle hit the wall, which clamps its position. Clear the screen and start closer to the middle.');
+  let rs=w.runs.slice(w.mark).filter(r=>r.kind!=='idle');
+  rs=rs.filter(r=>!(r.kind==='straight'&&r.dist<0.02)&&!(r.kind==='turn'&&Math.abs(r.turn)<0.01));
+  if(rs.some(r=>r.kind==='curve'||r.kind==='reverse'))return bad('there is a curve or a reverse move in the drawing, so it is not made of straight sides and sharp turns.');
+  const m=[];
+  for(const r of rs){const p=m[m.length-1];if(p&&p.kind===r.kind){p.dist+=r.dist;p.turn+=r.turn;p.x1=r.x1;p.y1=r.y1;}else m.push(Object.assign({},r));}
+  while(m.length&&m[0].kind==='turn')m.shift();
+  while(m.length&&m[m.length-1].kind==='turn')m.pop();
+  const S=m.filter(r=>r.kind==='straight'),Tn=m.filter(r=>r.kind==='turn');
+  if(S.length<3)return bad('I count '+S.length+' straight side'+(S.length===1?'':'s')+'. A closed shape needs at least 3.');
+  const side=S.reduce((a,r)=>a+r.dist,0)/S.length;
+  for(const r of S)if(Math.abs(r.dist-side)>0.12*side)return bad('the sides are not the same length ('+S.map(r=>r.dist.toFixed(2)).join(', ')+'). Send the next command only after the last one has finished, because a new command replaces the old one.');
+  const tau=Tn.reduce((a,r)=>a+r.turn,0)/Math.max(1,Tn.length);
+  if(Math.abs(tau)<0.35)return bad('the turns are too small to close a shape.');
+  for(const r of Tn)if(Math.abs(r.turn-tau)>0.1*Math.abs(tau)+0.03)return bad('the turns are not all the same ('+Tn.map(r=>(r.turn*180/Math.PI).toFixed(0)+'°').join(', ')+').');
+  const n=S.length,mw=Math.round(n*Math.abs(tau)/PI2);
+  if(mw<1||Math.abs(n*Math.abs(tau)-PI2*mw)>0.2)return bad(n+' sides with a '+(Math.abs(tau)*180/Math.PI).toFixed(0)+'° turn at each corner does not add up to whole turns, so the shape does not close.');
+  const err=Math.hypot(S[0].x0-S[S.length-1].x1,S[0].y0-S[S.length-1].y1);
+  if(err>0.2*side+0.1)return bad('the end is '+err.toFixed(2)+' units from the start, so the shape is open.');
+  return{ok:true,n:n,m:mw,side:side,turnDeg:Math.abs(tau)*180/Math.PI,err:err,left:tau>0};
+}
+function curveTurns(w){let t=0;for(const r of w.runs.slice(w.mark))if(r.kind==='curve')t+=Math.abs(r.turn);return t/PI2;}
+
+/* ---------- a tiny reader for the YAML that "ros2 topic pub" takes ---------- */
+function parseFlow(s){
+  let i=0;const err=m=>{throw new Error(m);};
+  const ws=()=>{while(i<s.length&&/\s/.test(s[i]))i++;};
+  function val(){
+    ws();if(s[i]==='{')return obj();
+    const m=/^[^,}\]\s][^,}\]]*/.exec(s.slice(i));if(!m)err('expected a value at position '+i);
+    i+=m[0].length;const t=m[0].trim();
+    if(/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(t))return +t;
+    if(t==='true')return true;if(t==='false')return false;
+    if(/^(['"]).*\1$/.test(t))return t.slice(1,-1);
+    return t;
+  }
+  function obj(){
+    i++;const o={};ws();if(s[i]==='}'){i++;return o;}
+    for(;;){
+      ws();const m=/^(['"]?)([A-Za-z_]\w*)\1/.exec(s.slice(i));if(!m)err('expected a field name at position '+i);
+      i+=m[0].length;ws();if(s[i]!==':')err("expected ':' after "+m[2]);
+      i++;if(i<s.length&&!/\s/.test(s[i])&&s[i]!=='{')err("YAML needs a space after ':' (write "+m[2]+": 1.0, not "+m[2]+":1.0)");
+      o[m[2]]=val();ws();
+      if(s[i]===','){i++;continue;}
+      if(s[i]==='}'){i++;return o;}
+      err("expected ',' or '}' at position "+i);
+    }
+  }
+  ws();if(s[i]!=='{')err('the message must start with { and end with }');
+  const v=obj();ws();if(i<s.length)err('unexpected text after the closing }');return v;
+}
+function twistFrom(o){
+  const ok={linear:1,angular:1},xyz={x:1,y:1,z:1};
+  for(const k in o){if(!ok[k])throw new Error("the Twist message has no field '"+k+"'. Its fields are linear and angular.");
+    if(typeof o[k]!=='object')throw new Error("'"+k+"' must be a group like {x: 1.0}");
+    for(const j in o[k])if(!xyz[j])throw new Error("'"+k+"' has no field '"+j+"'. Its fields are x, y and z.");}
+  const g=(a,b)=>((o[a]&&typeof o[a][b]==='number')?o[a][b]:0);
+  return{lx:g('linear','x'),ly:g('linear','y'),lz:g('linear','z'),ax:g('angular','x'),ay:g('angular','y'),az:g('angular','z')};
+}
+const fmtF=x=>{const s=String(x);return /[.eE]/.test(s)?s:s+'.0';};
+function twistYaml(t){return'linear:\n  x: '+fmtF(t.lx)+'\n  y: '+fmtF(t.ly)+'\n  z: '+fmtF(t.lz)+'\nangular:\n  x: '+fmtF(t.ax)+'\n  y: '+fmtF(t.ay)+'\n  z: '+fmtF(t.az)+'\n---';}
+function twistRepr(t){return'geometry_msgs.msg.Twist(linear=geometry_msgs.msg.Vector3(x='+fmtF(t.lx)+', y='+fmtF(t.ly)+', z='+fmtF(t.lz)+'), angular=geometry_msgs.msg.Vector3(x='+fmtF(t.ax)+', y='+fmtF(t.ay)+', z='+fmtF(t.az)+'))';}
+function poseYaml(p){const f=v=>fmtF(Math.fround(v));return'x: '+f(p.x)+'\ny: '+f(p.y)+'\ntheta: '+f(p.theta)+'\nlinear_velocity: '+f(p.linear_velocity)+'\nangular_velocity: '+f(p.angular_velocity)+'\n---';}
+
+/* ---------- timers, with the late wake-ups a real computer has ---------- */
+function makeSched(period,jit,rng){const s={period:period,jit:jit||0,rng:rng||Math.random,k:0,next:0};s.next=s.jit*s.rng();return s;}
+function schedDue(s,t){if(t+1e-12>=s.next){s.k++;s.next=s.k*s.period+s.jit*s.rng();return true;}return false;}
+
+/* ---------- controller 1: a list of (linear, angular, seconds), played by a timer. The same logic as draw_shape.py ---------- */
+function makePlanNode(plan){
+  let step=0,t0=null,done=false;
+  return{done:()=>done,tick(w){
+    if(done)return;const now=w.t;if(t0===null)t0=now;
+    let p=plan[step];
+    if(now-t0>=p[2]-1e-9){step++;t0=now;if(step>=plan.length){cmdVel(w,0,0);done=true;return;}p=plan[step];}
+    cmdVel(w,p[0],p[1]);
+  }};
+}
+function polygonPlan(sides,turns,sideLen,speed,turnRate){
+  const turn=turns*PI2/sides,plan=[];
+  for(let i=0;i<sides;i++){plan.push([speed,0,sideLen/speed]);plan.push([0,turnRate,turn/turnRate]);}
+  return plan;
+}
+/* ---------- controller 2: listens to the pose and corrects. The same logic as draw_square_pose.py ---------- */
+function makePoseSquare(o){
+  o=Object.assign({sides:4,side:2.0,speed:2.0,maxTurn:2.0,kd:3.0,ka:4.0,tolD:0.02,tolA:0.01,minV:0.15,minW:0.1},o||{});
+  let state='wait',start=null,goal=0,done=false,count=0;
+  return{done:()=>done,tick(w){
+    if(done)return;const p=poseOf(w);
+    if(state==='wait'){start=[p.x,p.y];goal=p.theta;state='forward';}
+    let lin=0,ang=0;
+    if(state==='forward'){
+      const rem=o.side-Math.hypot(p.x-start[0],p.y-start[1]);
+      if(rem<=o.tolD){state='turn';goal=normAng(goal+PI2/o.sides);}
+      else lin=Math.min(o.speed,Math.max(o.minV,o.kd*rem));
+    }
+    if(state==='turn'){
+      const e=normAng(goal-p.theta);
+      if(Math.abs(e)<o.tolA){count++;if(count>=o.sides){done=true;cmdVel(w,0,0);return;}state='forward';start=[p.x,p.y];}
+      else ang=Math.sign(e)*Math.min(o.maxTurn,Math.max(o.minW,o.ka*Math.abs(e)));
+    }
+    cmdVel(w,lin,ang);
+  }};
+}
+/* run a controller in virtual time and report how well the shape closed */
+function runOffline(node,period,jit,seed,maxT){
+  const w=makeWorld(),s=makeSched(period,jit,mulberryB(seed||1));maxT=maxT||40;
+  const start={x:w.turtle.x,y:w.turtle.y,th:w.turtle.th};
+  while(w.t<maxT){if(schedDue(s,w.t))node.tick(w);worldTick(w);if(node.done()&&Math.abs(w.turtle.lin)<1e-9&&w.t-w.turtle.lastCmd>0.05)break;}
+  worldAdvance(w,0.1);
+  return{world:w,t:w.t,endErr:Math.hypot(w.turtle.x-start.x,w.turtle.y-start.y),headErr:Math.abs(normAng(w.turtle.th-start.th))*180/Math.PI,done:node.done()};
+}
+if(typeof module!=='undefined')module.exports={TS,makeWorld,cmdVel,worldTick,worldAdvance,clearTrail,resetWorld,teleportAbs,setPen,rotateAbs,poseOf,detectShape,curveTurns,parseFlow,twistFrom,twistYaml,twistRepr,poseYaml,makeSched,schedDue,makePlanNode,polygonPlan,makePoseSquare,runOffline,normAng,mulberryB};
+
+/* ===== shared helpers, navigation, progress (Tutorial B2) ===== */
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const redraws=[];
+function reg(fn){redraws.push(fn);}
+function redrawAll(){for(const f of redraws){try{f();}catch(e){console.error(e);}}}
+function fit(cv,aspect){
+  const w=cv.clientWidth||(cv.parentNode&&cv.parentNode.clientWidth)||0;if(!w)return null;
+  const dpr=Math.min(window.devicePixelRatio||1,2),h=Math.round(w*aspect);
+  const pw=Math.round(w*dpr),ph=Math.round(h*dpr);
+  if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;}
+  cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  return{ctx:ctx,w:w,h:h};
+}
+const pillSet=(id,ok,txt)=>{const p=$(id);if(!p)return;p.textContent=txt;p.className='pill'+(ok?' ok':'');};
+const fin={};
+function finish(mod,lab,labs){fin[mod]=fin[mod]||{};fin[mod][lab]=1;if(labs.every(l=>fin[mod][l]))markDone(mod);}
+
+/* ---- progress ---- */
+const KEY='robotlab-tutB2-v2';
+let prog={done:{},wk:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.done)prog=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(prog));}catch(e){}}
+function markDone(i){if(!prog.done[i]){prog.done[i]=1;save();}updateRail();}
+
+/* ---- navigation ---- */
+const mods=Array.from(document.querySelectorAll('.mod'));
+let cur=0;
+let onProgress=null;
+const mid=i=>+mods[i].id.slice(1);
+const SIGNOFF=10;
+function buildRail(){
+  const rail=$('rail');
+  rail.innerHTML='<button class="railtog" id="rail-close" title="Hide the lesson list" aria-label="Hide the lesson list">&#9664;</button><div class="brand">Robot Lab<b>B2 · Your first ROS package</b></div><ol></ol><div class="prog"><span id="prog-t"></span><i><b id="prog-b"></b></i></div>';
+  (function(){const wrap=document.querySelector('.wrap');if(!wrap)return;
+    const op=document.createElement('button');op.className='railopen';op.id='rail-open';op.title='Show the lesson list';op.setAttribute('aria-label','Show the lesson list');op.innerHTML='&#9776;';op.hidden=true;document.body.appendChild(op);
+    const set=c=>{wrap.classList.toggle('railoff',c);op.hidden=!c;try{localStorage.setItem('railoffB2v2',c?'1':'');}catch(e){}};
+    $('rail-close').addEventListener('click',()=>set(true));op.addEventListener('click',()=>{set(false);});
+    try{if(localStorage.getItem('railoffB2v2')&&innerWidth>900)set(true);}catch(e){}})();
+  const ol=rail.querySelector('ol');
+  mods.forEach((m,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML='<button type="button" data-i="'+i+'"><span class="n">'+i+'</span><span class="t"></span><span class="tick" aria-hidden="true">✓</span></button>';
+    li.querySelector('.t').textContent=m.dataset.title;
+    li.querySelector('button').addEventListener('click',()=>show(i));
+    ol.appendChild(li);
+  });
+}
+function updateRail(){
+  const btns=document.querySelectorAll('#rail ol button');
+  btns.forEach((b,i)=>{b.setAttribute('aria-current',i===cur?'true':'false');b.classList.toggle('done',!!prog.done[mid(i)]);});
+  let tot=0,n=0;for(let i=1;i<mods.length;i++){tot++;if(prog.done[mid(i)])n++;}
+  const t=$('prog-t'),b=$('prog-b');if(t)t.textContent=n+' of '+tot+' modules done';if(b)b.style.width=(n/tot*100)+'%';
+  if(onProgress)onProgress();
+}
+function show(i,noHash){
+  cur=Math.max(0,Math.min(mods.length-1,i));
+  mods.forEach((m,j)=>{m.hidden=(j!==cur);});
+  updateRail();
+  try{window.scrollTo({top:0});}catch(e){}
+  try{if(!noHash)history.replaceState(null,'','#m'+cur);}catch(e){}
+  requestAnimationFrame(redrawAll);
+}
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-go]');if(!g)return;const v=g.dataset.go;show(/^m\d+$/.test(v)?mods.findIndex(m=>m.id===v):+v);});
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-open]');if(!g)return;const d=document.getElementById(g.dataset.open);if(!d)return;d.open=true;try{d.scrollIntoView({behavior:'smooth',block:'center'});}catch(x){}d.style.outline='2px solid var(--accent)';setTimeout(()=>{d.style.outline='';},2500);});
+window.addEventListener('resize',()=>requestAnimationFrame(redrawAll));
+try{new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redrawAll);}catch(e){}
+function visible(k){const m=document.getElementById('m'+k);return !!m&&!m.hidden;}
+
+/* ---- a small multiple-choice quiz: quiz(containerId, pillId, moduleId, labName, labsList, questions) ---- */
+function quiz(box,pill,mod,lab,labs,qs){
+  const root=$(box);let right=0;const got={};
+  root.innerHTML=qs.map((q,i)=>'<div class="quiz" data-q="'+i+'"><div class="q">'+(i+1)+'. '+q.q+'</div>'+q.o.map((t,j)=>'<label class="opt"><input type="radio" name="'+box+i+'" value="'+j+'"><span>'+t+'</span></label>').join('')+'<div class="fb" aria-live="polite"></div></div>').join('<hr style="border:0;border-top:1px solid var(--rule);margin:10px 0">');
+  function count(){right=Object.keys(got).filter(k=>got[k]).length;pillSet(pill,right===qs.length,right+' of '+qs.length+' right');if(right===qs.length)finish(mod,lab,labs);}
+  root.addEventListener('change',e=>{
+    const el=e.target;if(el.type!=='radio')return;const qd=el.closest('.quiz'),i=+qd.dataset.q,j=+el.value,fb=qd.querySelector('.fb');
+    got[i]=(j===qs[i].a);fb.style.color=got[i]?'var(--ok)':'var(--bad)';fb.textContent=(got[i]?'Right. ':'Not quite. ')+qs[i].why[j];count();
+  });
+  count();
+}
+
+/* ===== the turtle window and the simulated terminals (Tutorial B) ===== */
+function drawTurtle(ctx,x,y,th,k,u,color){
+  const X=x*u,Y=(TS.SIZE-y)*u,s=k;
+  ctx.save();ctx.translate(X,Y);ctx.rotate(-th);
+  ctx.fillStyle='rgba(0,0,0,.28)';
+  for(const f of[[9,-15,-0.5],[9,15,0.5],[-10,-14,0.5],[-10,14,-0.5]]){ctx.beginPath();ctx.ellipse(f[0]*s,f[1]*s,8*s,4.5*s,f[2],0,6.283);ctx.fill();}
+  ctx.beginPath();ctx.moveTo(-15*s,0);ctx.lineTo(-24*s,-3*s);ctx.lineTo(-24*s,3*s);ctx.closePath();ctx.fill();
+  ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,17*s,14*s,0,0,6.283);ctx.fill();
+  ctx.beginPath();ctx.arc(21*s,0,6.5*s,0,6.283);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1.3*s;
+  ctx.beginPath();ctx.ellipse(0,0,10*s,8*s,0,0,6.283);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-17*s,0);ctx.lineTo(17*s,0);ctx.moveTo(0,-14*s);ctx.lineTo(0,14*s);ctx.stroke();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(23*s,-2.5*s,1.2*s,0,6.283);ctx.arc(23*s,2.5*s,1.2*s,0,6.283);ctx.fill();
+  ctx.restore();
+}
+/* o.running false: the window is closed. o.extra: more trails to draw, [{trails, color}]. o.turtles: [{x,y,th,color}] to draw instead of the world's own turtle. */
+function drawTurtleWorld(cv,w,o){
+  o=o||{};const F=fit(cv,1);if(!F)return;
+  const ctx=F.ctx,S=F.w,k=S/500,u=S/TS.SIZE;
+  ctx.fillStyle=o.running===false?'#26262e':'#4556ff';ctx.fillRect(0,0,S,S);
+  if(o.running===false){
+    ctx.fillStyle='#b9b4c8';ctx.font=Math.max(12,13*k*1.2)+'px '+css('--font-m');ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('The turtlesim window is not open.',S/2,S/2-10);ctx.fillText('It opens when you press Ctrl+Shift+B.',S/2,S/2+12);return;
+  }
+  ctx.lineCap='round';ctx.lineJoin='round';
+  const stroke=(tr,col,wd)=>{if(tr.pts.length<2)return;ctx.strokeStyle=col||tr.color;ctx.lineWidth=(wd||tr.width)*k;ctx.beginPath();tr.pts.forEach((p,i)=>{const px=p[0]*u,py=(TS.SIZE-p[1])*u;i?ctx.lineTo(px,py):ctx.moveTo(px,py);});ctx.stroke();};
+  for(const e of(o.extra||[]))for(const tr of e.trails)stroke(tr,e.color,e.width);
+  for(const tr of w.trails)stroke(tr);
+  if(o.turtles)for(const t of o.turtles)drawTurtle(ctx,t.x,t.y,t.th,k,u,t.color||'#3fae49');
+  else drawTurtle(ctx,w.turtle.x,w.turtle.y,w.turtle.th,k,u,'#3fae49');
+}
+
+/* ===== Tutorial B2 labs: practice wizard, practice "Ctrl+Shift+B", order lab, error clinic ===== */
+const PY={"open": "\"\"\"The simple version. Make the turtle draw a shape (square, triangle, star ...) by following a plan.\n\nBefore you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node\nThen run this file:                                         python3 simple_draw_shape.py\n\nHow it works, in four steps:\n  1. Build a PLAN. A plan is a list. Each item in the list is one instruction:\n         (forward speed, turn speed, how many seconds to keep doing it)\n  2. Connect to turtlesim. We make a ROS 2 node and a publisher, which is how we send messages.\n  3. Wait until turtlesim is listening.\n  4. Go through the plan one instruction at a time. For each instruction, send the same\n     command over and over (50 times a second) until its time is up.\n\nThis is called OPEN LOOP: the program never looks at where the turtle really is.\nIt only watches the clock and hopes the turtle did what it was told.\n\"\"\"\nimport math\nimport sys\nimport time\n\nimport rclpy\nfrom geometry_msgs.msg import Twist\n\n# ---------------- settings: change these and run again ----------------\n# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the\n# program, for example:  python3 simple_draw_shape.py turtle2\nTURTLE = sys.argv[1] if len(sys.argv) > 1 else 'turtle1'\nSIDES = 4            # 3 = triangle, 4 = square, 5 = pentagon, 6 = hexagon\nTURNS = 1            # 1 for an ordinary shape. SIDES = 5 with TURNS = 2 draws a five-point star\nSIDE_LENGTH = 2.0    # how long each side is, in turtlesim units\nSPEED = 2.0          # forward speed, in units per second\nTURN_RATE = 1.0      # turning speed, in radians per second (1 radian is about 57 degrees)\nSEND_EVERY = 0.02    # seconds between messages (0.02 means 50 messages a second)\n\n\ndef make_plan():\n    \"\"\"Build the plan: a list of (forward speed, turn speed, seconds) instructions.\"\"\"\n    plan = []                                    # start with an empty list\n\n    # How far the turtle turns at each corner, in radians.\n    # A full circle is 2 * pi radians. For a square, SIDES is 4, so each turn is a quarter circle.\n    turn_angle = TURNS * 2 * math.pi / SIDES\n\n    # Repeat once for every side. side_number counts 0, 1, 2, 3 ... but we do not need\n    # its value. It is only there so the loop knows how many times to repeat.\n    for side_number in range(SIDES):\n        # Instruction 1: drive straight. Time = distance / speed.\n        plan.append((SPEED, 0.0, SIDE_LENGTH / SPEED))\n        # Instruction 2: turn on the spot. Time = angle / turn speed.\n        plan.append((0.0, TURN_RATE, turn_angle / TURN_RATE))\n\n    return plan\n\n\ndef main():\n    # ---- Step 2: connect to ROS 2 ----\n    rclpy.init()                                                  # start ROS 2\n    node = rclpy.create_node('shape_drawer')                      # our program's name in ROS 2\n    # A publisher sends messages to a topic. turtlesim listens on /turtle1/cmd_vel\n    # for messages of type Twist (a forward speed and a turn speed). The 10 is a queue size.\n    publisher = node.create_publisher(Twist, '/' + TURTLE + '/cmd_vel', 10)\n\n    # ---- Step 3: wait until turtlesim is listening ----\n    # Programs need a moment to find each other. A message sent before turtlesim is\n    # connected is lost, and the first side of the shape would come out too short.\n    print('Waiting for turtlesim...')\n    while publisher.get_subscription_count() == 0:     # 0 means nobody is listening yet\n        time.sleep(0.1)                                # wait a tenth of a second, then check again\n\n    # ---- Step 4: follow the plan ----\n    plan = make_plan()\n    print('Drawing... press Ctrl+C to stop.')\n    try:\n        for line in plan:                              # take one instruction at a time\n            forward_speed, turn_speed, seconds = line  # split the three numbers into names\n\n            message = Twist()                          # an empty command: every value is 0.0\n            message.linear.x = forward_speed           # forward speed\n            message.angular.z = turn_speed             # turn speed (counter-clockwise is positive)\n\n            # Keep sending this same command until the time is up.\n            end_time = time.time() + seconds\n            while time.time() < end_time:\n                publisher.publish(message)\n                time.sleep(SEND_EVERY)                 # pause, so we send 50 messages a second\n    except KeyboardInterrupt:                          # this happens when you press Ctrl+C\n        print('Stopped.')\n\n    publisher.publish(Twist())                         # a command of all zeros means \"stop\"\n    print('Done.')\n    node.destroy_node()\n    rclpy.shutdown()\n\n\nif __name__ == '__main__':\n    main()\n", "cls": "\"\"\"The ROS way: the same program as simple_draw_shape.py, written as a class with a timer.\n\nBefore you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node\nThen run this file:                                         python3 draw_shape.py\n\nMost ROS 2 programs are written like this. Instead of one long function that waits, we write a\nCLASS (a bundle of variables and functions that belong together) and ask ROS 2 to call one of its\nfunctions, on_timer, 50 times a second. Each call does a tiny amount of work and returns, so ROS 2\nstays free to do other things between calls.\n\nBecause on_timer runs again and again, the class remembers where it is in a variable called phase:\n  'waiting'  - turtlesim is not connected yet. Check again next time.   (the first kind of waiting)\n  'drawing'  - follow the plan, one line at a time.                     (the second kind of waiting)\n  'finished' - everything is done.\n\"\"\"\nimport math\nimport sys\n\nimport rclpy\nfrom rclpy.node import Node\nfrom geometry_msgs.msg import Twist\n\n# ---------------- settings: change these and run again ----------------\n# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the\n# program, for example:  python3 draw_shape.py turtle2\nTURTLE = sys.argv[1] if len(sys.argv) > 1 else 'turtle1'\nSIDES = 4            # 3 = triangle, 4 = square, 5 = pentagon, 6 = hexagon\nTURNS = 1            # 1 for an ordinary shape. SIDES = 5 with TURNS = 2 draws a five-point star\nSIDE_LENGTH = 2.0    # how long each side is, in turtlesim units\nSPEED = 2.0          # forward speed, in units per second\nTURN_RATE = 1.0      # turning speed, in radians per second (1 radian is about 57 degrees)\nSEND_EVERY = 0.02    # seconds between messages (0.02 means 50 messages a second)\n\n\ndef make_plan():\n    \"\"\"Build the plan: a list of (forward speed, turn speed, seconds) instructions.\"\"\"\n    plan = []                                    # start with an empty list\n    turn_angle = TURNS * 2 * math.pi / SIDES     # how far to turn at each corner, in radians\n    for side_number in range(SIDES):             # repeat once per side\n        plan.append((SPEED, 0.0, SIDE_LENGTH / SPEED))          # drive straight\n        plan.append((0.0, TURN_RATE, turn_angle / TURN_RATE))   # turn on the spot\n    return plan\n\n\nclass ShapeDrawer(Node):\n    \"\"\"A node is a program that is part of ROS 2. Putting (Node) after the name means:\n    ShapeDrawer is a kind of Node, so it gets everything a Node can do (create publishers, timers ...).\"\"\"\n\n    def __init__(self):\n        \"\"\"__init__ runs once, when we create a ShapeDrawer. It sets up the variables the class remembers.\n        'self' means 'this ShapeDrawer'. self.plan is the plan that belongs to this one.\"\"\"\n        super().__init__('shape_drawer')                 # let Node do its own set-up first, and name us\n        self.publisher = self.create_publisher(Twist, '/' + TURTLE + '/cmd_vel', 10)\n        self.plan = make_plan()\n        self.line_number = 0                             # which line of the plan we are on\n        self.line_started = None                         # the time that line began\n        self.phase = 'waiting'\n        self.done = False\n        self.timer = self.create_timer(SEND_EVERY, self.on_timer)   # call on_timer 50 times a second\n\n    def on_timer(self):\n        \"\"\"ROS 2 calls this by itself, again and again. It only decides which phase we are in.\"\"\"\n        if self.phase == 'waiting':\n            self.wait_for_turtlesim()\n        elif self.phase == 'drawing':\n            self.follow_plan()\n\n    def wait_for_turtlesim(self):\n        \"\"\"Phase 1. Is anyone listening yet? If not, do nothing and try again next time.\"\"\"\n        if self.publisher.get_subscription_count() == 0:\n            return                                       # not connected yet, so leave and wait for the next call\n        self.line_started = self.get_clock().now()       # the first line starts now\n        self.phase = 'drawing'\n\n    def follow_plan(self):\n        \"\"\"Phase 2. Send the command for the current plan line. Move to the next line when its time is up.\"\"\"\n        now = self.get_clock().now()\n        forward_speed, turn_speed, seconds = self.plan[self.line_number]\n        elapsed = (now - self.line_started).nanoseconds * 1e-9     # seconds since this line began\n\n        if elapsed >= seconds:                           # this line is finished\n            self.line_number = self.line_number + 1      # move on to the next one\n            self.line_started = now\n            if self.line_number == len(self.plan):       # that was the last line\n                self.finish()\n                return\n            forward_speed, turn_speed, seconds = self.plan[self.line_number]\n\n        message = Twist()\n        message.linear.x = forward_speed\n        message.angular.z = turn_speed\n        self.publisher.publish(message)\n\n    def finish(self):\n        self.publisher.publish(Twist())                  # all zeros means \"stop\"\n        self.phase = 'finished'\n        self.done = True\n        self.get_logger().info('Done.')\n\n\ndef main():\n    rclpy.init()\n    node = ShapeDrawer()                                 # make one ShapeDrawer: this runs __init__\n    try:\n        while rclpy.ok() and not node.done:\n            rclpy.spin_once(node)                        # let ROS 2 call on_timer when it is due\n    except KeyboardInterrupt:                            # this happens when you press Ctrl+C\n        node.publisher.publish(Twist())\n        print('Stopped.')\n    node.destroy_node()\n    rclpy.shutdown()\n\n\nif __name__ == '__main__':\n    main()\n", "pose": "\"\"\"The ROS way: the same program as simple_draw_square_pose.py, written as a class with a callback.\n\nBefore you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node\nThen run this file:                                         python3 draw_square_pose.py\n\nTurtlesim publishes the turtle's pose (x, y, heading) about 60 times a second. This class\nsubscribes to those messages. Each time one arrives, ROS 2 calls on_pose. That one function is\nthe whole control loop: look at the pose, decide what to do, send a command.\n\nThe class remembers where it is in a variable called phase:\n  'waiting'  - no pose has arrived yet, or turtlesim is not listening for commands yet.\n  'driving'  - go forward until we have travelled SIDE_LENGTH.\n  'turning'  - turn until we face the next direction.\n  'finished' - everything is done.\nThis is CLOSED LOOP: every command is worked out from a measurement, never from a clock.\n\"\"\"\nimport math\nimport sys\n\nimport rclpy\nfrom rclpy.node import Node\nfrom geometry_msgs.msg import Twist\n\ntry:\n    from turtlesim_msgs.msg import Pose      # newer ROS 2 releases keep the turtlesim messages here\nexcept ImportError:\n    from turtlesim.msg import Pose           # older releases\n\n# ---------------- settings: change these and run again ----------------\n# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the\n# program, for example:  python3 draw_square_pose.py turtle2\nTURTLE = sys.argv[1] if len(sys.argv) > 1 else 'turtle1'\nSIDES = 4                # 3 = triangle, 4 = square, 6 = hexagon ...\nSIDE_LENGTH = 2.0        # units\nMAX_SPEED = 2.0          # fastest forward speed, units per second\nMAX_TURN = 2.0           # fastest turning speed, radians per second\nSPEED_PER_UNIT = 3.0     # drive speed = this x the distance still to go, so it slows down near the goal\nTURN_PER_RADIAN = 4.0    # turn speed = this x the angle still to turn\nMIN_SPEED = 0.15         # never slower than this, or the turtle would crawl for ever\nMIN_TURN = 0.1\nDISTANCE_OK = 0.02       # close enough to the end of the side, in units\nANGLE_OK = 0.01          # close enough to the new heading, in radians\n\n\ndef wrap(angle):\n    \"\"\"Turn any angle into the range -pi to +pi, the same range the turtle reports.\n    Without this, a heading of +3.1 and a goal of -3.1 would look 6.2 radians apart\n    when they are really only 0.08 radians apart.\"\"\"\n    return angle - 2 * math.pi * math.floor((angle + math.pi) / (2 * math.pi))\n\n\nclass SquareDrawer(Node):\n    \"\"\"A node is a program that is part of ROS 2. SquareDrawer is a kind of Node.\"\"\"\n\n    def __init__(self):\n        \"\"\"__init__ runs once, when we create a SquareDrawer. 'self' means 'this SquareDrawer'.\"\"\"\n        super().__init__('square_drawer')                # let Node do its own set-up first, and name us\n        self.publisher = self.create_publisher(Twist, '/' + TURTLE + '/cmd_vel', 10)\n        self.subscription = self.create_subscription(Pose, '/' + TURTLE + '/pose', self.on_pose, 10)\n        self.phase = 'waiting'\n        self.side_number = 0         # how many sides are finished\n        self.start_x = 0.0           # where the current side began\n        self.start_y = 0.0\n        self.goal_heading = 0.0      # the direction the turtle should face\n        self.done = False\n\n    def on_pose(self, pose):\n        \"\"\"ROS 2 calls this by itself every time a Pose message arrives. 'pose' is that message.\"\"\"\n        if self.phase == 'waiting':\n            self.wait_for_turtlesim(pose)\n        elif self.phase == 'driving':\n            self.drive(pose)\n        elif self.phase == 'turning':\n            self.turn(pose)\n\n    def wait_for_turtlesim(self, pose):\n        \"\"\"Phase 1. A pose has arrived. Is turtlesim also listening for commands?\"\"\"\n        if self.publisher.get_subscription_count() == 0:\n            return                                       # not yet: wait for the next pose\n        self.goal_heading = pose.theta                   # start from the way the turtle already faces\n        self.begin_side(pose)\n\n    def begin_side(self, pose):\n        \"\"\"Remember where this side starts, and switch to driving.\"\"\"\n        self.start_x = pose.x\n        self.start_y = pose.y\n        self.phase = 'driving'\n\n    def drive(self, pose):\n        \"\"\"Phase 2. Go forward until we have travelled SIDE_LENGTH.\"\"\"\n        travelled = math.hypot(pose.x - self.start_x, pose.y - self.start_y)\n        remaining = SIDE_LENGTH - travelled\n        if remaining <= DISTANCE_OK:                     # far enough: time to turn\n            self.goal_heading = wrap(self.goal_heading + 2 * math.pi / SIDES)\n            self.phase = 'turning'\n            return\n        message = Twist()\n        speed = SPEED_PER_UNIT * remaining               # far away = fast, nearly there = slow\n        message.linear.x = min(MAX_SPEED, max(MIN_SPEED, speed))\n        self.publisher.publish(message)\n\n    def turn(self, pose):\n        \"\"\"Phase 3. Turn until the turtle faces the next direction.\"\"\"\n        error = wrap(self.goal_heading - pose.theta)     # how far we still have to turn (+ or -)\n        if abs(error) < ANGLE_OK:                        # facing the right way\n            self.side_number = self.side_number + 1\n            if self.side_number == SIDES:\n                self.finish()\n            else:\n                self.begin_side(pose)\n            return\n        message = Twist()\n        rate = min(MAX_TURN, max(MIN_TURN, TURN_PER_RADIAN * abs(error)))\n        message.angular.z = math.copysign(rate, error)   # turn toward the goal, either way\n        self.publisher.publish(message)\n\n    def finish(self):\n        self.publisher.publish(Twist())                  # all zeros means \"stop\"\n        self.phase = 'finished'\n        self.done = True\n        self.get_logger().info('Done.')\n\n\ndef main():\n    rclpy.init()\n    node = SquareDrawer()                                # make one SquareDrawer: this runs __init__\n    try:\n        while rclpy.ok() and not node.done:\n            rclpy.spin_once(node)                        # let ROS 2 call on_pose when a pose arrives\n    except KeyboardInterrupt:                            # this happens when you press Ctrl+C\n        node.publisher.publish(Twist())\n        print('Stopped.')\n    node.destroy_node()\n    rclpy.shutdown()\n\n\nif __name__ == '__main__':\n    main()\n", "stub": "#!/usr/bin/env python3\nimport rclpy\nfrom rclpy.node import Node\n\n\nclass {{Class}}(Node):\n\n    def __init__(self):\n        super().__init__(\"{{node}}\")\n        example_param = self.declare_parameter(\"example_param\", \"default_value\").value\n        self.get_logger().info(f\"Declared parameter 'example_param'. Value: {example_param}\")\n        self.get_logger().info(\"Hello world from the Python node {{node}}\")\n\n\ndef main(args=None):\n    rclpy.init(args=args)\n\n    {{node}} = {{Class}}()\n\n    try:\n        rclpy.spin({{node}})\n    except KeyboardInterrupt:\n        pass\n\n    {{node}}.destroy_node()\n    rclpy.try_shutdown()\n\n\nif __name__ == '__main__':\n    main()\n"};
+const SL={};
+const ST={name:'my_shapes',text:'',saved:'',autosave:true};
+const camel=n=>n.split('_').map(s=>s.charAt(0).toUpperCase()+s.slice(1)).join('');
+const stubFor=n=>PY.stub.replace(/\{\{Class\}\}/g,camel(n)+'Node').replace(/\{\{node\}\}/g,n+'_node');
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const hasMain=t=>/^def main\(/m.test(t);
+const kindOf=t=>/Hello world from the Python node/.test(t)?'stub':(/SPEED_PER_UNIT/.test(t)&&/def main\(/.test(t)?'pose':(/def make_plan\(/.test(t)?(/class \w+\(Node\)/.test(t)?'cls':'open'):'other'));
+ST.text=ST.saved=stubFor(ST.name);
+
+/* a list of tick-off missions: Missions(box,pill,list,unit,mod,lab,labs) */
+function Missions(box,pill,list,unit,mod,lab,labs){
+  const root=$(box),done={};
+  function paint(){
+    root.innerHTML=list.map(m=>'<div class="mission'+(done[m.k]?' done':'')+'"><span class="box">'+(done[m.k]?'✓':'')+'</span><span>'+m.t+'</span></div>').join('');
+    const n=list.filter(m=>done[m.k]).length;pillSet(pill,n===list.length,n+' of '+list.length+' '+unit);
+    if(n===list.length)finish(mod,lab,labs);
+  }
+  paint();
+  return{done:done,mark(k){if(!done[k]){done[k]=1;paint();}}};
+}
+
+/* ---------------- Lab 1: the practice wizard ---------------- */
+{
+  const body=$('w1-body'),M=Missions('w1-missions','w1-pill',[
+    {k:'name',t:'Type a valid package name.'},
+    {k:'py',t:'Choose a Python package and a plain Python node.'},
+    {k:'make',t:'Press Create and get your package.'},
+    {k:'mine',t:'Click the one file you will edit.'},
+    {k:'other',t:'Click any other file and read what it is for.'}],'missions',1,'wiz',['wiz','q']);
+  const W={name:'',type:'',kind:'',param:false,launch:false,made:false};
+  body.innerHTML=
+   '<div class="wiz-step on" id="w1-s1"><h4>1. Package name</h4><input type="text" id="w1-name" autocomplete="off" spellcheck="false" placeholder="for example my_shapes" aria-label="Package name"><div class="msg hint" id="w1-nm">Lowercase letters, digits and underscores.</div></div>'+
+   '<div class="wiz-step lock" id="w1-s2"><h4>2. What kind of package?</h4>'+
+     [['cpp','C++ package'],['py','Python package'],['mix','Mixed (C++ and Python)'],['msg','Custom message interface']].map(o=>'<label class="opt2"><input type="radio" name="w1t" value="'+o[0]+'"><span>'+o[1]+'</span></label>').join('')+
+     '<div class="msg hint" id="w1-tm"></div></div>'+
+   '<div class="wiz-step lock" id="w1-s3"><h4>3. What kind of Python node?</h4>'+
+     [['node','Python node'],['life','Python lifecycle node']].map(o=>'<label class="opt2"><input type="radio" name="w1k" value="'+o[0]+'"><span>'+o[1]+'</span></label>').join('')+
+     '<div class="msg hint" id="w1-km"></div></div>'+
+   '<div class="wiz-step lock" id="w1-s4"><h4>4. Extra files (optional)</h4>'+
+     '<label class="opt2"><input type="checkbox" id="w1-par"><span>Create a parameter file</span></label>'+
+     '<label class="opt2"><input type="checkbox" id="w1-lau"><span>Create a launch file</span></label>'+
+     '<div><button type="button" class="btn" id="w1-go">Create package</button></div></div>';
+  const validName=n=>{
+    if(!n)return{ok:false,t:'Lowercase letters, digits and underscores.',c:'hint'};
+    if(/[A-Z]/.test(n))return{ok:false,t:'Use lowercase letters only: '+n.toLowerCase()+'?',c:'bad'};
+    if(/[\s-]/.test(n))return{ok:false,t:'No spaces or dashes. Use an underscore: '+n.replace(/[\s-]+/g,'_')+'?',c:'bad'};
+    if(!/^[a-z]/.test(n))return{ok:false,t:'A name must start with a letter.',c:'bad'};
+    if(!/^[a-z][a-z0-9_]*$/.test(n))return{ok:false,t:'Only lowercase letters, digits and underscores.',c:'bad'};
+    if(/__|_$/.test(n))return{ok:false,t:'No double underscores, and no underscore at the end.',c:'bad'};
+    return{ok:true,t:'Good. Your program will be called '+n+'_node.',c:'ok'};
+  };
+  const setStep=n=>{$('w1-step').textContent='Step '+n+' of 4';};
+  function refresh(){
+    const v=validName(W.name);const m=$('w1-nm');m.textContent=v.t;m.className='msg '+v.c;
+    const s2=$('w1-s2'),s3=$('w1-s3'),s4=$('w1-s4');
+    s2.classList.toggle('lock',!v.ok);
+    s3.classList.toggle('lock',!(v.ok&&W.type==='py'));
+    s4.classList.toggle('lock',!(v.ok&&W.type==='py'&&W.kind==='node'));
+    if(v.ok)M.mark('name');
+    setStep(!v.ok?1:W.type!=='py'?2:W.kind!=='node'?3:4);
+  }
+  $('w1-name').addEventListener('input',e=>{W.name=e.target.value.trim();refresh();});
+  body.addEventListener('change',e=>{
+    const t=e.target;
+    if(t.name==='w1t'){W.type=t.value;const m=$('w1-tm');
+      m.className='msg '+(t.value==='py'?'ok':'bad');
+      m.textContent={py:'Right: your scripts are Python.',cpp:'That writes C++ files. Your scripts are Python.',mix:'That is for packages with both languages. Yours is only Python.',msg:'That is for defining new message types, which we do not need.'}[t.value];}
+    if(t.name==='w1k'){W.kind=t.value;const m=$('w1-km');
+      m.className='msg '+(t.value==='node'?'ok':'bad');
+      m.textContent=t.value==='node'?'Right: an ordinary node that starts and runs.':'A lifecycle node adds start-up and shut-down states that a manager must switch. Useful on big robots, but far more than we need.';}
+    if(t.id==='w1-par')W.param=t.checked;
+    if(t.id==='w1-lau')W.launch=t.checked;
+    refresh();
+  });
+  const INFO={
+    node:'<b>The one you edit.</b> This is where your script goes: <span class="mono">NAME/NAME/NAME_node.py</span>. The package folder, then a folder with the same name again, then this file. In Module 3 you replace everything in it.',
+    xml:'<b>package.xml</b> is the package\'s ID card: its name, version, who made it and what it needs. You do not edit it.',
+    setup:'<b>setup.py</b> tells the build tool which files to install and links the program name to your <span class="mono">main()</span>: <span class="mono">NAME_node = NAME.NAME_node:main</span>. You do not edit it.',
+    cfg:'<b>setup.cfg</b> is two lines telling the build tool where to put the program. You do not edit it.',
+    res:'<b>resource/</b> holds an empty marker file named after the package, so ROS can find the package. You do not edit it.',
+    test:'<b>test/</b> holds automatic style checks. Ignore it for now.',
+    init:'<b>__init__.py</b> is an empty file that tells Python this folder is a package. Leave it empty.',
+    conf:'<b>The parameter file.</b> A list of settings a program can read. Not used in this tutorial.',
+    laun:'<b>The launch file.</b> A recipe for starting several programs with one command. Not used in this tutorial.',
+    dir:'A folder. Click the files inside it.'
+  };
+  function tree(){
+    const n=W.name,L=[];
+    L.push([n+'/','dir']);
+    if(W.param){L.push(['├── config/','dir']);L.push(['│   └── '+n+'_params.yaml','conf']);}
+    if(W.launch){L.push(['├── launch/','dir']);L.push(['│   └── '+n+'_launch.py','laun']);}
+    L.push(['├── package.xml','xml']);L.push(['├── resource/','res']);L.push(['│   └── '+n,'res']);
+    L.push(['├── setup.cfg','cfg']);L.push(['├── setup.py','setup']);L.push(['├── test/','test']);
+    L.push(['│   ├── test_copyright.py','test']);L.push(['│   ├── test_flake8.py','test']);L.push(['│   └── test_pep257.py','test']);
+    L.push(['└── '+n+'/','dir']);L.push(['    ├── __init__.py','init']);L.push(['    └── '+n+'_node.py','node']);
+    const box=$('w1-tree');box.innerHTML='';
+    L.forEach(l=>{const b=document.createElement('button');b.type='button';b.textContent=l[0];b.dataset.k=l[1];if(l[1]==='node')b.classList.add('mine');
+      b.addEventListener('click',()=>{
+        box.querySelectorAll('.sel').forEach(x=>x.classList.remove('sel'));b.classList.add('sel');
+        $('w1-info').innerHTML=INFO[l[1]].replace(/NAME/g,n);
+        M.mark(l[1]==='node'?'mine':(l[1]==='dir'?'':'other'));
+      });box.appendChild(b);});
+    $('w1-tree-wrap').hidden=false;
+  }
+  $('w1-go').addEventListener('click',()=>{
+    if(!(validName(W.name).ok&&W.type==='py'&&W.kind==='node'))return;
+    W.made=true;ST.name=W.name;ST.text=ST.saved=stubFor(W.name);
+    M.mark('py');M.mark('make');tree();setStep(4);
+  });
+  SL.w1={W:W,M:M,type:(n)=>{const i=$('w1-name');i.value=n;i.dispatchEvent(new Event('input',{bubbles:true}));},
+    pick:(name,val)=>{const r=document.querySelector('input[name="'+name+'"][value="'+val+'"]');r.checked=true;r.dispatchEvent(new Event('change',{bubbles:true}));},
+    check:(id,on)=>{const c=$(id);c.checked=on;c.dispatchEvent(new Event('change',{bubbles:true}));},
+    create:()=>$('w1-go').click(),click:(k)=>{const b=$('w1-tree').querySelector('button[data-k="'+k+'"]');b.click();}};
+}
+
+{const stub=$('m3-stub');if(stub)stub.textContent=stubFor('my_shapes');}
+
+/* ---------------- Labs 3 and 4: a practice "Ctrl+Shift+B" ---------------- */
+function runLab(rootId,o){
+  const root=$(rootId),FOLDER='~/Desktop/shapes_project',SPEED=3;
+  const edit=o.mode==='edit';
+  root.innerHTML=
+   '<div class="tl"><div class="vsw"><div class="vsw-h"><i></i><i></i><i></i><span>'+FOLDER.replace('~/Desktop/','')+' — Visual Studio Code</span></div>'+
+   '<div class="vsw-tab"><span id="'+o.p+'-fname"></span><span class="dot" id="'+o.p+'-dot"></span></div>'+
+   (edit?'<textarea class="edit" id="'+o.p+'-set" rows="8" spellcheck="false" aria-label="The settings at the top of your file"></textarea>':'')+
+   '<div class="term" id="'+o.p+'-term" aria-live="polite"></div></div>'+
+   '<div class="panes"><canvas id="'+o.p+'-cv" aria-label="The turtlesim window"></canvas>'+
+   '<div class="row"><button type="button" class="keycap" id="'+o.p+'-go">Press Ctrl+Shift+B</button>'+
+   '<button type="button" class="chip" id="'+o.p+'-close">Close the turtlesim window</button>'+
+   '<span class="chips">'+o.chips.map(c=>'<button type="button" class="chip" id="'+o.p+'-c-'+c[0]+'" aria-pressed="false">'+c[2]+'</button>').join('')+'</span></div>'+
+   '<div class="readout" id="'+o.p+'-read"></div></div></div>';
+  const term=$(o.p+'-term'),cv=$(o.p+'-cv'),go=$(o.p+'-go');
+  const M=Missions(o.p+'-missions-box',o.pill,o.missions,'missions',o.mod,o.lab,o.labs||[o.lab]);
+  const w=makeWorld();let open=false,busy=false,pressCount=0,lastErr={},timers=[],raf=0,ctl=null;
+  const log=(t,c)=>{const d=document.createElement('div');d.className=c||'';d.textContent=t;term.appendChild(d);term.scrollTop=term.scrollHeight;};
+  const num=(t,n,dflt)=>{const m=new RegExp('^'+n+'\\s*=\\s*([-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?)','m').exec(t);return m?+m[1]:dflt;};
+  function paint(){
+    const F=fit(cv,1);if(!F)return;drawTurtleWorld(cv,w,{running:open});
+  }
+  reg(paint);
+  function names(){
+    $(o.p+'-fname').textContent=ST.name+'_node.py';
+    const k=kindOf(ST.saved);
+    o.chips.forEach(c=>$(o.p+'-c-'+c[0]).setAttribute('aria-pressed',k===c[1]?'true':'false'));
+    $(o.p+'-dot').textContent=(ST.text!==ST.saved)?' ● not saved':'';
+  }
+  function settingsText(){
+    const lines=ST.saved.split('\n').slice(0,60).filter(l=>/^[A-Z][A-Z_]*\s*=/.test(l)&&!/^TURTLE\s*=/.test(l)&&!/^(MAX|MIN|SPEED_PER|TURN_PER|DISTANCE|ANGLE)/.test(l));
+    return lines.join('\n');
+  }
+  function loadSettings(){if(edit)$(o.p+'-set').value=settingsText();}
+  function applySettings(){
+    if(!edit)return;
+    let t=ST.saved;
+    $(o.p+'-set').value.split('\n').forEach(l=>{const m=/^([A-Z][A-Z_]*)\s*=/.exec(l);if(m)t=t.replace(new RegExp('^'+m[1]+'\\s*=.*$','m'),l);});
+    ST.saved=ST.text=t;
+  }
+  function useScript(k){
+    ST.saved=ST.text=(k==='open'?PY.open:(k==='cls'?PY.cls:(k==='pose'?PY.pose:stubFor(ST.name))));
+    names();loadSettings();
+  }
+  o.chips.forEach(c=>$(o.p+'-c-'+c[0]).addEventListener('click',()=>useScript(c[1])));
+  if(edit){$(o.p+'-set').addEventListener('input',applySettings);$(o.p+'-set').placeholder='Click Paste your script to see its settings here.';}
+  reg(()=>{names();if(edit&&document.activeElement!==$(o.p+'-set'))loadSettings();});
+  $(o.p+'-close').addEventListener('click',()=>{if(busy)return;open=false;paint();});
+  function clearTimers(){timers.forEach(clearTimeout);timers=[];if(raf)cancelAnimationFrame(raf);raf=0;}
+  function build(kind,t){
+    const sides=num(t,'SIDES',4),len=num(t,'SIDE_LENGTH',2.0);
+    if(kind==='pose'){
+      return{node:makePoseSquare({sides:sides,side:len}),sched:makeSched(0.016,0.01,mulberryB(2000+pressCount*7)),sides:sides};
+    }
+    if(!Number.isInteger(sides)){
+      const ln=t.split('\n').findIndex(l=>/for side_number in range\(SIDES\)/.test(l))+1;
+      return{err:['Traceback (most recent call last):','  File "'+FOLDER+'/'+ST.name+'/'+ST.name+'/'+ST.name+'_node.py", line '+ln+', in make_plan','    for side_number in range(SIDES):',"TypeError: 'float' object cannot be interpreted as an integer"]};
+    }
+    const plan=polygonPlan(sides,num(t,'TURNS',1),len,num(t,'SPEED',2.0),num(t,'TURN_RATE',1.0));
+    const s=makeSched(num(t,'SEND_EVERY',0.02),0.08,mulberryB(1000+pressCount*7));
+    return{node:makePlanNode(plan),sched:s,sides:sides};
+  }
+  function finish1(kind,start,sides){
+    const T=w.turtle,endErr=Math.hypot(T.x-start.x,T.y-start.y),headErr=Math.abs(normAng(T.th-start.th))*180/Math.PI;
+    log(kind==='cls'?'[INFO] [1792090502.41] [shape_drawer]: Done.':(kind==='pose'?'[INFO] [1792090502.41] [square_drawer]: Done.':'Done.'));log(' *  Terminal will be reused by tasks, press any key to close it.','d');
+    const d=detectShape(w);lastErr[kind]=endErr;
+    $(o.p+'-read').innerHTML='<span>version that ran: <b>'+({open:'function version',cls:'class version (clock)',pose:'feedback version'}[kind])+'</b></span><span>end is <b>'+endErr.toFixed(2)+'</b> units from the start</span><span>heading off by <b>'+headErr.toFixed(1)+'°</b></span><span>'+(d.ok?'a closed <b>'+d.n+'-sided</b> shape'+(d.m>1?' (wound '+d.m+' times)':''):'<b>not a closed shape</b>: '+esc(d.why))+'</span>';
+    o.onDone&&o.onDone({kind:kind,d:d,endErr:endErr,headErr:headErr,sides:sides,M:M,lastErr:lastErr});
+    busy=false;go.disabled=false;paint();
+  }
+  function simulate(kind,b,instant){
+    const start={x:w.turtle.x,y:w.turtle.y,th:w.turtle.th};w.mark=w.runs.length;w.wallMark=w.wallHits;
+    const step=sec=>{const n=Math.round(sec/TS.DT);for(let i=0;i<n;i++){if(schedDue(b.sched,w.t))b.node.tick(w);worldTick(w);
+      if(b.node.done()&&Math.abs(w.turtle.lin)<1e-9&&w.t-w.turtle.lastCmd>0.05)return true;}return false;};
+    if(instant){let n=0;while(!step(1)&&n++<120);worldAdvance(w,0.1);finish1(kind,start,b.sides);return;}
+    let last=0;
+    const frame=ts=>{const dt=last?Math.min(0.05,(ts-last)/1000):0.016;last=ts;
+      const fin=step(dt*SPEED);paint();
+      if(fin){worldAdvance(w,0.1);paint();finish1(kind,start,b.sides);return;}
+      raf=requestAnimationFrame(frame);};
+    raf=requestAnimationFrame(frame);
+  }
+  function press(instant){
+    if(busy)return;busy=true;go.disabled=true;pressCount++;clearTimers();term.innerHTML='';
+    const t=ST.saved,k=kindOf(t),pending=ST.text!==ST.saved;
+    const lines=[[' *  Executing task: bash '+FOLDER+'/.vscode/run.sh',''],['','d'],['== 1. Looking for your package',''],['Found package: '+ST.name,''],['== 2. Building it',''],
+      ['Starting >>> '+ST.name,''],['Finished <<< '+ST.name+' [1.19s]',''],['',''],['Summary: 1 package finished [1.44s]',''],
+      ['== 3. Opening the turtlesim window (if needed) and clearing the old drawing',''],['== 4. Running '+ST.name+' '+ST.name+'_node','']];
+    if(pending)lines.splice(2,0,['(Note: the file has changes that are not saved yet, so the OLD code runs.)','e']);
+    let b=null,tail=[];
+    if(k==='stub'){tail=[['[INFO] [1792090501.17]['+ST.name+'_node]: Declared parameter \'example_param\'. Value: default_value',''],['[INFO] [1792090501.17]['+ST.name+'_node]: Hello world from the Python node '+ST.name+'_node',''],['(The placeholder only says hello and then waits. Nothing moves. Press Ctrl+C in the panel to stop it.)','d']];}
+    else if(!hasMain(t)){tail=[['ImportError: cannot import name \'main\' from \''+ST.name+'.'+ST.name+'_node\' (the exact wording can differ)','e'],['There is no main() function in the file, so there is nothing for ROS to call.','d']];}
+    else if(k==='other'){tail=[['(This practice window can only run the three versions from this tutorial.)','d']];}
+    else{b=build(k,t);if(b.err)tail=b.err.map(x=>[x,'e']);else tail=(k==='cls'||k==='pose')?[]:[['Waiting for turtlesim...',''],['Drawing... press Ctrl+C to stop.','']];}
+    const showOpen=()=>{resetWorld(w);open=true;paint();};
+    const end=()=>{
+      if(!b||b.err){if(!b||b.err){busy=false;go.disabled=false;}paint();o.onFail&&o.onFail({kind:k,err:!!(b&&b.err)});return;}
+      simulate(k,b,instant);
+    };
+    if(instant){lines.concat(tail).forEach(l=>log(l[0],l[1]));showOpen();end();return;}
+    let i=0;const all=lines.concat(tail);
+    const next=()=>{
+      if(i>=all.length){end();return;}
+      const l=all[i++];log(l[0],l[1]);
+      if(l[0].indexOf('== 3.')===0)showOpen();
+      timers.push(setTimeout(next,l[0].indexOf('Finished')===0?500:170));
+    };
+    next();
+  }
+  go.addEventListener('click',()=>press(false));
+  if(ST.saved===stubFor(ST.name)||kindOf(ST.saved)==='stub'){/* nothing pasted yet: leave the placeholder in so the lab shows what it does */}
+  names();loadSettings();paint();
+  return{M:M,press:()=>press(true),pressSlow:()=>press(false),closeWin:()=>$(o.p+'-close').click(),use:useScript,term:()=>term.textContent,
+    read:()=>$(o.p+'-read').textContent,set:(v)=>{$(o.p+'-set').value=v;$(o.p+'-set').dispatchEvent(new Event('input',{bubbles:true}));},world:w,names:names,load:loadSettings,isOpen:()=>open,errs:lastErr};
+}
+// the Missions box ids are created here so the lab markup stays short
+['r3','r4','r6','r7'].forEach(p=>{const m=document.createElement('div');m.id=p+'-missions-box';$(p+'-root').parentNode.insertBefore(m,$(p+'-root'));});
+{
+  let okRuns=0;
+  SL.r3=runLab('r3-root',{p:'r3',pill:'r3-pill',mod:4,lab:'run',mode:'run',
+    chips:[['pa','open','Paste your script'],['pp','stub','Back to the placeholder']],
+    missions:[{k:'ph',t:'With the placeholder in the file, press Ctrl+Shift+B and read what it prints.'},{k:'a',t:'Paste your script, press Ctrl+Shift+B, and wait until it says Done.'},{k:'again',t:'Press Ctrl+Shift+B once more. The old drawing is wiped and the turtle starts again in the middle.'}],
+    onFail(r){if(r.kind==='stub')SL.r3.M.mark('ph');},
+    onDone(r){const M=r.M;if(r.kind==='open'){M.mark('a');okRuns++;if(okRuns>=2)M.mark('again');}}});
+}
+SL.r4=runLab('r4-root',{p:'r4',pill:'r4-pill',mod:5,lab:'edit',mode:'edit',
+  chips:[['pa','open','Paste your script'],['pp','stub','Back to the placeholder']],
+  missions:[{k:'tri',t:'Draw a triangle (SIDES = 3).'},{k:'hex',t:'Draw a hexagon (SIDES = 6).'},{k:'star',t:'Draw a five-point star (SIDES = 5, TURNS = 2).'}],
+  onDone(r){const M=r.M,d=r.d;if(!d.ok)return;if(d.n===3&&d.m===1)M.mark('tri');if(d.n===6&&d.m===1)M.mark('hex');if(d.n===5&&d.m===2)M.mark('star');}});
+{
+  const shapes={};
+  SL.r6=runLab('r6-root',{p:'r6',pill:'r6-pill',mod:6,lab:'cls',labs:['cls','q'],mode:'run',
+    chips:[['pf','open','Paste the function version'],['pc','cls','Paste the class version']],
+    missions:[{k:'f',t:'Paste the function version and run it until it says Done.'},{k:'c',t:'Paste the class version and run it the same way.'},{k:'same',t:'Check: both versions drew the same shape (see the readout).'}],
+    onDone(r){const M=r.M,d=r.d;if(r.kind==='open')M.mark('f');if(r.kind==='cls')M.mark('c');
+      if(d.ok)shapes[r.kind]=d.n+':'+d.m;
+      if(shapes.open&&shapes.open===shapes.cls)M.mark('same');}});
+}
+
+{
+  const err={};
+  SL.r7=runLab('r7-root',{p:'r7',pill:'r7-pill',mod:7,lab:'fb',labs:['fb','q'],mode:'run',
+    chips:[['pc','cls','Paste the clock version (draw_shape.py)'],['pp','pose','Paste the feedback version (draw_square_pose.py)']],
+    missions:[{k:'c',t:'Paste the clock version and run it until it says Done.'},{k:'p',t:'Paste the feedback version and run it the same way.'},{k:'cmp',t:'Compare: the feedback version should end closer to where it started.'}],
+    onDone(r){const M=r.M;err[r.kind]=r.endErr;if(r.kind==='cls')M.mark('c');if(r.kind==='pose')M.mark('p');
+      if(err.cls!==undefined&&err.pose!==undefined&&err.pose<err.cls)M.mark('cmp');}});
+}
+
+/* ---------------- Lab 5: put the steps in order ---------------- */
+{
+  const S=[
+    {t:'Type colcon build in a terminal',decoy:1,why:'Not needed here. Ctrl+Shift+B builds for you. You will type this yourself in later tutorials, and then you will know what it does.'},
+    {t:'Open the folder in VS Code (File, Open Folder)',o:3,need:'Not yet. The folder, and the package inside it, must exist first.'},
+    {t:'Make a new project folder with a lowercase name',o:1,need:''},
+    {t:'Run turtle-nest from a terminal: a package name, Python node, and the folder you just made',o:2,need:'Not yet. The wizard needs the project folder to exist so it can put the package there.'},
+    {t:'Paste your script into the package\'s _node.py file',o:5,need:'Not yet. The file you paste into does not exist until the wizard has made the package.'},
+    {t:'Type source install/setup.bash',decoy:1,why:'Not needed here. The run script does this for you, in the right folder, every time.'},
+    {t:'Create the .vscode folder with run.sh, tasks.json and settings.json in it',o:4,need:'Not yet. You create these inside the folder VS Code has open.'},
+    {t:'Press Ctrl+Shift+B',o:6,need:'Not yet. There is nothing to build until the package exists and your script is in it.'}
+  ];
+  const box=$('o6-list'),msg=$('o6-msg');let next=1;
+  const n=S.filter(s=>!s.decoy).length;
+  function paint(){pillSet('o6-pill',next>n,(next-1)+' of '+n+' steps');if(next>n)finish(9,'ord',['ord']);}
+  S.forEach(s=>{
+    const b=document.createElement('button');b.type='button';b.innerHTML='<span class="no">'+(s.decoy?'–':'?')+'</span><span>'+esc(s.t)+'</span>';
+    b.addEventListener('click',()=>{
+      if(b.classList.contains('used'))return;
+      if(s.decoy){msg.className='msg hint';msg.textContent=s.why;return;}
+      if(s.o===next){b.classList.add('used');b.querySelector('.no').textContent=s.o;next++;msg.className='msg ok';msg.textContent=next>n?'That is the whole recipe. Every project, the same six steps.':'Right.';paint();}
+      else{msg.className='msg bad';msg.textContent=s.need||'Not yet. Something has to come first.';}
+    });box.appendChild(b);
+  });
+  paint();
+  SL.o6={click:(txt)=>{[...box.querySelectorAll('button')].find(b=>b.textContent.indexOf(txt)>=0).click();},msg:()=>msg.textContent,count:()=>next-1,all:S};
+}
+
+/* ---------------- quizzes ---------------- */
+quiz('q1-box','q1-pill',1,'q',['wiz','q'],[
+  {q:'Which one file in the package do you edit?',o:['package.xml','setup.py','The file ending in _node.py, inside the folder that has the same name as the package','test/test_flake8.py'],a:2,
+   why:['That is the package ID card. The wizard writes it and you leave it alone.','That tells the build tool what to install. The wizard writes it and you leave it alone.','Yes: that is where your script goes.','Those are style checks.']},
+  {q:'Which of these is a valid package name?',o:['Shape Drawer','shape-drawer','shape_drawer','3_shapes'],a:2,
+   why:['Capital letters and a space are not allowed.','Dashes are not allowed. Use an underscore.','Lowercase letters and underscores, starting with a letter.','A name must start with a letter.']},
+  {q:'You tick both "parameter file" and "launch file" in the wizard. What happens?',o:['Nothing breaks. You just get two extra files this tutorial does not use.','The package will not build.','The wizard refuses, because we have no use for them.','The turtle moves faster.'],a:0,
+   why:['Right. They are for the next tutorial.','They are extra files, and they build fine.','The wizard is happy to make them.','They have no effect on speed.']}
+]);
+quiz('q3-box','q3-pill',3,'q',['q'],[
+  {q:'You pasted your script and pressed Ctrl+Shift+B. The panel says there is no main() to call. What most likely happened?',o:['You forgot to save.','Only part of the script was pasted, or the end of the file was deleted.','The turtle window is closed.','The package name is too long.'],a:1,
+   why:['An unsaved file runs the old code, which is a different symptom.','Right: main() is at the bottom of the script. Paste the whole file.','That causes a different symptom: a program that waits.','Length is not the problem.']},
+  {q:'The package is called ball_chaser. Which path is the file you paste into?',o:['ball_chaser/setup.py','ball_chaser/package.xml','ball_chaser/ball_chaser/ball_chaser_node.py','ball_chaser/test/test_flake8.py'],a:2,
+   why:['That is the build tool\'s file.','That is the ID card.','Yes: the folder, the folder with the same name again, then name_node.py.','That is a style check.']},
+  {q:'You edit the file and immediately press Ctrl+Shift+B. The turtle does the old thing. What is the likely cause?',o:['The wizard has to be run again.','The file was not saved yet. Look for the dot on its tab.','The build tool does not understand edits.','turtlesim remembers the old shape.'],a:1,
+   why:['The package is fine.','Right. Wait a second for the auto-save, or press Ctrl+S.','The build tool is fine with edits.','The window only draws what the program tells it.']}
+]);
+quiz('q6-box','q6-pill',6,'q',['cls','q'],[
+  {q:'In the class version, why is the current line of the plan kept in self.line_number instead of an ordinary variable?',o:['ROS requires every variable to start with self.','on_timer runs again and again, and an ordinary variable inside it is forgotten each time. A value kept on self is remembered between calls.','self makes the number go faster.','It is only a style rule and changes nothing.'],a:1,
+   why:['Only values the node must remember between calls go on self.','Right. This is the main reason ROS code uses classes.','Speed is not affected.','It matters: without it the node would start from line 0 on every timer call.']},
+  {q:'Who calls on_timer?',o:['You do, once, at the bottom of the file.','ROS does, about 50 times a second, because the node asked for it with create_timer.','The turtle does.','The build tool does, while building.'],a:1,
+   why:['You never call it yourself. main() only lets ROS work with spin_once.','Right. create_timer(SEND_EVERY, self.on_timer) is the request, and spin_once lets ROS run it when it is due.','The turtle only listens for Twist messages.','The build only gets the package ready.']},
+  {q:'You paste the class version and ROS says it cannot import main. What is the most likely cause?',o:['A class cannot be used in a ROS program.','Part of the file was not pasted, so main() at the bottom is missing.','The class is called ShapeDrawer instead of the package name.','self is spelled wrongly.'],a:1,
+   why:['Most ROS programs use classes.','Right. The rule from Module 3 still holds: the file must contain a function called main.','The class name can be anything. Only main must have the right name.','That would give a different error, inside the class.']}
+]);
+quiz('q7-box','q7-pill',7,'q',['fb','q'],[
+  {q:'In the feedback version, which method is the control loop?',o:['main()','on_pose','__init__','finish'],a:1,
+   why:['main() only makes the node and lets ROS run.','Right. ROS calls it for every pose message, and each call measures, decides and sends one command.','__init__ runs once, to set things up.','finish runs once at the end.']},
+  {q:'The turtle is slow to react and a few messages arrive late. Why does the feedback version still draw a good square?',o:['It runs on a faster timer.','It stops each side by measuring the distance travelled, not by counting seconds, so a late message cannot add up to an error.','It ignores the turtle.','It sends more messages.'],a:1,
+   why:['It has no timer at all.','Right. The next pose message shows exactly where the turtle is.','It depends entirely on the pose messages.','The number of messages is not what matters.']},
+  {q:'You close the turtlesim window and run the feedback version. Nothing happens and nothing is printed. Why?',o:['The build failed.','No pose messages arrive, so on_pose is never called and the node just waits.','main() is missing.','The file is not saved.'],a:1,
+   why:['A failed build stops the run script with a message.','Right. The node does everything inside on_pose, so with no poses there is nothing to do. Open turtlesim and press Ctrl+Shift+B again.','A missing main() gives an ImportError.','An unsaved file runs the old code.']}
+]);
+{
+  const snip=s=>'<pre class="snip">'+s+'</pre>';
+  quiz('q5-box','q5-pill',8,'q',['q'],[
+    {q:'1. '+snip('== 1. Looking for your package\n<span class="e">No package found in this folder.</span>\nOpen a terminal here (Terminal menu, New Terminal), run:  turtle-nest\nMake a package, then press Ctrl+Shift+B again.')+'What does this mean?',
+     o:['The wizard has not made a package in the folder VS Code has open.','Python is not installed.','Your script has a typo.','The turtlesim window is closed.'],a:0,
+     why:['Right: run the wizard first, and make sure it put the package in the folder that is open.','Python is fine. The run script stopped before it reached your code.','The run script never reached your code.','It would open the window itself, later.']},
+    {q:'2. '+snip('== 2. Building it\nStarting >>> my_shapes\n<span class="e">...red error text...</span>\n<span class="e">The build failed. Read the red text above.</span>')+'What do you do first?',
+     o:['Press Ctrl+Shift+B again until it works.','Delete the package and start over.','Read the first red line above the message. It says what the build tool could not do.','Reinstall ROS.'],a:2,
+     why:['The same input gives the same failure.','That throws away your work for no reason.','Right. The first red line is usually the cause. The rest is fallout.','Far too drastic for one failed build.']},
+    {q:'3. '+snip('<span class="d">  File ".../my_shapes/my_shapes/my_shapes_node.py", line 44</span>\n    for side_number in range(SIDES)\n                                   <span class="e">^</span>\n<span class="e">SyntaxError: expected \':\'</span>')+'What is wrong?',
+     o:['A colon is missing at the end of line 44.','The package name is wrong.','turtlesim is not running.','The build failed.'],a:0,
+     why:['Right. Python wants a : at the end of a for line. The message even names the file and the line.','That would stop earlier, with a different message.','That gives no error. The program just waits.','The build finished. This error is in your code.']},
+    {q:'4. '+snip('<span class="d">  File ".../my_shapes/my_shapes/my_shapes_node.py", line 52</span>\n        message = Twist()\n<span class="e">IndentationError: unexpected indent</span>')+'What is the most likely cause?',
+     o:['A line is indented further than the lines around it, often from a messy paste.','The wrong turtle name.','Missing rclpy.','The panel is too small.'],a:0,
+     why:['Right. Python uses indentation as grammar. Line the block up with its neighbours.','That would not stop the file from loading.','That is a different error: ModuleNotFoundError.','The size of the panel has no effect on the code.']},
+    {q:'5. '+snip('== 4. Running my_shapes my_shapes_node\nWaiting for turtlesim...')+'Nothing more appears, for a minute. What does the last line tell you?',
+     o:['The build failed.','The script is alive and waiting for a turtle that is listening. Check the turtlesim window and the turtle name.','main() is missing.','The file is not saved.'],a:1,
+     why:['The build succeeded: the run step started.','Right. The script waits until something listens to its commands.','A missing main() gives an ImportError, not a waiting message.','An unsaved file runs the old code, which would not stay stuck here.']},
+    {q:'6. You change SIDES from 4 to 6 and press Ctrl+Shift+B at once. The panel ends with Done. and the turtle drew a square again. No error. Why?',
+     o:['SIDES has to be 3.','The change was not saved yet, so the old code ran.','turtlesim only draws squares.','The build tool reads SIDES from a different file.'],a:1,
+     why:['Any whole number of 3 or more works.','Right. Wait a second after typing, or press Ctrl+S, then press Ctrl+Shift+B.','It draws whatever the program tells it to.','The setting lives at the top of your file, nowhere else.']}
+  ]);
+}
+
+document.querySelectorAll('pre[data-py]').forEach(pre=>{
+  const bar=document.createElement('div');bar.className='row';bar.style.cssText='justify-content:space-between;margin-bottom:4px';
+  const nm=document.createElement('span');nm.className='mono';nm.style.color='var(--ink2)';nm.textContent=pre.dataset.py;
+  const bt=document.createElement('button');bt.type='button';bt.className='chip';bt.textContent='Copy';
+  const sel=()=>{try{const r=document.createRange();r.selectNodeContents(pre);const s=window.getSelection();s.removeAllRanges();s.addRange(r);bt.textContent='Selected: press Ctrl+C';}catch(e){bt.textContent='Select and copy by hand';}};
+  bt.addEventListener('click',()=>{
+    const ok=()=>{bt.textContent='Copied';setTimeout(()=>{bt.textContent='Copy';},1500);};
+    try{navigator.clipboard.writeText(pre.textContent).then(ok,sel);}catch(e){sel();}
+  });
+  bar.appendChild(nm);bar.appendChild(bt);pre.parentNode.insertBefore(bar,pre);
+});
+
+/* ===== sign-off: lab results fill in by themselves, VM steps are ticked by hand ===== */
+{
+  const auto=[
+    [1,'Module 1: made a package in the practice wizard and passed the check'],
+    [2,'Module 2: created the three .vscode files'],
+    [3,'Module 3: pasted a script into the node file and kept main()'],
+    [4,'Module 4: ran the placeholder and then your script from the package'],
+    [5,'Module 5: drew a triangle, a hexagon and a star by changing numbers'],
+    [6,'Module 6: ran the function version and the class version and compared them'],
+    [7,'Module 7: ran the feedback version and compared it with the clock version'],
+    [8,'Module 8: passed the error clinic'],
+    [9,'Module 9: put the new-project steps in order']
+  ];
+  const hw=[
+    'I made a new project folder with a lowercase name, ran turtle-nest, and made a Python package inside that folder.',
+    'I opened the project folder in VS Code (File, Open Folder) and created run.sh, tasks.json and settings.json inside a folder named .vscode.',
+    'I pasted simple_draw_shape.py over my package\'s _node.py file and the tab showed no unsaved dot.',
+    'I pressed Ctrl+Shift+B, saw Finished <<< and Done. in the panel, and the turtle drew a square.',
+    'I pasted draw_shape.py, pressed Ctrl+Shift+B, and the turtle drew the same shape.',
+    'I pasted draw_square_pose.py, pressed Ctrl+Shift+B, and the turtle drew a square that closed better than the clock version.',
+    'I changed SIDES, pressed Ctrl+Shift+B again, and the turtle drew a different shape.',
+    'I started a second project in a new folder, from step one, without looking at this page.'
+  ];
+  const idx=k=>mods.findIndex(m=>m.id==='m'+k);
+  function row(text,checked,disabled){
+    const l=document.createElement('label');l.className='check';l.style.flexDirection='row';
+    const c=document.createElement('input');c.type='checkbox';c.checked=checked;c.disabled=disabled;
+    const s=document.createElement('span');s.textContent=text;l.appendChild(c);l.appendChild(s);return{l:l,c:c};
+  }
+  function paintAuto(){
+    const box=$('wk-auto');box.innerHTML='';
+    auto.forEach(a=>{
+      const on=!!prog.done[a[0]],r=row(a[1],on,true);
+      if(!on){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent='go to it';b.dataset.go=idx(a[0]);r.l.appendChild(b);r.l.style.opacity='.75';}
+      box.appendChild(r.l);
+    });
+  }
+  function status(){
+    const na=auto.filter(a=>prog.done[a[0]]).length,nh=Object.keys(prog.wk).length,tot=auto.length+hw.length,n=na+nh;
+    $('wk-pill').textContent=n+' of '+tot;$('wk-pill').className='pill'+(n===tot?' ok':'');
+    return n===tot;
+  }
+  function sync(){
+    paintAuto();const full=status();
+    if(full&&!prog.done[SIGNOFF]){prog.done[SIGNOFF]=1;save();updateRail();}
+    else if(!full&&prog.done[SIGNOFF]){delete prog.done[SIGNOFF];save();updateRail();}
+  }
+  function renderHw(){
+    const box=$('wk-list');box.innerHTML='';
+    hw.forEach((t,i)=>{const r=row(t,!!prog.wk[i],false);r.c.id='wk'+i;
+      r.c.addEventListener('change',()=>{if(r.c.checked)prog.wk[i]=1;else delete prog.wk[i];save();sync();});box.appendChild(r.l);});
+  }
+  onProgress=sync;
+  $('reset-all').addEventListener('click',()=>{prog={done:{},wk:{}};save();renderHw();updateRail();sync();});
+  [['vm-ok',0],['vm-ok2',2]].forEach(p=>{const vm=$(p[0]);if(vm){vm.checked=!!prog.done[p[1]];vm.addEventListener('change',()=>{if(vm.checked)markDone(p[1]);else{delete prog.done[p[1]];save();updateRail();}});}});
+  buildRail();renderHw();
+  const h=(location.hash||'').match(/^#m(\d+)$/);show(h?+h[1]:0,true);
+}
+
+
+</script>
+
+</body></html>

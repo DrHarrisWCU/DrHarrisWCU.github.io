@@ -1,0 +1,1917 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Robot Lab Tutorial B</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout concept: a lab notebook. Left rail of numbered modules, one working column, each lab sits in a ruled "bench" panel with its own readouts. */
+:root{
+  --paper:#f0eef4; --panel:#fbfafd; --ink:#1e1a2a; --ink2:#5b5469; --rule:#d8d3e2;
+  --accent:#5a2d86; --accent-ink:#ffffff; --accent-soft:#ece4f6; --gold:#b9800a;
+  --ok:#1b7a4b; --warn:#9a6100; --bad:#b3261e;
+  --plot-bg:#ffffff; --grid:#e7e3ef; --t1:#5a2d86; --t2:#d1650f; --t3:#1c6e8c; --t4:#8a8697;
+  --code-bg:#ebe8f2; --term-bg:#17141f; --term-fg:#e6e1f0; --term-dim:#8d86a1; --term-acc:#d9b3ff;
+  --h1:#5a2d86; --h2:#1c6e8c; --h3:#b9800a; --h4:#2f7d4f; --h5:#b0357a; --h6:#8a6a1f;
+  --font-d:'Bricolage Grotesque','Segoe UI',system-ui,sans-serif;
+  --font-b:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --font-m:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#14111b; --panel:#1c1826; --ink:#ece8f5; --ink2:#a7a0b9; --rule:#342f48;
+  --accent:#b88ce8; --accent-ink:#1a1226; --accent-soft:#2b2240; --gold:#e8b23a;
+  --ok:#5fd09a; --warn:#f0b44a; --bad:#ff8a80;
+  --plot-bg:#120f19; --grid:#2a2640; --t1:#c39cf0; --t2:#f0913a; --t3:#5cc0e0; --t4:#8d86a1;
+  --code-bg:#241f33; --term-bg:#0e0c14;
+  --h1:#c39cf0; --h2:#5cc0e0; --h3:#e8b23a; --h4:#6fd49a; --h5:#f08ac0; --h6:#d3b45a;
+  color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#14111b; --panel:#1c1826; --ink:#ece8f5; --ink2:#a7a0b9; --rule:#342f48;
+  --accent:#b88ce8; --accent-ink:#1a1226; --accent-soft:#2b2240; --gold:#e8b23a;
+  --ok:#5fd09a; --warn:#f0b44a; --bad:#ff8a80;
+  --plot-bg:#120f19; --grid:#2a2640; --t1:#c39cf0; --t2:#f0913a; --t3:#5cc0e0; --t4:#8d86a1;
+  --code-bg:#241f33; --term-bg:#0e0c14;
+  --h1:#c39cf0; --h2:#5cc0e0; --h3:#e8b23a; --h4:#6fd49a; --h5:#f08ac0; --h6:#d3b45a;
+  color-scheme:dark;}
+
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 var(--font-b);padding-inline:16px}
+.wrap{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:232px minmax(0,1fr);gap:36px;padding-block:22px 72px}
+a{color:var(--accent)}
+h1,h2,h3{font-family:var(--font-d);text-wrap:balance;margin:0}
+h1{font-size:clamp(28px,4.4vw,44px);line-height:1.08;font-weight:700;letter-spacing:-.01em}
+h2{font-size:clamp(22px,3vw,28px);line-height:1.15;font-weight:700;letter-spacing:-.005em}
+h3{font-size:16px;font-weight:600;font-family:var(--font-b)}
+p{margin:0 0 .8em;max-width:68ch}
+code,.mono{font-family:var(--font-m);font-size:.9em}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+
+.railtog{all:unset;box-sizing:border-box;float:right;width:26px;height:26px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:6px;cursor:pointer;font-size:11px;color:var(--ink2);background:var(--panel)}
+.railtog:hover{background:var(--accent-soft);color:var(--ink)}
+.railtog:focus-visible,.railopen:focus-visible{outline:2px solid var(--accent)}
+.railopen{position:fixed;top:calc(env(safe-area-inset-top,0px) + 10px);left:10px;z-index:30;width:36px;height:36px;display:grid;place-items:center;border:1px solid var(--rule);border-radius:8px;cursor:pointer;font-size:18px;line-height:1;color:var(--ink);background:var(--panel)}
+.railopen:hover{background:var(--accent-soft)}
+.railopen[hidden]{display:none}
+.wrap.railoff{grid-template-columns:minmax(0,1fr)}
+.wrap.railoff .rail{display:none}
+.wrap.railoff main{padding-left:44px}
+@media(max-width:900px){.railtog,.railopen{display:none!important}}
+/* rail */
+.rail{position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px);align-self:start;min-width:0}
+.brand{font:600 12px/1.2 var(--font-m);letter-spacing:.12em;text-transform:uppercase;color:var(--ink2);margin-bottom:14px}
+.brand b{display:block;font:700 19px/1.15 var(--font-d);letter-spacing:0;text-transform:none;color:var(--ink);margin-top:4px}
+.rail ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:26px 1fr 16px;align-items:center;gap:8px;width:100%;padding:7px 8px;border-radius:6px;cursor:pointer;font-size:14px;color:var(--ink2)}
+.rail button:hover{background:var(--accent-soft);color:var(--ink)}
+.rail button:focus-visible{outline:2px solid var(--accent)}
+.rail button[aria-current="true"]{background:var(--accent-soft);color:var(--ink);font-weight:600}
+.rail .n{font:500 12px var(--font-m);width:24px;height:24px;border:1px solid var(--rule);border-radius:50%;display:grid;place-items:center;background:var(--panel);color:var(--ink2)}
+.rail [aria-current="true"] .n{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.rail .tick{font-size:13px;color:var(--ok);opacity:0}
+.rail .done .tick{opacity:1}
+.prog{margin-top:14px;font:12px var(--font-m);color:var(--ink2)}
+.prog i{display:block;height:4px;border-radius:2px;background:var(--rule);margin-top:6px;overflow:hidden}
+.prog i b{display:block;height:100%;width:0;background:var(--accent)}
+
+/* module chrome */
+main{min-width:0}
+.mod{display:flex;flex-direction:column;gap:20px}
+.mod[hidden]{display:none!important}
+.eyebrow{font:500 12px var(--font-m);letter-spacing:.1em;text-transform:uppercase;color:var(--accent)}
+.lede{font-size:17px;max-width:62ch;color:var(--ink)}
+.goal{font-size:14px;color:var(--ink2)}
+.goal b{color:var(--ink)}
+.callout{border:1px solid var(--rule);background:var(--panel);border-radius:8px;padding:12px 14px}
+.callout .eyebrow{display:block;margin-bottom:4px;color:var(--gold)}
+.callout p:last-child{margin-bottom:0}
+.lab{border:1px solid var(--rule);background:var(--panel);border-radius:8px;overflow:hidden}
+.lab-h{display:flex;gap:10px;justify-content:space-between;align-items:center;flex-wrap:wrap;padding:9px 14px;border-bottom:1px solid var(--rule);background:var(--accent-soft)}
+.lab-h b{font:600 13px var(--font-m);letter-spacing:.03em;color:var(--ink)}
+.lab-b{padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.pill{display:inline-flex;align-items:center;gap:6px;font:500 12px var(--font-m);padding:2px 9px;border-radius:99px;border:1px solid var(--rule);color:var(--ink2);background:var(--panel)}
+.pill.ok{color:var(--ok);border-color:var(--ok)}
+.toast{position:absolute;left:50%;top:12px;transform:translateX(-50%);max-width:calc(100% - 24px);padding:8px 16px;border-radius:99px;background:var(--panel);color:var(--ink);border:2px solid var(--ok);font:600 14px var(--font-s,system-ui);box-shadow:0 4px 16px rgba(0,0,0,.18);opacity:0;pointer-events:none;transition:opacity .4s ease;text-align:center}
+.toast.show{opacity:1}
+@keyframes pillfade{0%{opacity:0;transform:scale(1.2)}100%{opacity:1;transform:scale(1)}}
+.pill.flash{animation:pillfade 2s ease-out;border-color:var(--ok);color:var(--ok)}
+@media (prefers-reduced-motion:reduce){.pill.flash{animation:none}.toast{transition:none}}
+
+.pill.bad{color:var(--bad);border-color:var(--bad)}
+.pill.warn{color:var(--warn);border-color:var(--warn)}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:14px}.rail{position:static}.rail ol{flex-direction:row;overflow-x:auto;padding-bottom:6px}.rail button{width:auto;grid-template-columns:24px auto 14px;white-space:nowrap}.rail .t{display:none}.rail [aria-current="true"] .t{display:inline}.prog{display:none}.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+label{font-size:13px;color:var(--ink2);display:flex;flex-direction:column;gap:4px;min-width:0}
+label .v{font:500 13px var(--font-m);color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number],input[type=text],select{font:14px var(--font-m);padding:6px 8px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg);color:var(--ink);min-width:0;max-width:100%}
+.btn{font:600 14px var(--font-b);padding:7px 14px;border-radius:6px;border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);cursor:pointer}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.5;cursor:default}
+.chip{font:500 12px var(--font-m);padding:3px 9px;border-radius:99px;border:1px solid var(--rule);background:var(--panel);color:var(--ink);cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+canvas{width:100%;display:block;background:var(--plot-bg);border:1px solid var(--rule);border-radius:6px}
+pre.code{margin:0;padding:12px 14px;background:var(--code-bg);border-radius:6px;overflow-x:auto;font:13px/1.55 var(--font-m);color:var(--ink);tab-size:2}
+pre.code .hl{background:color-mix(in srgb,var(--gold) 28%,transparent);display:inline-block;width:100%}
+.out{font:13px/1.5 var(--font-m);background:var(--code-bg);border-radius:6px;padding:8px 12px;min-height:2.6em;overflow-wrap:anywhere}
+.readout{display:flex;flex-wrap:wrap;gap:6px 18px;font:13px var(--font-m);color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font:500 12px var(--font-m);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2)}
+.tw{overflow-x:auto}
+details.ask{border:1px dashed var(--rule);border-radius:8px;padding:10px 14px;background:transparent}
+details.ask summary{cursor:pointer;font:500 12px var(--font-m);letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+details.ask p{margin:8px 0 0}
+.nav2{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-top:6px;border-top:1px solid var(--rule)}
+
+/* packet bytes */
+.hex{display:flex;flex-wrap:wrap;gap:5px;font:500 15px var(--font-m)}
+.hex .b{display:flex;flex-direction:column;align-items:center;gap:2px}
+.hex .b span:first-child{padding:3px 6px;border-radius:4px;border-bottom:3px solid var(--c);background:color-mix(in srgb,var(--c) 16%,var(--panel))}
+.hex .b span:last-child{font:10px var(--font-m);color:var(--ink2);letter-spacing:.04em}
+.hex .bad span:first-child{outline:2px solid var(--bad)}
+.f-hdr{--c:var(--h1)}.f-rsv{--c:var(--h6)}.f-id{--c:var(--h2)}.f-len{--c:var(--h3)}.f-inst{--c:var(--h5)}.f-par{--c:var(--h4)}.f-crc{--c:var(--t4)}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font:11px var(--font-m);color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--c);margin-right:5px;vertical-align:-1px}
+
+/* terminal */
+.term{background:var(--term-bg);color:var(--term-fg);border-radius:6px;padding:10px 12px;font:13px/1.45 var(--font-m);height:300px;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;border:1px solid var(--rule)}
+.term .p{color:var(--term-acc)}.term .d{color:var(--term-dim)}.term .e{color:#ff9d94}
+.termin{display:flex;gap:8px;align-items:center;background:var(--term-bg);border:1px solid var(--rule);border-radius:6px;padding:6px 10px;margin-top:-8px}
+.termin span{font:13px var(--font-m);color:var(--term-acc)}
+.termin input{flex:1;min-width:0;background:transparent;border:0;color:var(--term-fg);font:13px var(--font-m);outline:none;padding:4px}
+.mission{display:flex;gap:8px;align-items:flex-start;font-size:14px;padding:5px 0}
+.mission .box{flex:none;width:18px;height:18px;border:1.5px solid var(--rule);border-radius:4px;display:grid;place-items:center;font-size:12px;color:var(--accent-ink);margin-top:2px}
+.mission.done .box{background:var(--ok);border-color:var(--ok)}
+.mission.done span:last-child{color:var(--ink2);text-decoration:line-through}
+.graph{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;font:12px var(--font-m);padding:10px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg)}
+.graph .node{border:1.5px solid var(--accent);border-radius:6px;padding:5px 9px;color:var(--ink);background:var(--accent-soft)}
+.graph .topic{color:var(--t2);display:flex;flex-direction:column;align-items:center;line-height:1.2}
+.graph .you{border-color:var(--t2);background:transparent}
+
+/* code reading */
+.chunk{border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--panel)}
+.chunk>button{all:unset;box-sizing:border-box;display:flex;justify-content:space-between;gap:12px;width:100%;padding:9px 14px;cursor:pointer;font:600 13px var(--font-m);color:var(--ink);background:var(--accent-soft)}
+.chunk>button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.chunk .why{padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.chunk .why p{margin:0}
+.quiz{display:flex;flex-direction:column;gap:8px}
+.quiz .q{font-weight:600}
+.quiz .opt{flex-direction:row;display:flex;gap:8px;align-items:flex-start;font-size:14px;cursor:pointer;color:var(--ink)}
+.quiz .fb{font-size:13px;min-height:1.2em}
+.check{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:14px}
+.check input{margin-top:4px;accent-color:var(--accent)}
+.legendline{font:12px var(--font-m);color:var(--ink2)}
+.sw{display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px}
+textarea.edit{width:100%;font:12.5px/1.5 var(--font-m);padding:10px 12px;border:1px solid var(--rule);border-radius:6px;background:var(--plot-bg);color:var(--ink);resize:vertical;tab-size:2;white-space:pre;overflow:auto;min-width:0}
+.rv{background:transparent;border:1px dashed var(--rule);color:var(--ink2);cursor:pointer;font:12px var(--font-m);padding:2px 10px;border-radius:99px}
+.rv:hover{border-color:var(--accent);color:var(--accent)}
+#mj-rs td{vertical-align:top}#mj-rs td:nth-child(1),#mj-rs td:nth-child(2){font:12.5px/1.45 var(--font-m);overflow-wrap:anywhere}
+.chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+#arch-steps li{font-size:14px;color:var(--ink2)}#arch-steps li.on{color:var(--ink);font-weight:600}
+
+/* ---- Tutorial B additions ---- */
+.tl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:14px;align-items:start}
+@media(max-width:900px){.tl{grid-template-columns:minmax(0,1fr)}}
+.tl canvas{width:100%;border-radius:6px;border:1px solid var(--rule)}
+.panes{display:flex;flex-direction:column;gap:10px;min-width:0}
+.pane{border:1px solid var(--rule);border-radius:8px;overflow:hidden;background:var(--term-bg)}
+.pane.focus{outline:2px solid var(--accent);outline-offset:-1px}
+.pane-h{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:3px 8px;font:11px var(--font-m);color:var(--term-dim);border-bottom:1px solid #2c2740}
+.pane .term{height:150px;border:0;border-radius:0}
+.pane .termin{margin:0;border:0;border-top:1px solid #2c2740;border-radius:0}
+.pane .termin.busy span{color:var(--term-dim)}
+.pane .chip{padding:1px 8px;font-size:11px}
+.tl .chips{display:flex;flex-wrap:wrap;gap:6px}
+.wire{width:100%;height:auto;background:var(--plot-bg);border:1px solid var(--rule);border-radius:6px}
+.wire text{font:12px var(--font-m);fill:var(--ink)}
+.wire .dim{fill:var(--ink2);font-size:11px}
+.wire .nodebox{fill:var(--accent-soft);stroke:var(--accent);stroke-width:1.5}
+.wire .topicbox{fill:var(--panel);stroke:var(--t2);stroke-width:1.5}
+.wire .flow{stroke:var(--ok);stroke-width:2.5;fill:none}
+.wire .cut{stroke:var(--bad);stroke-width:2.5;fill:none;stroke-dasharray:6 5}
+.wire .off{stroke:var(--rule);stroke-width:2;fill:none;stroke-dasharray:3 4}
+.plan td input[type=number]{width:100%;min-width:60px}
+.plan td{vertical-align:middle}
+.dl{display:block;margin:6px 0;padding:8px 12px;border:1px dashed var(--rule);border-radius:6px;font-size:14px;color:var(--ink2)}
+.keys{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:6px 18px}
+.keys div{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:baseline;font-size:14px}.keys div span{flex:1 1 180px}
+.callout table{display:block;overflow-x:auto}
+kbd{font:12px var(--font-m);border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;padding:0 6px;background:var(--panel)}
+ol.steps{padding-left:22px;display:flex;flex-direction:column;gap:8px}
+</style>
+<div class="wrap">
+<nav class="rail" id="rail" aria-label="Modules"></nav>
+<main id="main">
+
+<section class="mod" id="m0" data-title="Get the virtual machine">
+  <div><div class="eyebrow">Module 0 of 7 · about 60 minutes, mostly waiting for a download</div><h2>Get the ROS 2 virtual machine running</h2></div>
+  <p class="lede">ROS 2 is installed and ready inside a <b>virtual machine</b>: a whole second computer that runs in a window on yours. You download it once, unpack it, and open it in VirtualBox. Everything you need is already on it, so there is nothing to install inside.</p>
+  <div class="goal"><b>By the end:</b> the lab's ROS 2 desktop is running in a window, you can get your mouse back from it, and you have two terminals open side by side.</div>
+
+  <div class="callout"><span class="eyebrow">Before you start</span>
+    <p>You need a Windows or Linux computer with <b>VirtualBox</b> installed, a download of tens of gigabytes, and room on the disk: the unpacked machine is about <b>50 GB</b>, and the downloaded pieces sit beside it, so plan for about <b>100 GB free</b> until you delete the pieces. <b>Apple-silicon Macs</b> (M1 and later) cannot run this kind of machine in VirtualBox. If that is you, use a lab computer or ask your instructor.</p></div>
+
+  <ol class="steps">
+    <li><b>Install 7-Zip.</b> The VM arrives as a split archive and the tool that unpacks it is the free <a href="https://www.7-zip.org/" target="_blank" rel="noopener">7-Zip</a>. Install it and keep the default options.</li>
+    <li><b>Show file extensions.</b> In File Explorer open the <b>View</b> menu, then <b>Show</b>, and tick <b>File name extensions</b>. You need to see the end of each file name to pick the right file in step 4.</li>
+    <li><b>Download every file in the folder.</b> The machine is cut into pieces with names ending <span class="mono">.zip.001</span>, <span class="mono">.zip.002</span>, and so on. Put <b>all of them</b> in one new folder. If one is missing, the unpacking fails near the end.
+      <span class="dl" id="vm-dl">Your instructor will give you the link to the folder.</span></li>
+    <li><b>Unpack it.</b> Right-click <b>only the first file</b>, the one ending <span class="mono">.zip.001</span>, choose <b>7-Zip</b>, then <b>Extract Here</b>. Do not extract the others. 7-Zip finds the rest by itself because they sit in the same folder. This takes a while.</li>
+    <li><b>Import it into VirtualBox.</b> Open VirtualBox, choose <b>Machine</b> and then <b>Add</b> (some versions call it <b>Open</b>), and pick the VM file from the unpacked folder. If you were given an <span class="mono">.ova</span> file instead, use <b>File</b> then <b>Import Appliance</b>.</li>
+    <li><b>Give it the right amount of computer.</b> Select the machine and open <b>Settings</b>. Under <b>System</b>, move the <b>Base Memory</b> slider and the <b>Processors</b> slider, and keep both in the <b>green</b> part of the bar. Under <b>System, Acceleration</b>, turn on the hardware acceleration options. Under <b>Display</b>, raise <b>Video Memory</b> to the maximum.</li>
+    <li><b>Start it and sign in.</b> <span class="dl" id="vm-login">Select the machine and press <b>Start</b>. Your instructor will tell you the user name and password for the desktop.</span></li>
+    <li><b>Learn the host key.</b> The VM captures your mouse and keyboard when you click inside it. To get them back, press the <b>host key</b>, which is the <b>right Ctrl</b> key by default. VirtualBox shows the host key in the bottom right corner of its window.</li>
+    <li><b>Optional: Guest Additions.</b> In the VM's menu choose <b>Devices</b> then <b>Insert Guest Additions CD image</b> and follow the installer. This gives you drag-and-drop of files and a <b>shared clipboard</b> (also under <b>Devices</b>) so you can copy a command on this page and paste it into the VM.</li>
+  </ol>
+
+  <div class="callout"><span class="eyebrow">What is on the machine</span>
+    <p><b>Brave</b> (web browser), <b>Visual Studio Code</b> and <b>Sublime Text</b> (editors), and <b>Terminator</b> (the terminal you will use all the time), along with ROS 2 and the turtlesim program.</p>
+    <p><b>Terminator</b> is an ordinary terminal that can split its window into several panes. You will want two or three, because each program you start keeps its terminal busy. Right-click inside it and choose a split, or press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>O</kbd> for a pane below and <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> for a pane beside. To <b>paste</b> a command, press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>, or right-click and choose Paste, or middle-click on text you have highlighted. A plain <kbd>Ctrl</kbd>+<kbd>V</kbd> does nothing in a terminal.</p></div>
+
+  <div class="callout"><span class="eyebrow">Read and watch, when you want more</span>
+    <p>A <a href="https://youtu.be/eGyMzv0ibW0" target="_blank" rel="noopener">short walkthrough video</a> shows the first steps, including the turtlesim demo you will do in the next module.</p>
+    <p>The book <b>ROS 2 from Scratch</b> (O'Reilly) is free with your WCU login: sign in to O'Reilly, choose <b>Affiliated with a school</b>, and search for the title. <span class="dl" style="display:inline;border:0;padding:0" id="vm-list">A YouTube playlist goes with the course: ask your instructor for the link.</span></p></div>
+
+  <label class="check"><input type="checkbox" id="vm-ok"><span>My virtual machine starts, I signed in, and I can open Terminator. (Tick this to mark the module done.)</span></label>
+
+  <div class="nav2"><span></span><button class="btn" data-go="1">Next: Run the turtle</button></div>
+</section>
+
+<section class="mod" id="m1" hidden data-title="Run the turtle">
+  <div><div class="eyebrow">Module 1 of 7 · about 25 minutes</div><h2>Run the turtle and drive it from the keyboard</h2></div>
+  <p class="lede">Turtlesim is a tiny robot simulator made for learning. A turtle sits on a blue floor and draws a line wherever it goes. It is a good first robot because you can see every command do something. In this module you start it, drive it by hand, and meet the two ideas the rest of the tutorial grows from: <b>programs that talk to each other</b>, and <b>one program per terminal</b>.</p>
+  <div class="goal"><b>By the end:</b> you can start turtlesim and the keyboard controller in two terminals, drive the turtle, and shut both down cleanly.</div>
+
+  <div class="callout"><span class="eyebrow">Do it in the VM</span>
+    <p><b>1.</b> Open Terminator and split it into two panes. <b>2.</b> In the first pane run:</p>
+<pre class="code">ros2 run turtlesim turtlesim_node</pre>
+    <p>A blue window with a turtle opens. The pane is now busy and prints messages. <b>3.</b> Click the second pane and run:</p>
+<pre class="code">ros2 run turtlesim turtle_teleop_key</pre>
+    <p><b>4.</b> With the second pane selected, press the arrow keys. The turtle moves and draws. Press <kbd>Q</kbd> to end the controller. Press <kbd>Ctrl</kbd>+<kbd>C</kbd> in the first pane to close the turtle window.</p>
+    <p>Not sure which ROS 2 release the VM has? Run <span class="mono">printenv ROS_DISTRO</span> and write down the name. The commands in this tutorial are the same on every recent release.</p></div>
+
+  <div class="callout"><span class="eyebrow">The keys</span>
+    <div class="keys">
+      <div><kbd>&uarr;</kbd><kbd>&darr;</kbd><span>forward and back at 2 units per second</span></div>
+      <div><kbd>&larr;</kbd><kbd>&rarr;</kbd><span>turn left and right at 2 radians per second</span></div>
+      <div><kbd>G</kbd><kbd>B</kbd><kbd>V</kbd><kbd>C</kbd><kbd>D</kbd><kbd>E</kbd><kbd>R</kbd><kbd>T</kbd><span>turn to a fixed heading: G is 0, then every 45 degrees around, so D is 180</span></div>
+      <div><kbd>F</kbd><span>cancel a turn that is in progress</span></div>
+      <div><kbd>Q</kbd><span>quit the controller</span></div>
+    </div></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 1 · Drive the turtle</b><span class="pill" id="l1-pill">0 of 7 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--ink2)">This is a practice copy that behaves like the real thing, so you can try it right here. Type a command and press Enter, or click a command below the terminals to fill the line. Teleop reads the keyboard only while its terminal is selected, so click in it first (the on-screen keys work too).</p>
+    <div id="l1-root"></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Why two terminals?</span>
+    <p>Each program stays running until you stop it, so each one needs its own terminal. They are separate programs. They do not share variables or windows. Yet pressing a key in one moves a turtle in the other. How? That is the next module.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 1</b><span class="pill" id="q1-pill">0 of 3 right</span></div><div class="lab-b" id="q1-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="0">Back</button><button class="btn" data-go="2">Next: Nodes and topics</button></div>
+</section>
+
+<section class="mod" id="m2" hidden data-title="Nodes and topics">
+  <div><div class="eyebrow">Module 2 of 7 · about 30 minutes</div><h2>Nodes, topics and messages</h2></div>
+  <p class="lede">A ROS 2 robot is not one big program. It is many small programs, called <b>nodes</b>, that each do one job and pass <b>messages</b> to each other along named channels called <b>topics</b>. Turtlesim is one node. The keyboard controller is another. They never talk to each other directly. They both talk to a topic.</p>
+  <div class="goal"><b>By the end:</b> you can name the node, topic and message in the turtle demo, and use four <span class="mono">ros2</span> commands to look inside a running system.</div>
+
+  <div class="callout"><span class="eyebrow">Four words</span>
+    <p><b>Node:</b> a running program that is part of the system. <b>Topic:</b> a named channel, like <span class="mono">/turtle1/cmd_vel</span>. <b>Message:</b> one piece of data sent on a topic, with a fixed layout called its <b>type</b>. <b>Publish and subscribe:</b> a node that sends on a topic <em>publishes</em>, and a node that listens <em>subscribes</em>. Neither needs to know who is at the other end.</p>
+    <svg class="wire" viewBox="0 0 640 170" role="img" aria-label="The teleop node publishes Twist messages on the topic /turtle1/cmd_vel, and the turtlesim node subscribes to it. Turtlesim also publishes its Pose on /turtle1/pose.">
+      <rect class="nodebox" x="10" y="20" width="150" height="50" rx="8"/><text x="85" y="50" text-anchor="middle">/teleop_turtle</text>
+      <rect class="topicbox" x="245" y="20" width="150" height="50" rx="25"/><text x="320" y="41" text-anchor="middle">/turtle1/cmd_vel</text><text class="dim" x="320" y="58" text-anchor="middle">Twist</text>
+      <rect class="nodebox" x="480" y="20" width="150" height="50" rx="8"/><text x="555" y="50" text-anchor="middle">/turtlesim</text>
+      <path class="flow" d="M160 45 H245"/><path class="flow" d="M395 45 H480"/>
+      <text class="dim" x="202" y="36" text-anchor="middle">publishes</text><text class="dim" x="438" y="36" text-anchor="middle">subscribes</text>
+      <rect class="topicbox" x="245" y="100" width="150" height="50" rx="25"/><text x="320" y="121" text-anchor="middle">/turtle1/pose</text><text class="dim" x="320" y="138" text-anchor="middle">Pose</text>
+      <path class="flow" d="M555 70 V125 H395"/><text class="dim" x="470" y="116" text-anchor="middle">publishes</text>
+      <path class="off" d="M245 125 H200"/><text class="dim" x="120" y="129" text-anchor="middle">nobody listens yet</text>
+    </svg></div>
+
+  <div class="callout"><span class="eyebrow">What is inside a Twist</span>
+    <p>The command message is <span class="mono">geometry_msgs/msg/Twist</span>. A twist is a velocity, in two parts: <b>linear</b> (how fast it moves along x, y and z) and <b>angular</b> (how fast it turns about x, y and z). A turtle on a flat floor uses only <b>linear.x</b>, the forward speed, and <b>angular.z</b>, the turn rate. The other four numbers are ignored. Speeds are per second: units per second for linear, radians per second for angular.</p>
+    <p>Turtlesim answers with a second message, <span class="mono">turtlesim/msg/Pose</span>: its x, y, heading (<span class="mono">theta</span>, in radians) and current speeds. Module 5 uses that feedback. On newer ROS 2 releases the turtle messages may be named <span class="mono">turtlesim_msgs/msg/...</span>. Your VM tells you the real name when you run <span class="mono">ros2 topic list -t</span>.</p></div>
+
+  <div class="callout"><span class="eyebrow">The commands that look inside</span>
+    <table>
+      <tr><th>Command</th><th>What it tells you</th></tr>
+      <tr><td class="mono">ros2 node list</td><td>every running node</td></tr>
+      <tr><td class="mono">ros2 node info /turtlesim</td><td>what that node publishes, subscribes to, and offers</td></tr>
+      <tr><td class="mono">ros2 topic list -t</td><td>every topic, with its message type</td></tr>
+      <tr><td class="mono">ros2 topic info /turtle1/cmd_vel</td><td>how many publishers and subscribers it has</td></tr>
+      <tr><td class="mono">ros2 interface show geometry_msgs/msg/Twist</td><td>the fields of a message type</td></tr>
+      <tr><td class="mono">ros2 topic echo /turtle1/cmd_vel</td><td>print every message as it passes. Stop with Ctrl+C</td></tr>
+      <tr><td class="mono">ros2 topic hz /turtle1/pose</td><td>how many messages a second arrive</td></tr>
+    </table></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 2 · Look inside the system</b><span class="pill" id="l2-pill">0 of 7 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--ink2)">The diagram under the turtle shows which nodes are running and which topics they use. Watch it change as you start things. Use all three terminals.</p>
+    <div id="l2-root"></div>
+  </div></div>
+
+  <details class="ask"><summary>For the mentor: what to ask</summary><p>Ask the student to predict the output of <span class="mono">ros2 topic info /turtle1/cmd_vel</span> before the teleop starts, and again after. They should say 0 publishers and 1 subscriber, then 1 and 1. Then ask: if you start a <em>second</em> teleop, what happens? (Both publish; the turtle obeys whichever message arrived last.)</p></details>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 2</b><span class="pill" id="q2-pill">0 of 3 right</span></div><div class="lab-b" id="q2-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="1">Back</button><button class="btn" data-go="3">Next: Publish from the terminal</button></div>
+</section>
+
+<section class="mod" id="m3" hidden data-title="Publish from the terminal">
+  <div><div class="eyebrow">Module 3 of 7 · about 35 minutes</div><h2>Drive the turtle with commands you type</h2></div>
+  <p class="lede">The teleop is only a node that publishes Twist messages when you press a key. You can publish the same messages yourself from the terminal. That is the fastest way to test a robot: send exactly the message you want and watch what happens. This module also meets the two other kinds of conversation ROS 2 has, <b>services</b> and <b>actions</b>.</p>
+  <div class="goal"><b>By the end:</b> you can move the turtle with <span class="mono">ros2 topic pub</span>, explain why it stops by itself, and use a service to clear the screen and lift the pen.</div>
+
+  <div class="callout"><span class="eyebrow">ros2 topic pub</span>
+<pre class="code">ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0}}"
+ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist "{angular: {z: 1.5708}}"
+ros2 topic pub -r 1 /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0}, angular: {z: 1.0}}"</pre>
+    <p>The pieces are: the topic name, the message type, and the message written as <b>YAML</b> inside double quotes. Fields you leave out are zero. <span class="mono">--once</span> sends one message and stops. <span class="mono">-r 1</span> sends one every second until you press <kbd>Ctrl</kbd>+<kbd>C</kbd>.</p>
+    <p>YAML is picky about one thing: after each colon you need a <b>space</b>. <span class="mono">{x: 2.0}</span> works. <span class="mono">{x:2.0}</span> does not.</p></div>
+
+  <div class="callout"><span class="eyebrow">Why does the turtle stop by itself?</span>
+    <p>Turtlesim obeys the last command it received and <b>forgets it after one second</b> without a new one. So <span class="mono">--once</span> with a forward speed of 2 moves the turtle about 2 units, then it stops. A safe habit for real robots too: a robot that stops when it hears nothing is a robot that does not run away.</p>
+    <p>A fast repeating message therefore gives continuous motion. A forward speed of 2 together with a turn rate of 1 for as long as you keep sending makes a circle of radius 2 (radius = speed / turn rate).</p></div>
+
+  <div class="callout"><span class="eyebrow">Three ways nodes talk</span>
+    <table>
+      <tr><th></th><th>Topic</th><th>Service</th><th>Action</th></tr>
+      <tr><td><b>Pattern</b></td><td>a stream, no reply</td><td>one request, one reply</td><td>a long job with progress and a result</td></tr>
+      <tr><td><b>Turtlesim example</b></td><td>/turtle1/cmd_vel</td><td>/clear, /turtle1/set_pen, /turtle1/teleport_absolute</td><td>/turtle1/rotate_absolute</td></tr>
+      <tr><td><b>Command</b></td><td class="mono">ros2 topic pub</td><td class="mono">ros2 service call</td><td class="mono">ros2 action send_goal</td></tr>
+    </table>
+<pre class="code">ros2 service call /clear std_srvs/srv/Empty
+ros2 service call /turtle1/set_pen turtlesim/srv/SetPen "{'off': 1}"
+ros2 service call /turtle1/teleport_absolute turtlesim/srv/TeleportAbsolute "{x: 2.0, y: 2.0, theta: 0.0}"
+ros2 action send_goal /turtle1/rotate_absolute turtlesim/action/RotateAbsolute "{theta: 3.14}"</pre>
+    <p>Notice <span class="mono">'off'</span> in quotes. In YAML a bare <span class="mono">off</span> means <em>false</em>, so ROS 2 rejects it as a field name. The quotes keep it a word. Find the types for yourself with <span class="mono">ros2 service list -t</span>.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 3 · Publish, call, and send a goal</b><span class="pill" id="l3-pill">0 of 8 missions</span></div>
+  <div class="lab-b">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--ink2)">Tip: the commands under the terminals are examples. Click one, change a number, and press Enter. If nothing moves, the practice terminal tells you why, just as <span class="mono">ros2 topic list -t</span> would in the VM.</p>
+    <div id="l3-root"></div>
+  </div></div>
+
+  <details class="ask"><summary>For the mentor: what to ask</summary><p>Ask: "You publish a forward command at 1 Hz and a turn command at 1 Hz from two terminals. What does the turtle do?" It alternates between the two, because each message replaces the last, so it never goes straight or turns for long. This is why one node should own one command stream.</p></details>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 3</b><span class="pill" id="q3-pill">0 of 3 right</span></div><div class="lab-b" id="q3-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="2">Back</button><button class="btn" data-go="4">Next: Write a node</button></div>
+</section>
+
+<section class="mod" id="m4" hidden data-title="Write a node">
+  <div><div class="eyebrow">Module 4 of 7 · about 45 minutes</div><h2>Write a node that draws a shape</h2></div>
+  <p class="lede">Typing commands one at a time does not scale. A node is a Python program that does the publishing for you, following a plan. You will read a short one, run it in the VM, and then change it to draw shapes of your own. The plan is a list of lines. Each line says: go this fast forward, turn this fast, for this many seconds.</p>
+  <div class="goal"><b>By the end:</b> you can run <span class="mono">simple_draw_shape.py</span>, explain each part of it, make it draw a square, a hexagon and a five-point star, and read the same program written as a class.</div>
+
+  <div class="callout"><span class="eyebrow">The script</span>
+    <p>This is the <b>simple version</b>: one function, plain loops, no classes. Copy it into a file called <span class="mono">simple_draw_shape.py</span> in the VM (open Sublime Text or VS Code, paste, save). Start turtlesim in one Terminator pane. Then in another pane, in the folder that holds the file, run <span class="mono">python3 simple_draw_shape.py</span>.</p>
+<pre class="code" data-py="simple_draw_shape.py">&quot;&quot;&quot;The simple version. Make the turtle draw a shape (square, triangle, star ...) by following a plan.
+
+Before you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node
+Then run this file:                                         python3 simple_draw_shape.py
+
+How it works, in four steps:
+  1. Build a PLAN. A plan is a list. Each item in the list is one instruction:
+         (forward speed, turn speed, how many seconds to keep doing it)
+  2. Connect to turtlesim. We make a ROS 2 node and a publisher, which is how we send messages.
+  3. Wait until turtlesim is listening.
+  4. Go through the plan one instruction at a time. For each instruction, send the same
+     command over and over (50 times a second) until its time is up.
+
+This is called OPEN LOOP: the program never looks at where the turtle really is.
+It only watches the clock and hopes the turtle did what it was told.
+&quot;&quot;&quot;
+import math
+import sys
+import time
+
+import rclpy
+from geometry_msgs.msg import Twist
+
+# ---------------- settings: change these and run again ----------------
+# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the
+# program, for example:  python3 simple_draw_shape.py turtle2
+TURTLE = sys.argv[1] if len(sys.argv) &gt; 1 else &#x27;turtle1&#x27;
+SIDES = 4            # 3 = triangle, 4 = square, 5 = pentagon, 6 = hexagon
+TURNS = 1            # 1 for an ordinary shape. SIDES = 5 with TURNS = 2 draws a five-point star
+SIDE_LENGTH = 2.0    # how long each side is, in turtlesim units
+SPEED = 2.0          # forward speed, in units per second
+TURN_RATE = 1.0      # turning speed, in radians per second (1 radian is about 57 degrees)
+SEND_EVERY = 0.02    # seconds between messages (0.02 means 50 messages a second)
+
+
+def make_plan():
+    &quot;&quot;&quot;Build the plan: a list of (forward speed, turn speed, seconds) instructions.&quot;&quot;&quot;
+    plan = []                                    # start with an empty list
+
+    # How far the turtle turns at each corner, in radians.
+    # A full circle is 2 * pi radians. For a square, SIDES is 4, so each turn is a quarter circle.
+    turn_angle = TURNS * 2 * math.pi / SIDES
+
+    # Repeat once for every side. side_number counts 0, 1, 2, 3 ... but we do not need
+    # its value. It is only there so the loop knows how many times to repeat.
+    for side_number in range(SIDES):
+        # Instruction 1: drive straight. Time = distance / speed.
+        plan.append((SPEED, 0.0, SIDE_LENGTH / SPEED))
+        # Instruction 2: turn on the spot. Time = angle / turn speed.
+        plan.append((0.0, TURN_RATE, turn_angle / TURN_RATE))
+
+    return plan
+
+
+def main():
+    # ---- Step 2: connect to ROS 2 ----
+    rclpy.init()                                                  # start ROS 2
+    node = rclpy.create_node(&#x27;shape_drawer&#x27;)                      # our program&#x27;s name in ROS 2
+    # A publisher sends messages to a topic. turtlesim listens on /turtle1/cmd_vel
+    # for messages of type Twist (a forward speed and a turn speed). The 10 is a queue size.
+    publisher = node.create_publisher(Twist, &#x27;/&#x27; + TURTLE + &#x27;/cmd_vel&#x27;, 10)
+
+    # ---- Step 3: wait until turtlesim is listening ----
+    # Programs need a moment to find each other. A message sent before turtlesim is
+    # connected is lost, and the first side of the shape would come out too short.
+    print(&#x27;Waiting for turtlesim...&#x27;)
+    while publisher.get_subscription_count() == 0:     # 0 means nobody is listening yet
+        time.sleep(0.1)                                # wait a tenth of a second, then check again
+
+    # ---- Step 4: follow the plan ----
+    plan = make_plan()
+    print(&#x27;Drawing... press Ctrl+C to stop.&#x27;)
+    try:
+        for line in plan:                              # take one instruction at a time
+            forward_speed, turn_speed, seconds = line  # split the three numbers into names
+
+            message = Twist()                          # an empty command: every value is 0.0
+            message.linear.x = forward_speed           # forward speed
+            message.angular.z = turn_speed             # turn speed (counter-clockwise is positive)
+
+            # Keep sending this same command until the time is up.
+            end_time = time.time() + seconds
+            while time.time() &lt; end_time:
+                publisher.publish(message)
+                time.sleep(SEND_EVERY)                 # pause, so we send 50 messages a second
+    except KeyboardInterrupt:                          # this happens when you press Ctrl+C
+        print(&#x27;Stopped.&#x27;)
+
+    publisher.publish(Twist())                         # a command of all zeros means &quot;stop&quot;
+    print(&#x27;Done.&#x27;)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre></div>
+
+  <div class="callout"><span class="eyebrow">Reading it, part by part</span>
+    <p><b>What is rclpy?</b> The name is short for <em>ROS Client Library for Python</em>. ROS 2 itself is built in C and C++ underneath. A client library is the doorway that lets a program in another language join the same network of nodes and topics that the <span class="mono">ros2</span> terminal commands use. There is a C++ version called <span class="mono">rclcpp</span>. Three calls matter in this script: <span class="mono">rclpy.init()</span> connects your program to ROS 2, <span class="mono">rclpy.create_node('shape_drawer')</span> gives it a name, and <span class="mono">rclpy.shutdown()</span> disconnects. Prove it to yourself: while the script runs, type <span class="mono">ros2 node list</span> in a third terminal and look for <span class="mono">/shape_drawer</span>.</p>
+    <p><b>The header.</b> The long comment at the top (between the triple quotes) says what the program does in four steps. Read it first. Every program should start that way.</p>
+    <p><b>Imports.</b> <span class="mono">rclpy</span> is the ROS 2 library for Python. <span class="mono">Twist</span> is the message type: a forward speed and a turn speed. <span class="mono">time</span> lets the program wait.</p>
+    <p><b>Settings.</b> All the numbers you will want to change sit at the top, with names. <span class="mono">SIDES = 5</span> with <span class="mono">TURNS = 2</span> makes the turn at each corner 2 &times; 360&deg; / 5 = 144&deg;, which joins every second corner and draws a star.</p>
+    <p><b>make_plan.</b> <span class="mono">plan = []</span> makes an empty <b>list</b>, like an empty shopping list. The <b>for loop</b> repeats once per side, and each time round <span class="mono">plan.append(...)</span> adds one item to the end of the list: first a forward line, then a turn line. The turn time is the angle divided by the turn rate. Try it by hand: a 90&deg; corner is 1.5708 radians, and at 1 rad/s that takes 1.5708 seconds.</p>
+    <p><b>Step 2 in main: connect.</b> <span class="mono">create_node</span> gives your program a name inside ROS 2. <span class="mono">create_publisher(Twist, '/turtle1/cmd_vel', 10)</span> makes the sending end of the topic from Module 2. The 10 is a queue size. You do not need to write a class for any of this.</p>
+    <p><b>Step 3: wait for turtlesim (the first kind of waiting).</b> Programs need a moment to find each other. A message sent before turtlesim is connected is lost, which would make the first side too short. This loop asks <span class="mono">get_subscription_count()</span> again and again, with a short sleep between asks, until someone is listening. It happens once, before anything is drawn.</p>
+    <p><b>Step 4: follow the plan (the second kind of waiting).</b> The outer <span class="mono">for</span> loop takes one line of the plan at a time. The inner <span class="mono">while</span> loop sends that line's command 50 times a second until its seconds are used up, then the outer loop moves on to the next line. This waiting happens once per line, all the way through the shape. An all-zero Twist at the end stops the turtle.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 4 · Design the plan, then watch it run</b><span class="pill" id="pe-pill">0 of 3 shapes</span></div>
+  <div class="lab-b">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--ink2)">The table is the plan. Edit a number, add or delete a row, or fill the table from a polygon recipe, then press Run. The turtle follows the plan by sending 50 commands a second, exactly as the script does. When it stops, the page measures the shape.</p>
+    <div class="tl"><div>
+      <canvas id="pe-cv" width="500" height="500" aria-label="The turtle drawing the plan"></canvas>
+      <div class="readout" id="pe-read" style="margin-top:8px"></div>
+      <div class="row" style="margin-top:8px"><button type="button" class="btn" id="pe-run">Run the plan</button><button type="button" class="btn ghost" id="pe-reset">Clear</button>
+        <label style="font-size:13px">Speed <select id="pe-speed"><option value="1">1&times;</option><option value="4" selected>4&times;</option><option value="12">12&times;</option></select></label></div>
+      <div class="out" id="pe-res" style="margin-top:8px" aria-live="polite"></div>
+    </div><div>
+      <div class="callout" style="margin-bottom:10px"><span class="eyebrow">Fill from a recipe</span>
+        <div class="grid2" style="margin-top:6px">
+          <label>Sides <input type="number" id="pe-n" value="5" min="3" max="12" step="1"></label>
+          <label>Turns <input type="number" id="pe-m" value="2" min="1" max="11" step="1"></label>
+          <label>Side length <input type="number" id="pe-side" value="2" min="0.5" max="4" step="0.1"></label>
+          <label>Speed <input type="number" id="pe-sp" value="2" min="0.2" max="4" step="0.1"></label>
+          <label>Turn rate <input type="number" id="pe-tr" value="1" min="0.2" max="3" step="0.1"></label>
+        </div>
+        <div class="row" style="margin-top:8px"><button type="button" class="btn ghost" id="pe-fill">Fill the table</button><span style="font-size:13px;color:var(--ink2)" id="pe-turn"></span></div></div>
+      <div style="overflow-x:auto"><table class="plan" id="pe-tbl"></table></div>
+      <div class="row" style="margin-top:8px"><button type="button" class="chip" id="pe-add">+ Add a row</button></div>
+    </div></div>
+    <div id="pe-goals" style="margin-top:10px"></div>
+    <details class="ask" style="margin-top:10px"><summary>Copy this plan into your script</summary>
+      <p>Replace the whole <span class="mono">make_plan</span> function in <span class="mono">simple_draw_shape.py</span> (or in <span class="mono">draw_shape.py</span>, below) with this:</p>
+<pre class="code" id="pe-code"></pre></details>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">The ROS way: the same program as a class</span>
+    <p>The simple version works, but almost every ROS 2 program you will read online is written differently: as a <b>class</b>. You need to be able to read that style, so here is the same program rewritten in it. It draws exactly the same shape.</p>
+    <p><b>A class in four ideas.</b></p>
+    <ol class="steps">
+      <li><b>A class bundles variables and functions that belong together.</b> Our <span class="mono">ShapeDrawer</span> keeps its plan, its place in the plan and its phase together, with the functions that use them. Functions that live inside a class are called <b>methods</b>.</li>
+      <li><b><span class="mono">self</span> means "this one".</b> Inside a method, <span class="mono">self.plan</span> is the plan belonging to this ShapeDrawer. Variables that start with <span class="mono">self.</span> are remembered between calls. Ordinary variables inside a method are forgotten when it ends.</li>
+      <li><b><span class="mono">__init__</span> runs once, when the object is made.</b> The line <span class="mono">node = ShapeDrawer()</span> in <span class="mono">main</span> makes one ShapeDrawer and runs its <span class="mono">__init__</span> to set everything up.</li>
+      <li><b><span class="mono">(Node)</span> after the class name means "is a kind of Node".</b> The class inherits everything a ROS node can do, such as <span class="mono">create_publisher</span> and <span class="mono">create_timer</span>. The line <span class="mono">super().__init__('shape_drawer')</span> lets Node do its own set-up and gives the node its name.</li>
+    </ol>
+    <p><b>Why do ROS programs do it this way?</b> In the simple version the program does the waiting itself with <span class="mono">time.sleep</span>, and nothing else can run in the meantime. In the class version <b>ROS 2 does the waiting</b>. You hand it a function with <span class="mono">create_timer(SEND_EVERY, self.on_timer)</span>, and it calls <span class="mono">on_timer</span> 50 times a second. A function that ROS calls for you like this is called a <b>callback</b>. Each call must do a little work and return quickly. Because the function starts from scratch each time, the object has to <em>remember</em> where it is, and that is what <span class="mono">self.phase</span> and <span class="mono">self.line_number</span> are for.</p>
+    <p>Save this as <span class="mono">draw_shape.py</span> and run it the same way. Compare it with the simple version, side by side.</p>
+<pre class="code" data-py="draw_shape.py">&quot;&quot;&quot;The ROS way: the same program as simple_draw_shape.py, written as a class with a timer.
+
+Before you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node
+Then run this file:                                         python3 draw_shape.py
+
+Most ROS 2 programs are written like this. Instead of one long function that waits, we write a
+CLASS (a bundle of variables and functions that belong together) and ask ROS 2 to call one of its
+functions, on_timer, 50 times a second. Each call does a tiny amount of work and returns, so ROS 2
+stays free to do other things between calls.
+
+Because on_timer runs again and again, the class remembers where it is in a variable called phase:
+  &#x27;waiting&#x27;  - turtlesim is not connected yet. Check again next time.   (the first kind of waiting)
+  &#x27;drawing&#x27;  - follow the plan, one line at a time.                     (the second kind of waiting)
+  &#x27;finished&#x27; - everything is done.
+&quot;&quot;&quot;
+import math
+import sys
+
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+
+# ---------------- settings: change these and run again ----------------
+# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the
+# program, for example:  python3 draw_shape.py turtle2
+TURTLE = sys.argv[1] if len(sys.argv) &gt; 1 else &#x27;turtle1&#x27;
+SIDES = 4            # 3 = triangle, 4 = square, 5 = pentagon, 6 = hexagon
+TURNS = 1            # 1 for an ordinary shape. SIDES = 5 with TURNS = 2 draws a five-point star
+SIDE_LENGTH = 2.0    # how long each side is, in turtlesim units
+SPEED = 2.0          # forward speed, in units per second
+TURN_RATE = 1.0      # turning speed, in radians per second (1 radian is about 57 degrees)
+SEND_EVERY = 0.02    # seconds between messages (0.02 means 50 messages a second)
+
+
+def make_plan():
+    &quot;&quot;&quot;Build the plan: a list of (forward speed, turn speed, seconds) instructions.&quot;&quot;&quot;
+    plan = []                                    # start with an empty list
+    turn_angle = TURNS * 2 * math.pi / SIDES     # how far to turn at each corner, in radians
+    for side_number in range(SIDES):             # repeat once per side
+        plan.append((SPEED, 0.0, SIDE_LENGTH / SPEED))          # drive straight
+        plan.append((0.0, TURN_RATE, turn_angle / TURN_RATE))   # turn on the spot
+    return plan
+
+
+class ShapeDrawer(Node):
+    &quot;&quot;&quot;A node is a program that is part of ROS 2. Putting (Node) after the name means:
+    ShapeDrawer is a kind of Node, so it gets everything a Node can do (create publishers, timers ...).&quot;&quot;&quot;
+
+    def __init__(self):
+        &quot;&quot;&quot;__init__ runs once, when we create a ShapeDrawer. It sets up the variables the class remembers.
+        &#x27;self&#x27; means &#x27;this ShapeDrawer&#x27;. self.plan is the plan that belongs to this one.&quot;&quot;&quot;
+        super().__init__(&#x27;shape_drawer&#x27;)                 # let Node do its own set-up first, and name us
+        self.publisher = self.create_publisher(Twist, &#x27;/&#x27; + TURTLE + &#x27;/cmd_vel&#x27;, 10)
+        self.plan = make_plan()
+        self.line_number = 0                             # which line of the plan we are on
+        self.line_started = None                         # the time that line began
+        self.phase = &#x27;waiting&#x27;
+        self.done = False
+        self.timer = self.create_timer(SEND_EVERY, self.on_timer)   # call on_timer 50 times a second
+
+    def on_timer(self):
+        &quot;&quot;&quot;ROS 2 calls this by itself, again and again. It only decides which phase we are in.&quot;&quot;&quot;
+        if self.phase == &#x27;waiting&#x27;:
+            self.wait_for_turtlesim()
+        elif self.phase == &#x27;drawing&#x27;:
+            self.follow_plan()
+
+    def wait_for_turtlesim(self):
+        &quot;&quot;&quot;Phase 1. Is anyone listening yet? If not, do nothing and try again next time.&quot;&quot;&quot;
+        if self.publisher.get_subscription_count() == 0:
+            return                                       # not connected yet, so leave and wait for the next call
+        self.line_started = self.get_clock().now()       # the first line starts now
+        self.phase = &#x27;drawing&#x27;
+
+    def follow_plan(self):
+        &quot;&quot;&quot;Phase 2. Send the command for the current plan line. Move to the next line when its time is up.&quot;&quot;&quot;
+        now = self.get_clock().now()
+        forward_speed, turn_speed, seconds = self.plan[self.line_number]
+        elapsed = (now - self.line_started).nanoseconds * 1e-9     # seconds since this line began
+
+        if elapsed &gt;= seconds:                           # this line is finished
+            self.line_number = self.line_number + 1      # move on to the next one
+            self.line_started = now
+            if self.line_number == len(self.plan):       # that was the last line
+                self.finish()
+                return
+            forward_speed, turn_speed, seconds = self.plan[self.line_number]
+
+        message = Twist()
+        message.linear.x = forward_speed
+        message.angular.z = turn_speed
+        self.publisher.publish(message)
+
+    def finish(self):
+        self.publisher.publish(Twist())                  # all zeros means &quot;stop&quot;
+        self.phase = &#x27;finished&#x27;
+        self.done = True
+        self.get_logger().info(&#x27;Done.&#x27;)
+
+
+def main():
+    rclpy.init()
+    node = ShapeDrawer()                                 # make one ShapeDrawer: this runs __init__
+    try:
+        while rclpy.ok() and not node.done:
+            rclpy.spin_once(node)                        # let ROS 2 call on_timer when it is due
+    except KeyboardInterrupt:                            # this happens when you press Ctrl+C
+        node.publisher.publish(Twist())
+        print(&#x27;Stopped.&#x27;)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre>
+    <p><b>Where did the two kinds of waiting go?</b> They are now two separate methods. <span class="mono">wait_for_turtlesim</span> runs while the phase is <span class="mono">'waiting'</span>, and once someone is listening it switches the phase to <span class="mono">'drawing'</span>. <span class="mono">follow_plan</span> runs while the phase is <span class="mono">'drawing'</span>: it works out how long the current line has run, moves to the next line when the time is up, and publishes. <span class="mono">on_timer</span> only decides which of the two to call.</p>
+    <p><b>Which should you write?</b> For a short program like this, the simple one is easier to read. For anything that has to do several things at once, such as listen to sensors, publish commands and answer service calls, the class style is how ROS 2 is meant to be used, and every official tutorial uses it.</p></div>
+
+  <div class="callout"><span class="eyebrow">What would a skeptical reviewer say?</span>
+    <p>"Your square does not quite close." True, and that is the point of Module 5. In a virtual machine the shape can come out tilted, with sides a little different and the end short of the start. That is normal for this script. Waiting with time.sleep always comes back a little late, a few to a few tens of milliseconds on a busy VM, and the plan counts seconds, not distance or angle. Each late tick adds a small error that is never corrected. Hold that thought.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 4</b><span class="pill" id="q4-pill">0 of 6 right</span></div><div class="lab-b" id="q4-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="3">Back</button><button class="btn" data-go="5">Next: Listen and correct</button></div>
+</section>
+
+<section class="mod" id="m5" hidden data-title="Listen and correct">
+  <div><div class="eyebrow">Module 5 of 7 · about 40 minutes</div><h2>Close the loop: listen to the pose</h2></div>
+  <p class="lede">The last script follows the clock and hopes. If a command arrives a little late, the turtle goes a little further or turns a little less, and the error stays in the drawing. A robot that can <b>measure</b> what it did can correct itself. Turtlesim publishes its pose, so a node can subscribe to it, compare the pose with the goal, and send a command that shrinks the difference. That is a <b>closed loop</b>, and it is the idea behind every controller.</p>
+  <div class="goal"><b>By the end:</b> you can explain the difference between open and closed loop, run <span class="mono">simple_draw_square_pose.py</span>, read the class version, and say when feedback is worth its extra code.</div>
+
+  <div class="callout"><span class="eyebrow">The script</span>
+    <p>Same way as before: save this simple version as <span class="mono">simple_draw_square_pose.py</span>, start turtlesim, and run it with <span class="mono">python3 simple_draw_square_pose.py</span>.</p>
+<pre class="code" data-py="simple_draw_square_pose.py">&quot;&quot;&quot;The simple version. Make the turtle draw a shape by LISTENING to where it is, instead of watching the clock.
+
+Before you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node
+Then run this file:                                         python3 simple_draw_square_pose.py
+
+Turtlesim keeps telling everyone where the turtle is: about 60 times a second it publishes
+a Pose message (x, y and heading) on the topic /turtle1/pose. This program subscribes to
+that topic. For every side of the shape it does two jobs:
+  - DRIVE: keep checking how far the turtle has travelled, and stop when it is far enough.
+  - TURN:  keep checking which way the turtle faces, and stop when it faces the new direction.
+
+This is called CLOSED LOOP: measure, compare with the goal, correct, repeat.
+Because we never count time, a late timer cannot add up to a crooked shape.
+&quot;&quot;&quot;
+import math
+import sys
+
+import rclpy
+from geometry_msgs.msg import Twist
+
+try:
+    from turtlesim_msgs.msg import Pose      # newer ROS 2 releases keep the turtlesim messages here
+except ImportError:
+    from turtlesim.msg import Pose           # older releases
+
+# ---------------- settings: change these and run again ----------------
+# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the
+# program, for example:  python3 simple_draw_square_pose.py turtle2
+TURTLE = sys.argv[1] if len(sys.argv) &gt; 1 else &#x27;turtle1&#x27;
+SIDES = 4                # 3 = triangle, 4 = square, 6 = hexagon ...
+SIDE_LENGTH = 2.0        # units
+MAX_SPEED = 2.0          # fastest forward speed, units per second
+MAX_TURN = 2.0           # fastest turning speed, radians per second
+SPEED_PER_UNIT = 3.0     # drive speed = this x the distance still to go, so it slows down near the goal
+TURN_PER_RADIAN = 4.0    # turn speed = this x the angle still to turn
+MIN_SPEED = 0.15         # never slower than this, or the turtle would crawl for ever
+MIN_TURN = 0.1
+DISTANCE_OK = 0.02       # close enough to the end of the side, in units
+ANGLE_OK = 0.01          # close enough to the new heading, in radians
+
+latest_pose = None       # the newest Pose message we have received (None until the first one arrives)
+
+
+def on_pose(message):
+    &quot;&quot;&quot;ROS calls this function by itself every time a new Pose message arrives.&quot;&quot;&quot;
+    global latest_pose                # &quot;global&quot; lets this function change the variable above
+    latest_pose = message
+
+
+def wrap(angle):
+    &quot;&quot;&quot;Turn any angle into the range -pi to +pi, the same range the turtle reports.
+    Without this, a heading of +3.1 and a goal of -3.1 would look 6.2 radians apart
+    when they are really only 0.08 radians apart.&quot;&quot;&quot;
+    return angle - 2 * math.pi * math.floor((angle + math.pi) / (2 * math.pi))
+
+
+def main():
+    rclpy.init()
+    node = rclpy.create_node(&#x27;square_drawer&#x27;)
+    publisher = node.create_publisher(Twist, &#x27;/&#x27; + TURTLE + &#x27;/cmd_vel&#x27;, 10)
+    node.create_subscription(Pose, &#x27;/&#x27; + TURTLE + &#x27;/pose&#x27;, on_pose, 10)   # call on_pose for every pose message
+
+    def read_pose():
+        &quot;&quot;&quot;Wait for ROS to deliver a message (up to 0.1 s), then return the newest pose.&quot;&quot;&quot;
+        rclpy.spin_once(node, timeout_sec=0.1)
+        return latest_pose
+
+    # Wait for the first pose, so we know where the turtle starts and which way it faces.
+    print(&#x27;Waiting for turtlesim...&#x27;)
+    pose = None
+    while pose is None:
+        pose = read_pose()
+    while publisher.get_subscription_count() == 0:    # also make sure turtlesim is listening for commands
+        pose = read_pose()
+    goal_heading = pose.theta         # the direction the next side should point in
+
+    print(&#x27;Drawing... press Ctrl+C to stop.&#x27;)
+    try:
+        for side_number in range(SIDES):             # once per side (side_number is only a counter)
+
+            # ---- DRIVE forward until we have gone SIDE_LENGTH ----
+            start_x, start_y = pose.x, pose.y        # remember where this side began
+            while True:
+                pose = read_pose()
+                travelled = math.hypot(pose.x - start_x, pose.y - start_y)
+                remaining = SIDE_LENGTH - travelled
+                if remaining &lt;= DISTANCE_OK:
+                    break                            # far enough: leave the drive loop
+                message = Twist()
+                speed = SPEED_PER_UNIT * remaining   # far away = fast, nearly there = slow
+                message.linear.x = min(MAX_SPEED, max(MIN_SPEED, speed))
+                publisher.publish(message)
+
+            # ---- TURN until the turtle faces the next direction ----
+            goal_heading = wrap(goal_heading + 2 * math.pi / SIDES)
+            while True:
+                pose = read_pose()
+                error = wrap(goal_heading - pose.theta)   # how far we still have to turn (+ or -)
+                if abs(error) &lt; ANGLE_OK:
+                    break                            # facing the right way: leave the turn loop
+                message = Twist()
+                rate = TURN_PER_RADIAN * abs(error)
+                rate = min(MAX_TURN, max(MIN_TURN, rate))
+                message.angular.z = math.copysign(rate, error)   # turn toward the goal, either way
+                publisher.publish(message)
+    except KeyboardInterrupt:                        # this happens when you press Ctrl+C
+        print(&#x27;Stopped.&#x27;)
+
+    publisher.publish(Twist())                       # all zeros means &quot;stop&quot;
+    print(&#x27;Done.&#x27;)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre></div>
+
+  <div class="callout"><span class="eyebrow">What changed</span>
+    <p><b>A subscription instead of a clock.</b> <span class="mono">create_subscription(Pose, '/turtle1/pose', on_pose, 10)</span> asks ROS 2 to call the function <span class="mono">on_pose</span> each time a pose message arrives, about 60 times a second. It stores the newest pose in <span class="mono">latest_pose</span>. The program never looks at a clock.</p>
+    <p><b>Two loops per side.</b> For every side the program runs a <em>drive</em> loop and then a <em>turn</em> loop. In the drive loop it measures the distance from where the side began and leaves the loop when it is within <span class="mono">DISTANCE_OK</span>. In the turn loop it compares the heading with the goal heading and leaves when it is within <span class="mono">ANGLE_OK</span>. Each loop ends because of a measurement, not because time ran out.</p>
+    <p><b>Proportional control.</b> The command is proportional to the error: speed = <span class="mono">SPEED_PER_UNIT</span> &times; distance still to go, capped at <span class="mono">MAX_SPEED</span>. Far away, it runs flat out. Near the goal, it slows down, which stops it overshooting. The minimum speed stops it creeping for ever.</p>
+    <p><b>wrap().</b> Headings jump from +&pi; to &minus;&pi;. Without wrapping, a goal of &minus;3.1 and a heading of +3.1 looks like an error of 6.2 radians instead of 0.08, and the turtle spins the long way round.</p></div>
+
+  <div class="callout"><span class="eyebrow">The ROS way: the same program as a class</span>
+    <p>As in Module 4, here is the same closed-loop program written the way ROS 2 code is usually written. Two things are new. The callback is a <b>method</b>, <span class="mono">self.on_pose</span>, and the loop disappears: ROS 2 calls <span class="mono">on_pose</span> every time a pose arrives, so that one method <em>is</em> the control loop. And the two <span class="mono">while True</span> loops become two phases, <span class="mono">'driving'</span> and <span class="mono">'turning'</span>, stored in <span class="mono">self.phase</span>, because the method has to remember between calls which job it is doing. Save it as <span class="mono">draw_square_pose.py</span>.</p>
+<pre class="code" data-py="draw_square_pose.py">&quot;&quot;&quot;The ROS way: the same program as simple_draw_square_pose.py, written as a class with a callback.
+
+Before you run this, start turtlesim in another terminal:   ros2 run turtlesim turtlesim_node
+Then run this file:                                         python3 draw_square_pose.py
+
+Turtlesim publishes the turtle&#x27;s pose (x, y, heading) about 60 times a second. This class
+subscribes to those messages. Each time one arrives, ROS 2 calls on_pose. That one function is
+the whole control loop: look at the pose, decide what to do, send a command.
+
+The class remembers where it is in a variable called phase:
+  &#x27;waiting&#x27;  - no pose has arrived yet, or turtlesim is not listening for commands yet.
+  &#x27;driving&#x27;  - go forward until we have travelled SIDE_LENGTH.
+  &#x27;turning&#x27;  - turn until we face the next direction.
+  &#x27;finished&#x27; - everything is done.
+This is CLOSED LOOP: every command is worked out from a measurement, never from a clock.
+&quot;&quot;&quot;
+import math
+import sys
+
+import rclpy
+from rclpy.node import Node
+from geometry_msgs.msg import Twist
+
+try:
+    from turtlesim_msgs.msg import Pose      # newer ROS 2 releases keep the turtlesim messages here
+except ImportError:
+    from turtlesim.msg import Pose           # older releases
+
+# ---------------- settings: change these and run again ----------------
+# Which turtle to drive. Normally turtle1. To drive a second turtle, give its name when you run the
+# program, for example:  python3 draw_square_pose.py turtle2
+TURTLE = sys.argv[1] if len(sys.argv) &gt; 1 else &#x27;turtle1&#x27;
+SIDES = 4                # 3 = triangle, 4 = square, 6 = hexagon ...
+SIDE_LENGTH = 2.0        # units
+MAX_SPEED = 2.0          # fastest forward speed, units per second
+MAX_TURN = 2.0           # fastest turning speed, radians per second
+SPEED_PER_UNIT = 3.0     # drive speed = this x the distance still to go, so it slows down near the goal
+TURN_PER_RADIAN = 4.0    # turn speed = this x the angle still to turn
+MIN_SPEED = 0.15         # never slower than this, or the turtle would crawl for ever
+MIN_TURN = 0.1
+DISTANCE_OK = 0.02       # close enough to the end of the side, in units
+ANGLE_OK = 0.01          # close enough to the new heading, in radians
+
+
+def wrap(angle):
+    &quot;&quot;&quot;Turn any angle into the range -pi to +pi, the same range the turtle reports.
+    Without this, a heading of +3.1 and a goal of -3.1 would look 6.2 radians apart
+    when they are really only 0.08 radians apart.&quot;&quot;&quot;
+    return angle - 2 * math.pi * math.floor((angle + math.pi) / (2 * math.pi))
+
+
+class SquareDrawer(Node):
+    &quot;&quot;&quot;A node is a program that is part of ROS 2. SquareDrawer is a kind of Node.&quot;&quot;&quot;
+
+    def __init__(self):
+        &quot;&quot;&quot;__init__ runs once, when we create a SquareDrawer. &#x27;self&#x27; means &#x27;this SquareDrawer&#x27;.&quot;&quot;&quot;
+        super().__init__(&#x27;square_drawer&#x27;)                # let Node do its own set-up first, and name us
+        self.publisher = self.create_publisher(Twist, &#x27;/&#x27; + TURTLE + &#x27;/cmd_vel&#x27;, 10)
+        self.subscription = self.create_subscription(Pose, &#x27;/&#x27; + TURTLE + &#x27;/pose&#x27;, self.on_pose, 10)
+        self.phase = &#x27;waiting&#x27;
+        self.side_number = 0         # how many sides are finished
+        self.start_x = 0.0           # where the current side began
+        self.start_y = 0.0
+        self.goal_heading = 0.0      # the direction the turtle should face
+        self.done = False
+
+    def on_pose(self, pose):
+        &quot;&quot;&quot;ROS 2 calls this by itself every time a Pose message arrives. &#x27;pose&#x27; is that message.&quot;&quot;&quot;
+        if self.phase == &#x27;waiting&#x27;:
+            self.wait_for_turtlesim(pose)
+        elif self.phase == &#x27;driving&#x27;:
+            self.drive(pose)
+        elif self.phase == &#x27;turning&#x27;:
+            self.turn(pose)
+
+    def wait_for_turtlesim(self, pose):
+        &quot;&quot;&quot;Phase 1. A pose has arrived. Is turtlesim also listening for commands?&quot;&quot;&quot;
+        if self.publisher.get_subscription_count() == 0:
+            return                                       # not yet: wait for the next pose
+        self.goal_heading = pose.theta                   # start from the way the turtle already faces
+        self.begin_side(pose)
+
+    def begin_side(self, pose):
+        &quot;&quot;&quot;Remember where this side starts, and switch to driving.&quot;&quot;&quot;
+        self.start_x = pose.x
+        self.start_y = pose.y
+        self.phase = &#x27;driving&#x27;
+
+    def drive(self, pose):
+        &quot;&quot;&quot;Phase 2. Go forward until we have travelled SIDE_LENGTH.&quot;&quot;&quot;
+        travelled = math.hypot(pose.x - self.start_x, pose.y - self.start_y)
+        remaining = SIDE_LENGTH - travelled
+        if remaining &lt;= DISTANCE_OK:                     # far enough: time to turn
+            self.goal_heading = wrap(self.goal_heading + 2 * math.pi / SIDES)
+            self.phase = &#x27;turning&#x27;
+            return
+        message = Twist()
+        speed = SPEED_PER_UNIT * remaining               # far away = fast, nearly there = slow
+        message.linear.x = min(MAX_SPEED, max(MIN_SPEED, speed))
+        self.publisher.publish(message)
+
+    def turn(self, pose):
+        &quot;&quot;&quot;Phase 3. Turn until the turtle faces the next direction.&quot;&quot;&quot;
+        error = wrap(self.goal_heading - pose.theta)     # how far we still have to turn (+ or -)
+        if abs(error) &lt; ANGLE_OK:                        # facing the right way
+            self.side_number = self.side_number + 1
+            if self.side_number == SIDES:
+                self.finish()
+            else:
+                self.begin_side(pose)
+            return
+        message = Twist()
+        rate = min(MAX_TURN, max(MIN_TURN, TURN_PER_RADIAN * abs(error)))
+        message.angular.z = math.copysign(rate, error)   # turn toward the goal, either way
+        self.publisher.publish(message)
+
+    def finish(self):
+        self.publisher.publish(Twist())                  # all zeros means &quot;stop&quot;
+        self.phase = &#x27;finished&#x27;
+        self.done = True
+        self.get_logger().info(&#x27;Done.&#x27;)
+
+
+def main():
+    rclpy.init()
+    node = SquareDrawer()                                # make one SquareDrawer: this runs __init__
+    try:
+        while rclpy.ok() and not node.done:
+            rclpy.spin_once(node)                        # let ROS 2 call on_pose when a pose arrives
+    except KeyboardInterrupt:                            # this happens when you press Ctrl+C
+        node.publisher.publish(Twist())
+        print(&#x27;Stopped.&#x27;)
+    node.destroy_node()
+    rclpy.shutdown()
+
+
+if __name__ == &#x27;__main__&#x27;:
+    main()</pre></div>
+
+  <div class="lab"><div class="lab-h"><b>LAB 5 · Late timers against feedback</b><span class="pill" id="cl-pill">0 of 3</span></div>
+  <div class="lab-b">
+    <p style="margin:0 0 10px;font-size:14px;color:var(--ink2)">Both scripts try to draw the same shape on the same turtle. <span style="color:#d1650f"><b>Orange</b></span> is the open-loop script from Module 4, run with the timer period you choose. <span style="color:#1b7a4b"><b>Green</b></span> is the closed-loop script. A real computer wakes timers a little late, so the jitter slider adds that. The closed loop here reads the pose at the turtle's own 16 ms rate, with the same jitter.</p>
+    <div class="tl"><div>
+      <canvas id="cl-cv" width="500" height="500" aria-label="The open-loop and closed-loop paths"></canvas>
+    </div><div>
+      <div class="grid2">
+        <label><span>Timer period <span class="v" id="cl-pv"></span></span><input type="range" id="cl-per" min="0.01" max="0.2" step="0.01" value="0.1"></label>
+        <label><span>Timer jitter <span class="v" id="cl-jv"></span></span><input type="range" id="cl-jit" min="0" max="0.08" step="0.01" value="0.04"></label>
+      </div>
+      <div class="row" style="margin-top:8px"><label style="font-size:14px">Sides <select id="cl-sides"><option>3</option><option selected>4</option><option>5</option><option>6</option><option>8</option></select></label><button type="button" class="btn ghost" id="cl-again">Run again with new jitter</button></div>
+      <table style="margin-top:10px"><tr><th></th><th style="color:#d1650f">Open loop</th><th style="color:#1b7a4b">Closed loop</th></tr>
+        <tr><td>Miss at the end (units)</td><td id="cl-oe" class="mono"></td><td id="cl-ce" class="mono"></td></tr>
+        <tr><td>Heading error</td><td id="cl-oh" class="mono"></td><td id="cl-ch" class="mono"></td></tr>
+        <tr><td>Time taken</td><td id="cl-ot" class="mono"></td><td id="cl-ct" class="mono"></td></tr></table>
+    </div></div>
+    <div id="cl-missions" style="margin-top:10px"></div>
+  </div></div>
+
+  <div class="callout"><span class="eyebrow">Run your code on the VM yourself</span>
+    <p>Lab 5 above is a simulation. Here is the real thing: two turtles in one turtlesim window, <span style="color:#d1650f"><b>orange</b></span> running <span class="mono">simple_draw_shape.py</span> and <span style="color:#1b7a4b"><b>green</b></span> running <span class="mono">simple_draw_square_pose.py</span>, drawing side by side so you can compare the squares with your own eyes. Use four terminal panes.</p>
+    <p><b>Pane 1.</b> Start turtlesim.</p>
+<pre class="code">ros2 run turtlesim turtlesim_node</pre>
+    <p><b>Pane 2.</b> Set the stage. The first command adds a second turtle on the right half of the window. The next two move turtle1 to the left half and wipe the line that move drew. The last two give each turtle its own pen colour. Services need the right message type, and it differs between ROS 2 releases, so if one of these says the type is not found, run <span class="mono">ros2 service type /spawn</span> and use what it prints (for example <span class="mono">turtlesim_msgs/srv/Spawn</span> instead of <span class="mono">turtlesim/srv/Spawn</span>).</p>
+<pre class="code">ros2 service call /spawn turtlesim/srv/Spawn "{x: 7.0, y: 4.0, theta: 0.0, name: 'turtle2'}"
+ros2 service call /turtle1/teleport_absolute turtlesim/srv/TeleportAbsolute "{x: 2.0, y: 4.0, theta: 0.0}"
+ros2 service call /clear std_srvs/srv/Empty
+ros2 service call /turtle1/set_pen turtlesim/srv/SetPen "{r: 209, g: 101, b: 15, width: 3, off: 0}"
+ros2 service call /turtle2/set_pen turtlesim/srv/SetPen "{r: 27, g: 122, b: 75, width: 3, off: 0}"</pre>
+    <p><b>Panes 3 and 4.</b> Start the orange script in one and the green script in the other. The word at the end of the second line tells the script which turtle to drive. Press Enter in both as close together as you can.</p>
+<pre class="code">python3 simple_draw_shape.py
+python3 simple_draw_square_pose.py turtle2</pre>
+    <p><b>What to look for.</b> Compare where each path ends against where it began. Then try to make the difference bigger: edit <span class="mono">SEND_EVERY = 0.02</span> in <span class="mono">simple_draw_shape.py</span> to <span class="mono">0.2</span>, clear the screen with <span class="mono">ros2 service call /clear std_srvs/srv/Empty</span>, move both turtles back to their starting spots, and run both again. Does the green square change? Why not? Then swap in the class versions (<span class="mono">python3 draw_shape.py</span> and <span class="mono">python3 draw_square_pose.py turtle2</span>) and check that they behave the same way.</p>
+    <p><b>An honest warning.</b> Both programs share one busy VM. That load is part of the experiment, but it also means your results will not match anyone else's exactly. Write down what you see, and ask the question the skeptical reviewer would ask: would I get the same picture on a second run?</p></div>
+
+  <div class="callout"><span class="eyebrow">When is feedback worth it?</span>
+    <p>If nothing disturbs the robot and the timing is exact, an open loop is simple and good enough. In the real world wheels slip, batteries sag and computers get busy. Feedback turns an unknown disturbance into a small error that is corrected on the next cycle. The price is a measurement and a few gains to tune. When you drive the robot arm in Tutorial C, the same pattern appears with joint angles in place of the turtle's pose.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 5</b><span class="pill" id="q5-pill">0 of 3 right</span></div><div class="lab-b" id="q5-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="4">Back</button><button class="btn" data-go="6">Next: When it goes wrong</button></div>
+</section>
+
+<section class="mod" id="m6" hidden data-title="When it goes wrong">
+  <div><div class="eyebrow">Module 6 of 7 · about 15 minutes</div><h2>When it goes wrong, and where to go next</h2></div>
+  <p class="lede">Most ROS 2 problems are small: a wrong name, a terminal that was never set up, a program left running. This page lists the usual suspects, a cheat sheet of everything you used, and a few good places to continue.</p>
+  <div class="goal"><b>By the end:</b> you can fix the three most common problems yourself and you know where to read more.</div>
+
+  <div class="callout"><span class="eyebrow">The usual suspects</span>
+    <table>
+      <tr><th>You see</th><th>Try</th></tr>
+      <tr><td class="mono">ros2: command not found</td><td>Open a fresh terminal. If it still happens, load the setup file: <span class="mono">source /opt/ros/&lt;your release&gt;/setup.bash</span>. Find your release name with <span class="mono">ls /opt/ros</span>.</td></tr>
+      <tr><td>The turtle does not move</td><td>Is <span class="mono">turtlesim_node</span> running? Does <span class="mono">ros2 topic list -t</span> show <span class="mono">/turtle1/cmd_vel</span> with the type <span class="mono">geometry_msgs/msg/Twist</span>? A typo in the topic name quietly makes a new, unused topic.</td></tr>
+      <tr><td>The turtle moves, then stops</td><td>That is the one-second command timeout. Publish again, or use <span class="mono">-r</span> for a stream.</td></tr>
+      <tr><td>Teleop keys do nothing</td><td>Click the teleop terminal first. It reads the keyboard only while selected.</td></tr>
+      <tr><td>"Oh no! I hit the wall!"</td><td>The turtle was clamped at the edge of the 11 by 11 world. Shrink the shape, or move it with <span class="mono">teleport_absolute</span> first.</td></tr>
+      <tr><td>Strange old behaviour</td><td>A program from earlier is still running in another pane. Run <span class="mono">ros2 node list</span> and stop duplicates with <kbd>Ctrl</kbd>+<kbd>C</kbd>.</td></tr>
+      <tr><td>Nothing pastes</td><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>V</kbd>, not <kbd>Ctrl</kbd>+<kbd>V</kbd>.</td></tr>
+      <tr><td>A Python error mentioning <span class="mono">turtlesim.msg</span> or <span class="mono">turtlesim_msgs</span></td><td>The Pose message moved packages in newer releases. <span class="mono">draw_square_pose.py</span> tries both. If you copied another script, change its import to match <span class="mono">ros2 topic list -t</span>.</td></tr>
+    </table></div>
+
+  <div class="callout"><span class="eyebrow">Cheat sheet</span>
+<pre class="code">ros2 run turtlesim turtlesim_node
+ros2 run turtlesim turtle_teleop_key
+ros2 node list                         ros2 node info /turtlesim
+ros2 topic list -t                     ros2 topic info /turtle1/cmd_vel
+ros2 topic echo /turtle1/pose          ros2 topic hz /turtle1/pose
+ros2 interface show geometry_msgs/msg/Twist
+ros2 topic pub --once|-r 1 TOPIC TYPE "{...}"
+ros2 service list -t                   ros2 service call NAME TYPE "{...}"
+ros2 action list -t                    ros2 action send_goal NAME TYPE "{...}"
+printenv ROS_DISTRO</pre></div>
+
+  <div class="callout"><span class="eyebrow">Where next</span>
+    <p><b>Tutorial C</b> (when it is ready) puts the two-joint arm from Tutorial A into this same publish-and-subscribe system and a Gazebo simulation. The turtle's <span class="mono">cmd_vel</span> becomes a joint trajectory, and its pose becomes joint states.</p>
+    <p>The official ROS 2 documentation has a beginner tutorial series that covers nodes, topics, services, actions and parameters in more depth. The book <b>ROS 2 from Scratch</b> (free with your WCU login, see Module 0) is a gentler second pass.</p>
+    <p><b>Try this next:</b> make the turtle draw a spiral by changing the speed or turn rate in every line of the plan. Then make a node that subscribes to the pose and publishes a command that keeps the turtle away from the wall.</p></div>
+
+  <div class="lab"><div class="lab-h"><b>CHECK · Module 6</b><span class="pill" id="q6-pill">0 of 3 right</span></div><div class="lab-b" id="q6-box"></div></div>
+
+  <div class="nav2"><button class="btn ghost" data-go="5">Back</button><button class="btn" data-go="7">Next: Sign off</button></div>
+</section>
+
+<section class="mod" id="m7" hidden data-title="Sign off">
+  <div><div class="eyebrow">Module 7 of 7 · about 10 minutes</div><h2>Sign off with your mentor</h2></div>
+  <p class="lede">The labs on this page tick themselves off. The steps in the VM you tick by hand, because only you can say they happened. Show this page to your mentor when it reads full.</p>
+  <div class="lab"><div class="lab-h"><b>Checklist</b><span class="pill" id="wk-pill">0 of 13</span></div>
+  <div class="lab-b">
+    <p style="margin:0 0 8px;font-size:14px;color:var(--ink2)"><b>Lab results</b> (filled in for you)</p>
+    <div id="wk-auto" style="display:flex;flex-direction:column;gap:8px"></div>
+    <p style="margin:14px 0 8px;font-size:14px;color:var(--ink2)"><b>In the VM</b> (tick when done)</p>
+    <div id="wk-list" style="display:flex;flex-direction:column;gap:8px"></div>
+    <div class="row" style="margin-top:14px"><button type="button" class="btn ghost" id="reset-all">Reset my progress</button><span style="font-size:13px;color:var(--ink2)">Progress is saved in this browser only.</span></div>
+  </div></div>
+  <div class="nav2"><button class="btn ghost" data-go="6">Back</button><span></span></div>
+</section>
+
+</main>
+</div>
+<script>
+'use strict';
+/* bcore.js: the turtlesim model, a tiny YAML reader, shape detection, and the two controllers. No DOM. Tested in node, then inlined into the page.
+   The rules come from the turtlesim source (ros/ros_tutorials, turtle.cpp, turtle_frame.cpp):
+   - the world is a square about 11.09 units on a side, the turtle starts in the middle facing +x
+   - an update runs every 16 ms; heading is updated first, then position moves along the new heading
+   - a velocity command is forgotten after 1 s without a new one
+   - heading is kept between -pi and +pi; a wall clamps the position
+   - the rotate_absolute action turns at exactly +-1 rad/s until within 0.02 rad */
+const TS={SIZE:11.088888888888889,DT:0.016,TIMEOUT:1.0,START:5.544444444444445};
+const PI2=Math.PI*2;
+function normAng(a){return a-PI2*Math.floor((a+Math.PI)/PI2);}
+function clampv(x,a,b){return Math.min(b,Math.max(a,x));}
+function mulberryB(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+
+/* ---------- the world ---------- */
+function makeWorld(){
+  return{t:0,
+    turtle:{x:TS.START,y:TS.START,th:0,lin:0,ang:0,lastCmd:-1e9,rot:null,pen:{on:true,r:255,g:255,b:255,w:3}},
+    trails:[],runs:[],mark:0,wallHits:0,wallMark:0,wallNote:null,path:0,cmds:0,onCmd:null,rotDone:0};
+}
+function cmdVel(w,lin,ang){const T=w.turtle;T.lin=lin;T.ang=ang;T.lastCmd=w.t;w.cmds++;if(w.onCmd)w.onCmd(lin,ang);}
+function penColor(p){return'rgb('+p.r+','+p.g+','+p.b+')';}
+function addSeg(w,x0,y0,x1,y1){
+  const P=w.turtle.pen;if(!P.on)return;
+  let tr=w.trails[w.trails.length-1];
+  if(!tr||tr.open===false||tr.color!==penColor(P)||tr.width!==P.w||tr.pts.length===0||Math.hypot(tr.pts[tr.pts.length-1][0]-x0,tr.pts[tr.pts.length-1][1]-y0)>1e-9){
+    tr={pts:[[x0,y0]],color:penColor(P),width:P.w,open:true};w.trails.push(tr);
+  }
+  tr.pts.push([x1,y1]);
+}
+function logRun(w,lin,ang,ox,oy,dx,dy,dth){
+  const T=w.turtle,e=1e-9;
+  const kind=(Math.abs(lin)<e&&Math.abs(ang)<e)?'idle':(Math.abs(ang)<e?(lin>0?'straight':'reverse'):(Math.abs(lin)<e?'turn':'curve'));
+  let r=w.runs[w.runs.length-1];
+  if(!r||r.kind!==kind){r={kind:kind,dist:0,turn:0,x0:ox,y0:oy,x1:ox,y1:oy,t0:w.t};w.runs.push(r);}
+  r.dist+=Math.hypot(dx,dy);r.turn+=dth;r.x1=T.x;r.y1=T.y;r.t1=w.t;
+}
+function worldTick(w){
+  const T=w.turtle,dt=TS.DT;w.t+=dt;
+  if(T.rot){
+    if(Math.abs(normAng(T.th-T.rot.goal))<0.02){T.rot=null;T.lin=0;T.ang=0;w.rotDone++;}
+    else{T.lin=0;T.ang=normAng(T.rot.goal-T.th)<0?-1:1;}
+  }else if(w.t-T.lastCmd>TS.TIMEOUT){T.lin=0;T.ang=0;}
+  const ox=T.x,oy=T.y,lin=T.lin,ang=T.ang;
+  T.th=normAng(T.th+ang*dt);
+  T.x+=Math.cos(T.th)*lin*dt;T.y+=Math.sin(T.th)*lin*dt;
+  const cx=clampv(T.x,0,TS.SIZE),cy=clampv(T.y,0,TS.SIZE);
+  if(cx!==T.x||cy!==T.y){w.wallHits++;w.wallNote={x:T.x,y:T.y};T.x=cx;T.y=cy;}
+  const dx=T.x-ox,dy=T.y-oy;w.path+=Math.hypot(dx,dy);
+  if(dx||dy)addSeg(w,ox,oy,T.x,T.y);
+  logRun(w,lin,ang,ox,oy,dx,dy,ang*dt);
+}
+function worldAdvance(w,sec){const n=Math.round(sec/TS.DT);for(let i=0;i<n;i++)worldTick(w);}
+function clearTrail(w){w.trails=[];w.mark=w.runs.length;w.wallMark=w.wallHits;}
+function resetWorld(w){const keep=w.onCmd;const n=makeWorld();for(const k in n)w[k]=n[k];w.onCmd=keep;}
+function teleportAbs(w,x,y,th){const T=w.turtle;addSeg(w,T.x,T.y,x,y);T.x=clampv(x,0,TS.SIZE);T.y=clampv(y,0,TS.SIZE);T.th=normAng(th);}
+function setPen(w,o){const P=w.turtle.pen;P.on=!o.off;if(o.off)return;P.r=o.r|0;P.g=o.g|0;P.b=o.b|0;if(o.width)P.w=o.width;}
+function rotateAbs(w,goal){w.turtle.rot={goal:normAng(goal)};}
+function poseOf(w){const T=w.turtle;return{x:T.x,y:T.y,theta:T.th,linear_velocity:Math.abs(T.lin),angular_velocity:T.ang};}
+
+/* ---------- shape detection from the run log ---------- */
+function detectShape(w){
+  const bad=why=>({ok:false,why:why});
+  if(w.wallHits>w.wallMark)return bad('the turtle hit the wall, which clamps its position. Clear the screen and start closer to the middle.');
+  let rs=w.runs.slice(w.mark).filter(r=>r.kind!=='idle');
+  rs=rs.filter(r=>!(r.kind==='straight'&&r.dist<0.02)&&!(r.kind==='turn'&&Math.abs(r.turn)<0.01));
+  if(rs.some(r=>r.kind==='curve'||r.kind==='reverse'))return bad('there is a curve or a reverse move in the drawing, so it is not made of straight sides and sharp turns.');
+  const m=[];
+  for(const r of rs){const p=m[m.length-1];if(p&&p.kind===r.kind){p.dist+=r.dist;p.turn+=r.turn;p.x1=r.x1;p.y1=r.y1;}else m.push(Object.assign({},r));}
+  while(m.length&&m[0].kind==='turn')m.shift();
+  while(m.length&&m[m.length-1].kind==='turn')m.pop();
+  const S=m.filter(r=>r.kind==='straight'),Tn=m.filter(r=>r.kind==='turn');
+  if(S.length<3)return bad('I count '+S.length+' straight side'+(S.length===1?'':'s')+'. A closed shape needs at least 3.');
+  const side=S.reduce((a,r)=>a+r.dist,0)/S.length;
+  for(const r of S)if(Math.abs(r.dist-side)>0.12*side)return bad('the sides are not the same length ('+S.map(r=>r.dist.toFixed(2)).join(', ')+'). Send the next command only after the last one has finished, because a new command replaces the old one.');
+  const tau=Tn.reduce((a,r)=>a+r.turn,0)/Math.max(1,Tn.length);
+  if(Math.abs(tau)<0.35)return bad('the turns are too small to close a shape.');
+  for(const r of Tn)if(Math.abs(r.turn-tau)>0.1*Math.abs(tau)+0.03)return bad('the turns are not all the same ('+Tn.map(r=>(r.turn*180/Math.PI).toFixed(0)+'°').join(', ')+').');
+  const n=S.length,mw=Math.round(n*Math.abs(tau)/PI2);
+  if(mw<1||Math.abs(n*Math.abs(tau)-PI2*mw)>0.2)return bad(n+' sides with a '+(Math.abs(tau)*180/Math.PI).toFixed(0)+'° turn at each corner does not add up to whole turns, so the shape does not close.');
+  const err=Math.hypot(S[0].x0-S[S.length-1].x1,S[0].y0-S[S.length-1].y1);
+  if(err>0.2*side+0.1)return bad('the end is '+err.toFixed(2)+' units from the start, so the shape is open.');
+  return{ok:true,n:n,m:mw,side:side,turnDeg:Math.abs(tau)*180/Math.PI,err:err,left:tau>0};
+}
+function curveTurns(w){let t=0;for(const r of w.runs.slice(w.mark))if(r.kind==='curve')t+=Math.abs(r.turn);return t/PI2;}
+
+/* ---------- a tiny reader for the YAML that "ros2 topic pub" takes ---------- */
+function parseFlow(s){
+  let i=0;const err=m=>{throw new Error(m);};
+  const ws=()=>{while(i<s.length&&/\s/.test(s[i]))i++;};
+  function val(){
+    ws();if(s[i]==='{')return obj();
+    const m=/^[^,}\]\s][^,}\]]*/.exec(s.slice(i));if(!m)err('expected a value at position '+i);
+    i+=m[0].length;const t=m[0].trim();
+    if(/^[-+]?(\d+\.?\d*|\.\d+)([eE][-+]?\d+)?$/.test(t))return +t;
+    if(t==='true')return true;if(t==='false')return false;
+    if(/^(['"]).*\1$/.test(t))return t.slice(1,-1);
+    return t;
+  }
+  function obj(){
+    i++;const o={};ws();if(s[i]==='}'){i++;return o;}
+    for(;;){
+      ws();const m=/^(['"]?)([A-Za-z_]\w*)\1/.exec(s.slice(i));if(!m)err('expected a field name at position '+i);
+      i+=m[0].length;ws();if(s[i]!==':')err("expected ':' after "+m[2]);
+      i++;if(i<s.length&&!/\s/.test(s[i])&&s[i]!=='{')err("YAML needs a space after ':' (write "+m[2]+": 1.0, not "+m[2]+":1.0)");
+      o[m[2]]=val();ws();
+      if(s[i]===','){i++;continue;}
+      if(s[i]==='}'){i++;return o;}
+      err("expected ',' or '}' at position "+i);
+    }
+  }
+  ws();if(s[i]!=='{')err('the message must start with { and end with }');
+  const v=obj();ws();if(i<s.length)err('unexpected text after the closing }');return v;
+}
+function twistFrom(o){
+  const ok={linear:1,angular:1},xyz={x:1,y:1,z:1};
+  for(const k in o){if(!ok[k])throw new Error("the Twist message has no field '"+k+"'. Its fields are linear and angular.");
+    if(typeof o[k]!=='object')throw new Error("'"+k+"' must be a group like {x: 1.0}");
+    for(const j in o[k])if(!xyz[j])throw new Error("'"+k+"' has no field '"+j+"'. Its fields are x, y and z.");}
+  const g=(a,b)=>((o[a]&&typeof o[a][b]==='number')?o[a][b]:0);
+  return{lx:g('linear','x'),ly:g('linear','y'),lz:g('linear','z'),ax:g('angular','x'),ay:g('angular','y'),az:g('angular','z')};
+}
+const fmtF=x=>{const s=String(x);return /[.eE]/.test(s)?s:s+'.0';};
+function twistYaml(t){return'linear:\n  x: '+fmtF(t.lx)+'\n  y: '+fmtF(t.ly)+'\n  z: '+fmtF(t.lz)+'\nangular:\n  x: '+fmtF(t.ax)+'\n  y: '+fmtF(t.ay)+'\n  z: '+fmtF(t.az)+'\n---';}
+function twistRepr(t){return'geometry_msgs.msg.Twist(linear=geometry_msgs.msg.Vector3(x='+fmtF(t.lx)+', y='+fmtF(t.ly)+', z='+fmtF(t.lz)+'), angular=geometry_msgs.msg.Vector3(x='+fmtF(t.ax)+', y='+fmtF(t.ay)+', z='+fmtF(t.az)+'))';}
+function poseYaml(p){const f=v=>fmtF(Math.fround(v));return'x: '+f(p.x)+'\ny: '+f(p.y)+'\ntheta: '+f(p.theta)+'\nlinear_velocity: '+f(p.linear_velocity)+'\nangular_velocity: '+f(p.angular_velocity)+'\n---';}
+
+/* ---------- timers, with the late wake-ups a real computer has ---------- */
+function makeSched(period,jit,rng){const s={period:period,jit:jit||0,rng:rng||Math.random,k:0,next:0};s.next=s.jit*s.rng();return s;}
+function schedDue(s,t){if(t+1e-12>=s.next){s.k++;s.next=s.k*s.period+s.jit*s.rng();return true;}return false;}
+
+/* ---------- controller 1: a list of (linear, angular, seconds), played by a timer. The same logic as draw_shape.py ---------- */
+function makePlanNode(plan){
+  let step=0,t0=null,done=false;
+  return{done:()=>done,tick(w){
+    if(done)return;const now=w.t;if(t0===null)t0=now;
+    let p=plan[step];
+    if(now-t0>=p[2]-1e-9){step++;t0=now;if(step>=plan.length){cmdVel(w,0,0);done=true;return;}p=plan[step];}
+    cmdVel(w,p[0],p[1]);
+  }};
+}
+function polygonPlan(sides,turns,sideLen,speed,turnRate){
+  const turn=turns*PI2/sides,plan=[];
+  for(let i=0;i<sides;i++){plan.push([speed,0,sideLen/speed]);plan.push([0,turnRate,turn/turnRate]);}
+  return plan;
+}
+/* ---------- controller 2: listens to the pose and corrects. The same logic as draw_square_pose.py ---------- */
+function makePoseSquare(o){
+  o=Object.assign({sides:4,side:2.0,speed:2.0,maxTurn:2.0,kd:3.0,ka:4.0,tolD:0.02,tolA:0.01,minV:0.15,minW:0.1},o||{});
+  let state='wait',start=null,goal=0,done=false,count=0;
+  return{done:()=>done,tick(w){
+    if(done)return;const p=poseOf(w);
+    if(state==='wait'){start=[p.x,p.y];goal=p.theta;state='forward';}
+    let lin=0,ang=0;
+    if(state==='forward'){
+      const rem=o.side-Math.hypot(p.x-start[0],p.y-start[1]);
+      if(rem<=o.tolD){state='turn';goal=normAng(goal+PI2/o.sides);}
+      else lin=Math.min(o.speed,Math.max(o.minV,o.kd*rem));
+    }
+    if(state==='turn'){
+      const e=normAng(goal-p.theta);
+      if(Math.abs(e)<o.tolA){count++;if(count>=o.sides){done=true;cmdVel(w,0,0);return;}state='forward';start=[p.x,p.y];}
+      else ang=Math.sign(e)*Math.min(o.maxTurn,Math.max(o.minW,o.ka*Math.abs(e)));
+    }
+    cmdVel(w,lin,ang);
+  }};
+}
+/* run a controller in virtual time and report how well the shape closed */
+function runOffline(node,period,jit,seed,maxT){
+  const w=makeWorld(),s=makeSched(period,jit,mulberryB(seed||1));maxT=maxT||40;
+  const start={x:w.turtle.x,y:w.turtle.y,th:w.turtle.th};
+  while(w.t<maxT){if(schedDue(s,w.t))node.tick(w);worldTick(w);if(node.done()&&Math.abs(w.turtle.lin)<1e-9&&w.t-w.turtle.lastCmd>0.05)break;}
+  worldAdvance(w,0.1);
+  return{world:w,t:w.t,endErr:Math.hypot(w.turtle.x-start.x,w.turtle.y-start.y),headErr:Math.abs(normAng(w.turtle.th-start.th))*180/Math.PI,done:node.done()};
+}
+if(typeof module!=='undefined')module.exports={TS,makeWorld,cmdVel,worldTick,worldAdvance,clearTrail,resetWorld,teleportAbs,setPen,rotateAbs,poseOf,detectShape,curveTurns,parseFlow,twistFrom,twistYaml,twistRepr,poseYaml,makeSched,schedDue,makePlanNode,polygonPlan,makePoseSquare,runOffline,normAng,mulberryB};
+
+/* ===== shared helpers, navigation, progress (Tutorial B) ===== */
+const $=id=>document.getElementById(id);
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const redraws=[];
+function reg(fn){redraws.push(fn);}
+function redrawAll(){for(const f of redraws){try{f();}catch(e){console.error(e);}}}
+function fit(cv,aspect){
+  const w=cv.clientWidth||(cv.parentNode&&cv.parentNode.clientWidth)||0;if(!w)return null;
+  const dpr=Math.min(window.devicePixelRatio||1,2),h=Math.round(w*aspect);
+  const pw=Math.round(w*dpr),ph=Math.round(h*dpr);
+  if(cv.width!==pw||cv.height!==ph){cv.width=pw;cv.height=ph;}
+  cv.style.height=h+'px';
+  const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  return{ctx:ctx,w:w,h:h};
+}
+const pillSet=(id,ok,txt)=>{const p=$(id);if(!p)return;p.textContent=txt;p.className='pill'+(ok?' ok':'');};
+const fin={};
+function finish(mod,lab,labs){fin[mod]=fin[mod]||{};fin[mod][lab]=1;if(labs.every(l=>fin[mod][l]))markDone(mod);}
+
+/* ---- progress ---- */
+const KEY='robotlab-tutB-v1';
+let prog={done:{},wk:{}};
+try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.done)prog=s;}catch(e){}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(prog));}catch(e){}}
+function markDone(i){if(!prog.done[i]){prog.done[i]=1;save();}updateRail();}
+
+/* ---- navigation ---- */
+const mods=Array.from(document.querySelectorAll('.mod'));
+let cur=0;
+let onProgress=null;
+const mid=i=>+mods[i].id.slice(1);
+const SIGNOFF=7;
+function buildRail(){
+  const rail=$('rail');
+  rail.innerHTML='<button class="railtog" id="rail-close" title="Hide the lesson list" aria-label="Hide the lesson list">&#9664;</button><div class="brand">Robot Lab<b>B · ROS 2 and the turtle</b></div><ol></ol><div class="prog"><span id="prog-t"></span><i><b id="prog-b"></b></i></div>';
+  (function(){const wrap=document.querySelector('.wrap');if(!wrap)return;
+    const op=document.createElement('button');op.className='railopen';op.id='rail-open';op.title='Show the lesson list';op.setAttribute('aria-label','Show the lesson list');op.innerHTML='&#9776;';op.hidden=true;document.body.appendChild(op);
+    const set=c=>{wrap.classList.toggle('railoff',c);op.hidden=!c;try{localStorage.setItem('railoffB',c?'1':'');}catch(e){}};
+    $('rail-close').addEventListener('click',()=>set(true));op.addEventListener('click',()=>{set(false);});
+    try{if(localStorage.getItem('railoffB')&&innerWidth>900)set(true);}catch(e){}})();
+  const ol=rail.querySelector('ol');
+  mods.forEach((m,i)=>{
+    const li=document.createElement('li');
+    li.innerHTML='<button type="button" data-i="'+i+'"><span class="n">'+i+'</span><span class="t"></span><span class="tick" aria-hidden="true">✓</span></button>';
+    li.querySelector('.t').textContent=m.dataset.title;
+    li.querySelector('button').addEventListener('click',()=>show(i));
+    ol.appendChild(li);
+  });
+}
+function updateRail(){
+  const btns=document.querySelectorAll('#rail ol button');
+  btns.forEach((b,i)=>{b.setAttribute('aria-current',i===cur?'true':'false');b.classList.toggle('done',!!prog.done[mid(i)]);});
+  let tot=0,n=0;for(let i=1;i<mods.length;i++){tot++;if(prog.done[mid(i)])n++;}
+  const t=$('prog-t'),b=$('prog-b');if(t)t.textContent=n+' of '+tot+' modules done';if(b)b.style.width=(n/tot*100)+'%';
+  if(onProgress)onProgress();
+}
+function show(i,noHash){
+  cur=Math.max(0,Math.min(mods.length-1,i));
+  mods.forEach((m,j)=>{m.hidden=(j!==cur);});
+  updateRail();
+  try{window.scrollTo({top:0});}catch(e){}
+  try{if(!noHash)history.replaceState(null,'','#m'+cur);}catch(e){}
+  requestAnimationFrame(redrawAll);
+}
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-go]');if(!g)return;const v=g.dataset.go;show(/^m\d+$/.test(v)?mods.findIndex(m=>m.id===v):+v);});
+document.addEventListener('click',e=>{const g=e.target.closest&&e.target.closest('[data-open]');if(!g)return;const d=document.getElementById(g.dataset.open);if(!d)return;d.open=true;try{d.scrollIntoView({behavior:'smooth',block:'center'});}catch(x){}d.style.outline='2px solid var(--accent)';setTimeout(()=>{d.style.outline='';},2500);});
+window.addEventListener('resize',()=>requestAnimationFrame(redrawAll));
+try{new MutationObserver(redrawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});}catch(e){}
+try{window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change',redrawAll);}catch(e){}
+function visible(k){const m=document.getElementById('m'+k);return !!m&&!m.hidden;}
+
+/* ---- a small multiple-choice quiz: quiz(containerId, pillId, moduleId, labName, labsList, questions) ---- */
+function quiz(box,pill,mod,lab,labs,qs){
+  const root=$(box);let right=0;const got={};
+  root.innerHTML=qs.map((q,i)=>'<div class="quiz" data-q="'+i+'"><div class="q">'+(i+1)+'. '+q.q+'</div>'+q.o.map((t,j)=>'<label class="opt"><input type="radio" name="'+box+i+'" value="'+j+'"><span>'+t+'</span></label>').join('')+'<div class="fb" aria-live="polite"></div></div>').join('<hr style="border:0;border-top:1px solid var(--rule);margin:10px 0">');
+  function count(){right=Object.keys(got).filter(k=>got[k]).length;pillSet(pill,right===qs.length,right+' of '+qs.length+' right');if(right===qs.length)finish(mod,lab,labs);}
+  root.addEventListener('change',e=>{
+    const el=e.target;if(el.type!=='radio')return;const qd=el.closest('.quiz'),i=+qd.dataset.q,j=+el.value,fb=qd.querySelector('.fb');
+    got[i]=(j===qs[i].a);fb.style.color=got[i]?'var(--ok)':'var(--bad)';fb.textContent=(got[i]?'Right. ':'Not quite. ')+qs[i].why[j];count();
+  });
+  count();
+}
+
+/* ===== the turtle window and the simulated terminals (Tutorial B) ===== */
+function drawTurtle(ctx,x,y,th,k,u,color){
+  const X=x*u,Y=(TS.SIZE-y)*u,s=k;
+  ctx.save();ctx.translate(X,Y);ctx.rotate(-th);
+  ctx.fillStyle='rgba(0,0,0,.28)';
+  for(const f of[[9,-15,-0.5],[9,15,0.5],[-10,-14,0.5],[-10,14,-0.5]]){ctx.beginPath();ctx.ellipse(f[0]*s,f[1]*s,8*s,4.5*s,f[2],0,6.283);ctx.fill();}
+  ctx.beginPath();ctx.moveTo(-15*s,0);ctx.lineTo(-24*s,-3*s);ctx.lineTo(-24*s,3*s);ctx.closePath();ctx.fill();
+  ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(0,0,17*s,14*s,0,0,6.283);ctx.fill();
+  ctx.beginPath();ctx.arc(21*s,0,6.5*s,0,6.283);ctx.fill();
+  ctx.strokeStyle='rgba(0,0,0,.35)';ctx.lineWidth=1.3*s;
+  ctx.beginPath();ctx.ellipse(0,0,10*s,8*s,0,0,6.283);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-17*s,0);ctx.lineTo(17*s,0);ctx.moveTo(0,-14*s);ctx.lineTo(0,14*s);ctx.stroke();
+  ctx.fillStyle='#111';ctx.beginPath();ctx.arc(23*s,-2.5*s,1.2*s,0,6.283);ctx.arc(23*s,2.5*s,1.2*s,0,6.283);ctx.fill();
+  ctx.restore();
+}
+/* o.running false: the window is closed. o.extra: more trails to draw, [{trails, color}]. o.turtles: [{x,y,th,color}] to draw instead of the world's own turtle. */
+function drawTurtleWorld(cv,w,o){
+  o=o||{};const F=fit(cv,1);if(!F)return;
+  const ctx=F.ctx,S=F.w,k=S/500,u=S/TS.SIZE;
+  ctx.fillStyle=o.running===false?'#26262e':'#4556ff';ctx.fillRect(0,0,S,S);
+  if(o.running===false){
+    ctx.fillStyle='#b9b4c8';ctx.font=Math.max(12,13*k*1.2)+'px '+css('--font-m');ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('Nothing is running yet, so this window is grey.',S/2,S/2-10);ctx.fillText('Start turtlesim_node to open it.',S/2,S/2+12);return;
+  }
+  ctx.lineCap='round';ctx.lineJoin='round';
+  const stroke=(tr,col,wd)=>{if(tr.pts.length<2)return;ctx.strokeStyle=col||tr.color;ctx.lineWidth=(wd||tr.width)*k;ctx.beginPath();tr.pts.forEach((p,i)=>{const px=p[0]*u,py=(TS.SIZE-p[1])*u;i?ctx.lineTo(px,py):ctx.moveTo(px,py);});ctx.stroke();};
+  for(const e of(o.extra||[]))for(const tr of e.trails)stroke(tr,e.color,e.width);
+  for(const tr of w.trails)stroke(tr);
+  if(o.turtles)for(const t of o.turtles)drawTurtle(ctx,t.x,t.y,t.th,k,u,t.color||'#3fae49');
+  else drawTurtle(ctx,w.turtle.x,w.turtle.y,w.turtle.th,k,u,'#3fae49');
+}
+
+const TOPICS={
+  '/parameter_events':'rcl_interfaces/msg/ParameterEvent',
+  '/rosout':'rcl_interfaces/msg/Log',
+  '/turtle1/cmd_vel':'geometry_msgs/msg/Twist',
+  '/turtle1/color_sensor':'turtlesim/msg/Color',
+  '/turtle1/pose':'turtlesim/msg/Pose'
+};
+const SERVICES=[['/clear','std_srvs/srv/Empty'],['/kill','turtlesim/srv/Kill'],['/reset','std_srvs/srv/Empty'],['/spawn','turtlesim/srv/Spawn'],['/turtle1/set_pen','turtlesim/srv/SetPen'],['/turtle1/teleport_absolute','turtlesim/srv/TeleportAbsolute'],['/turtle1/teleport_relative','turtlesim/srv/TeleportRelative']];
+const KEYMAP={g:0,t:0.7854,r:1.5708,e:2.3562,d:3.1416,c:-2.3562,v:-1.5708,b:-0.7854};
+const TELEOP_HELP='Reading from keyboard\n---------------------------\nUse arrow keys to move the turtle.\nUse g|b|v|c|d|e|r|t keys to rotate to absolute orientations. \'f\' to cancel a rotation.\n\'q\' to quit.';
+
+/* opt: {panes, chips:[cmd], missions:[{k,t,ok:(S,W)=>bool}], title, graph:true, keypad:true, onDone:()=>void} */
+function rosLab(p,opt){
+  const root=$(p+'-root'),W=makeWorld(),S={t:0,f:{},n:0},panes=[],done={};
+  const N=opt.panes||2;
+  root.innerHTML='<div class="callout" id="'+p+'-next" style="margin-bottom:12px;border-color:var(--accent);background:var(--accent-soft)" aria-live="polite"></div><div class="tl"><div><canvas id="'+p+'-cv" width="500" height="500" aria-label="The turtlesim window"></canvas>'+
+    '<div class="readout" id="'+p+'-read" style="margin-top:8px"></div>'+
+    '<div class="row" style="margin-top:8px"><button type="button" class="chip" id="'+p+'-reset">Reset the lab</button></div></div>'+
+    '<div class="panes" id="'+p+'-panes"></div></div>'+
+    (opt.keypad?'<div class="row" id="'+p+'-keys" style="margin-top:10px"><span class="legendline">On-screen keys for the teleop terminal:</span>'+[['↑','up'],['↓','down'],['←','left'],['→','right'],['G','g'],['T','t'],['R','r'],['E','e'],['D','d'],['C','c'],['V','v'],['B','b'],['F','f'],['Q','q']].map(k=>'<button type="button" class="chip" data-k="'+k[1]+'">'+k[0]+'</button>').join('')+'</div>':'')+
+    (opt.graph?'<div class="graph" id="'+p+'-graph" style="margin-top:10px"></div>':'')+
+    '<div class="chips" id="'+p+'-chips" style="margin-top:10px"></div><div id="'+p+'-missions" style="margin-top:8px"></div>';
+  const pbox=$(p+'-panes');
+  for(let i=0;i<N;i++){
+    const d=document.createElement('div');d.className='pane';d.id=p+'-pane'+i;
+    d.innerHTML='<div class="pane-h"><span>Terminal '+(i+1)+'</span><span class="pst" id="'+p+'-pst'+i+'">ready</span><button type="button" class="chip" data-stop="'+i+'" title="Stop the program in this terminal">Ctrl+C</button></div><div class="term" role="log" aria-live="off"></div><div class="termin"><span>$</span><input type="text" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal '+(i+1)+' command line" placeholder="type a command, press Enter"></div>';
+    pbox.appendChild(d);
+    panes.push({i:i,el:d,out:d.querySelector('.term'),inp:d.querySelector('input'),inbox:d.querySelector('.termin'),st:$(p+'-pst'+i),proc:null,hist:[],hi:0,lines:0});
+  }
+  const stamp=()=>(Date.now()/1000).toFixed(9);
+  function print(pn,text,cls){const sp=document.createElement('span');if(cls)sp.className=cls;sp.textContent=text+'\n';pn.out.appendChild(sp);pn.lines++;
+    if(pn.lines>400){while(pn.out.childNodes.length>300){pn.out.removeChild(pn.out.firstChild);}pn.lines=300;}
+    pn.out.scrollTop=pn.out.scrollHeight;}
+  const running=t=>panes.some(q=>q.proc&&q.proc.type===t);
+  const turtleUp=()=>running('turtlesim');
+  function status(pn){pn.st.textContent=pn.proc?('running: '+pn.proc.label):'ready';pn.inbox.classList.toggle('busy',!!pn.proc);pn.inp.placeholder=pn.proc?(pn.proc.type==='teleop'?'click here, then use the arrow keys':'a program is running. Press Ctrl+C to stop it'):'type a command, press Enter';}
+  function topicsNow(){
+    const L=['/parameter_events','/rosout'];
+    if(turtleUp())L.push('/turtle1/cmd_vel','/turtle1/color_sensor','/turtle1/pose');
+    else if(running('teleop'))L.push('/turtle1/cmd_vel');
+    for(const q of panes)if(q.proc&&q.proc.type==='pub'&&!L.includes(q.proc.topic))L.push(q.proc.topic);
+    return L.sort();
+  }
+  const typeOf=t=>TOPICS[t]||(panes.some(q=>q.proc&&q.proc.type==='pub'&&q.proc.topic===t)?panes.find(q=>q.proc&&q.proc.type==='pub'&&q.proc.topic===t).proc.mtype:'');
+  function subsOn(t){let n=0;if(turtleUp()&&t==='/turtle1/cmd_vel')n++;for(const q of panes)if(q.proc&&q.proc.type==='echo'&&q.proc.topic===t)n++;return n;}
+  function pubsOn(t){let n=0;if(running('teleop')&&t==='/turtle1/cmd_vel')n++;for(const q of panes)if(q.proc&&q.proc.type==='pub'&&q.proc.topic===t)n++;if(turtleUp()&&t==='/turtle1/pose')n++;return n;}
+  /* a message goes out on a topic: the turtle obeys a Twist on its topic, and any echo on that topic prints it */
+  function deliver(topic,mtype,msg,src){
+    let hit=0;
+    if(topic==='/turtle1/cmd_vel'&&mtype==='geometry_msgs/msg/Twist'){
+      if(turtleUp()){cmdVel(W,msg.lx,msg.az);hit++;}
+      for(const q of panes)if(q.proc&&q.proc.type==='echo'&&q.proc.topic===topic){print(q,twistYaml(msg));q.proc.count++;S.f.echoCmd=(S.f.echoCmd||0)+1;hit++;}
+    }
+    return hit;
+  }
+  function stop(pn,quiet){
+    const pr=pn.proc;if(!pr)return;
+    if(!quiet)print(pn,'^C','d');
+    if(pr.type==='turtlesim'){print(pn,'[INFO] ['+stamp()+'] [rclcpp]: signal_handler(signum=2)','d');S.f.turtleStopped=true;}
+    if(pr.type==='teleop'&&!quiet)S.f.teleopStopped=true;
+    if(pr.type==='pub')S.f.pubStopped=true;
+    pn.proc=null;status(pn);refresh();
+  }
+  function startProc(pn,pr){pn.proc=pr;pr.label=pr.label||pr.type;status(pn);refresh();}
+  function twistFromKey(key){
+    if(key==='ArrowUp')return{lx:2,ly:0,lz:0,ax:0,ay:0,az:0};
+    if(key==='ArrowDown')return{lx:-2,ly:0,lz:0,ax:0,ay:0,az:0};
+    if(key==='ArrowLeft')return{lx:0,ly:0,lz:0,ax:0,ay:0,az:2};
+    if(key==='ArrowRight')return{lx:0,ly:0,lz:0,ax:0,ay:0,az:-2};
+    return null;
+  }
+  function teleopKey(pn,key){
+    const k=key.length===1?key.toLowerCase():key;
+    const tw=twistFromKey(k);
+    if(tw){deliver('/turtle1/cmd_vel','geometry_msgs/msg/Twist',tw,pn);S.f.teleopSent=(S.f.teleopSent||0)+1;return true;}
+    if(k==='q'){print(pn,'q','d');stop(pn,true);S.f.teleopQuit=true;S.f.teleopStopped=true;return true;}
+    if(k==='f'){if(turtleUp()){W.turtle.rot=null;}return true;}
+    if(KEYMAP[k]!==undefined){if(turtleUp()){rotateAbs(W,KEYMAP[k]);S.f.rotKeys=(S.f.rotKeys||0)+1;}return true;}
+    return false;
+  }
+  /* ---------- the commands ---------- */
+  const HELP='This sandbox understands:\n  ros2 run turtlesim turtlesim_node\n  ros2 run turtlesim turtle_teleop_key\n  ros2 node list | ros2 node info /turtlesim\n  ros2 topic list [-t] | info | echo | hz | pub\n  ros2 interface show geometry_msgs/msg/Twist\n  ros2 service list [-t] | ros2 service call ...\n  ros2 action list [-t] | ros2 action send_goal ...\n  ros2 pkg executables turtlesim\n  printenv ROS_DISTRO | clear\nUse the up and down arrow keys for earlier commands.';
+  function run(pn,line){
+    const toks=line.match(/"[^"]*"|'[^']*'|\S+/g)||[];if(!toks.length)return;
+    S.n++;
+    const unq=s=>/^(["']).*\1$/.test(s)?s.slice(1,-1):s;
+    if(toks[0]==='clear'||toks[0]==='cls'){pn.out.textContent='';pn.lines=0;return;}
+    if(toks[0]==='help'){print(pn,HELP,'d');return;}
+    if(toks[0]==='printenv'||(toks[0]==='echo'&&toks[1]==='$ROS_DISTRO')){
+      if(toks[0]==='echo'||toks[1]==='ROS_DISTRO'){print(pn,'jazzy');print(pn,'(Your VM prints the name of its own release. Whatever it prints, write it down.)','d');S.f.distro=true;}return;}
+    if(toks[0]!=='ros2'){print(pn,'bash: '+toks[0]+': command not found. Type help for the commands this sandbox knows.','e');return;}
+    const a=toks[1],b=toks[2];
+    if(a==='run'){
+      if(toks[2]!=='turtlesim'){print(pn,'Package \''+(toks[2]||'')+'\' not found. This sandbox has only turtlesim.','e');return;}
+      const ex=toks[3];
+      if(ex==='turtlesim_node'){
+        if(turtleUp()){print(pn,'A turtlesim window is already open from another terminal. This sandbox allows one.','d');return;}
+        resetWorld(W);S.f.turtleStopped=false;
+        startProc(pn,{type:'turtlesim',label:'turtlesim_node'});
+        print(pn,'[INFO] ['+stamp()+'] [turtlesim]: Starting turtlesim with node name /turtlesim');
+        print(pn,'[INFO] ['+stamp()+'] [turtlesim]: Spawning turtle [turtle1] at x=[5.544445], y=[5.544445], theta=[0.000000]');
+        S.f.turtleStarted=true;return;}
+      if(ex==='turtle_teleop_key'){
+        if(running('teleop')){print(pn,'The teleop is already running in another terminal.','d');return;}
+        startProc(pn,{type:'teleop',label:'turtle_teleop_key'});print(pn,TELEOP_HELP);S.f.teleopStarted=true;pn.inp.focus();return;}
+      if(ex==='draw_square'||ex==='mimic'){print(pn,ex+' is a real turtlesim program, but this sandbox does not run it. Try it in your VM.','d');return;}
+      print(pn,'No executable found','e');return;}
+    if(a==='pkg'&&b==='executables'){
+      if(toks[3]==='turtlesim'){print(pn,'turtlesim draw_square\nturtlesim mimic\nturtlesim turtle_teleop_key\nturtlesim turtlesim_node');S.f.executables=true;}
+      else print(pn,'Only turtlesim is available in this sandbox.','e');return;}
+    if(a==='node'&&b==='list'){
+      const L=[];if(running('teleop'))L.push('/teleop_turtle');if(turtleUp())L.push('/turtlesim');
+      if(L.length){print(pn,L.join('\n'));if(turtleUp())S.f.nodeList=true;}else print(pn,'(nothing printed: no ROS 2 node is running yet)','d');return;}
+    if(a==='node'&&b==='info'){
+      const nm=toks[3];
+      if(nm==='/turtlesim'&&turtleUp()){print(pn,'/turtlesim\n  Subscribers:\n    /parameter_events: rcl_interfaces/msg/ParameterEvent\n    /turtle1/cmd_vel: geometry_msgs/msg/Twist\n  Publishers:\n    /parameter_events: rcl_interfaces/msg/ParameterEvent\n    /rosout: rcl_interfaces/msg/Log\n    /turtle1/color_sensor: turtlesim/msg/Color\n    /turtle1/pose: turtlesim/msg/Pose\n  Service Servers:\n    /clear: std_srvs/srv/Empty\n    /kill: turtlesim/srv/Kill\n    /reset: std_srvs/srv/Empty\n    /spawn: turtlesim/srv/Spawn\n    /turtle1/set_pen: turtlesim/srv/SetPen\n    /turtle1/teleport_absolute: turtlesim/srv/TeleportAbsolute\n    /turtle1/teleport_relative: turtlesim/srv/TeleportRelative\n    (parameter services left out)\n  Action Servers:\n    /turtle1/rotate_absolute: turtlesim/action/RotateAbsolute');S.f.nodeInfo=true;}
+      else if(nm==='/teleop_turtle'&&running('teleop')){print(pn,'/teleop_turtle\n  Subscribers:\n    /parameter_events: rcl_interfaces/msg/ParameterEvent\n  Publishers:\n    /parameter_events: rcl_interfaces/msg/ParameterEvent\n    /rosout: rcl_interfaces/msg/Log\n    /turtle1/cmd_vel: geometry_msgs/msg/Twist\n  Action Clients:\n    /turtle1/rotate_absolute: turtlesim/action/RotateAbsolute\n    (parameter services left out)');S.f.nodeInfo=true;}
+      else print(pn,'Unable to find node \''+(nm||'')+'\'. Is it running? Check with ros2 node list.','e');return;}
+    if(a==='topic'){
+      if(b==='list'){const t=toks.includes('-t');print(pn,topicsNow().map(x=>x+(t?' ['+typeOf(x)+']':'')).join('\n'));S.f.topicList=true;if(t)S.f.topicListT=true;return;}
+      if(b==='info'){const tp=toks[3];
+        if(!tp||!topicsNow().includes(tp)){print(pn,'Unknown topic \''+(tp||'')+'\'','e');return;}
+        print(pn,'Type: '+typeOf(tp)+'\nPublisher count: '+pubsOn(tp)+'\nSubscription count: '+subsOn(tp));S.f.topicInfo=true;return;}
+      if(b==='echo'){const tp=toks[3];
+        if(!tp){print(pn,'usage: ros2 topic echo TOPIC','e');return;}
+        if(!topicsNow().includes(tp))print(pn,'WARNING: topic ['+tp+'] does not appear to be published yet\nCould not determine the type for passed topic','e');
+        startProc(pn,{type:'echo',topic:tp,label:'topic echo '+tp,count:0,next:S.t});
+        if(tp==='/turtle1/pose')print(pn,'(The real tool prints about 60 messages a second. The sandbox shows 4 a second.)','d');return;}
+      if(b==='hz'){const tp=toks[3];
+        if(!tp){print(pn,'usage: ros2 topic hz TOPIC','e');return;}
+        if(!topicsNow().includes(tp)||tp!=='/turtle1/pose'||!turtleUp()){print(pn,'WARNING: topic ['+tp+'] does not appear to be published yet','e');}
+        startProc(pn,{type:'hz',topic:tp,label:'topic hz '+tp,next:S.t+1});return;}
+      if(b==='pub'){return pubCmd(pn,toks.slice(3),unq);}
+    }
+    if(a==='interface'&&b==='show'){
+      if(toks[3]==='geometry_msgs/msg/Twist'){print(pn,'# This expresses velocity in free space broken into its linear and angular parts.\n\nVector3  linear\n\tfloat64 x\n\tfloat64 y\n\tfloat64 z\nVector3  angular\n\tfloat64 x\n\tfloat64 y\n\tfloat64 z');S.f.interface=true;}
+      else if(toks[3]==='turtlesim/msg/Pose'){print(pn,'float32 x\nfloat32 y\nfloat32 theta\n\nfloat32 linear_velocity\nfloat32 angular_velocity');S.f.interface=true;}
+      else print(pn,'Only geometry_msgs/msg/Twist and turtlesim/msg/Pose are available in this sandbox.','e');return;}
+    if(a==='service'){
+      if(b==='list'){if(!turtleUp()){print(pn,'(no turtlesim services: it is not running)','d');return;}
+        const t=toks.includes('-t');print(pn,SERVICES.map(s=>s[0]+(t?' ['+s[1]+']':'')).join('\n')+'\n(Every node also has parameter services. They are left out here.)');return;}
+      if(b==='call')return svcCall(pn,toks.slice(3),unq);
+    }
+    if(a==='action'){
+      if(b==='list'){if(!turtleUp()){print(pn,'(no actions: turtlesim is not running)','d');return;}print(pn,toks.includes('-t')?'/turtle1/rotate_absolute [turtlesim/action/RotateAbsolute]':'/turtle1/rotate_absolute');return;}
+      if(b==='send_goal'){
+        if(toks[3]!=='/turtle1/rotate_absolute'||toks[4]!=='turtlesim/action/RotateAbsolute'){print(pn,'usage: ros2 action send_goal /turtle1/rotate_absolute turtlesim/action/RotateAbsolute "{theta: 1.57}"','e');return;}
+        let g;try{g=parseFlow(unq(toks.slice(5).join(' ')));}catch(e){print(pn,'Could not parse the goal: '+e.message,'e');return;}
+        if(typeof g.theta!=='number'){print(pn,'The goal needs a number: "{theta: 1.57}".','e');return;}
+        if(!turtleUp()){print(pn,'Waiting for an action server to become available...','d');return;}
+        print(pn,'Waiting for an action server to become available...\nSending goal:\n     theta: '+g.theta+'\n\nGoal accepted with ID: 9f2b7c1e0a3d4b5c8e6f7a8b9c0d1e2f\n');
+        startProc(pn,{type:'goal',label:'action send_goal',goal:g.theta,start:W.turtle.th,seen:W.rotDone});rotateAbs(W,g.theta);return;}
+    }
+    print(pn,'That command is not in this sandbox. Type help.','e');
+  }
+  function svcCall(pn,r,unq){
+    const nm=r[0],ty=r[1];
+    const s=SERVICES.find(x=>x[0]===nm);
+    if(!s){print(pn,'The service '+(nm||'')+' is not in this sandbox. Try ros2 service list.','e');return;}
+    if(!turtleUp()){print(pn,'waiting for service to become available...','d');return;}
+    const base=s[1].split('/').pop(),pk=(ty||'').split('/')[0];
+    if(!ty||ty.split('/').pop()!==base||!['turtlesim','turtlesim_msgs','std_srvs'].includes(pk)){print(pn,'The type for '+nm+' is '+s[1]+'. Check it with ros2 service list -t.','e');return;}
+    const rawBody=unq(r.slice(2).join(' '));
+    let o={};
+    if(base!=='Empty'){
+      if(/(^|[{,]\s*)off\s*:/.test(rawBody)){print(pn,"YAML reads a bare off as the word false, so ROS 2 rejects it. Quote the name: 'off': 1","e");return;}
+      try{o=parseFlow(rawBody||'{}');}catch(e){print(pn,'Could not parse the request: '+e.message,'e');return;}
+    }
+    print(pn,'waiting for service to become available...');
+    const mod=pk==='std_srvs'?'std_srvs':pk;
+    if(base==='Empty'){
+      print(pn,'requester: making request: std_srvs.srv.Empty_Request()\n\nresponse:\nstd_srvs.srv.Empty_Response()\n');
+      if(nm==='/clear'){clearTrail(W);S.f.cleared=true;}
+      if(nm==='/reset'){const keep=S.t;resetWorld(W);S.f.reset=true;}
+      return;}
+    if(base==='SetPen'){
+      const q={r:o.r||0,g:o.g||0,b:o.b||0,width:o.width||0,off:o.off||0};
+      print(pn,'requester: making request: '+mod+'.srv.SetPen_Request(r='+q.r+', g='+q.g+', b='+q.b+', width='+q.width+', off='+q.off+')\n\nresponse:\n'+mod+'.srv.SetPen_Response()\n');
+      setPen(W,{off:!!q.off,r:q.r,g:q.g,b:q.b,width:q.width});S.f.setPen=true;return;}
+    if(base==='TeleportAbsolute'){
+      const q={x:o.x||0,y:o.y||0,theta:o.theta||0};
+      print(pn,'requester: making request: '+mod+'.srv.TeleportAbsolute_Request(x='+fmtF(q.x)+', y='+fmtF(q.y)+', theta='+fmtF(q.theta)+')\n\nresponse:\n'+mod+'.srv.TeleportAbsolute_Response()\n');
+      teleportAbs(W,q.x,q.y,q.theta);S.f.teleported=true;return;}
+    print(pn,'The sandbox does not model '+nm+'.','d');
+  }
+  function pubCmd(pn,r,unq){
+    let once=false,rate=1,times=0,wait=0;const pos=[];
+    for(let i=0;i<r.length;i++){
+      const x=r[i];
+      if(x==='--once'||x==='-1'){once=true;}
+      else if(x==='-r'||x==='--rate'){rate=parseFloat(r[++i]);}
+      else if(x==='-t'||x==='--times'){times=parseInt(r[++i],10);}
+      else if(x==='-w'||x==='--wait-matching-subscriptions'){wait=parseInt(r[++i],10);}
+      else pos.push(x);
+    }
+    if(pos.length<3){print(pn,'usage: ros2 topic pub [--once] [-r HZ] TOPIC TYPE "{linear: {x: 2.0}}"','e');return;}
+    let topic=pos[0];if(!topic.startsWith('/'))topic='/'+topic;
+    const mtype=pos[1];
+    if(!/^[a-z_]+\/msg\/[A-Za-z]+$/.test(mtype)||!['geometry_msgs/msg/Twist','std_msgs/msg/String'].includes(mtype)){print(pn,'The passed message type is invalid','e');return;}
+    if(!(rate>0)){print(pn,'The rate must be greater than zero.','e');return;}
+    let msg;
+    if(mtype==='geometry_msgs/msg/Twist'){try{msg=twistFrom(parseFlow(unq(pos.slice(2).join(' '))));}catch(e){print(pn,'Could not parse the message: '+e.message,'e');return;}}
+    else msg={data:'x'};
+    const pr={type:'pub',topic:topic,mtype:mtype,msg:msg,once:once,rate:once?1:rate,times:once?1:times,wait:wait,sent:0,next:S.t,label:'topic pub '+topic,started:false,hint:null};
+    startProc(pn,pr);
+    if(wait>0)print(pn,'Waiting for at least '+wait+' matching subscription(s)...','');
+    S.f.pubCount=(S.f.pubCount||0)+1;
+  }
+  /* ---------- time passes ---------- */
+  const DT=TS.DT;
+  function pubHint(pn,pr){
+    if(pr.hit)return;
+    const why=pr.topic!=='/turtle1/cmd_vel'?'turtlesim listens on /turtle1/cmd_vel, and this topic name is different.':(pr.mtype!=='geometry_msgs/msg/Twist'?'The type does not match the topic, so there is no connection.':(!turtleUp()?'turtlesim is not running.':''));
+    print(pn,'(Sandbox note: nobody received that. '+why+' Check with ros2 topic list -t.)','d');
+  }
+  function procTick(pn){
+    const pr=pn.proc;if(!pr)return;
+    if(pr.type==='pub'){
+      if(!pr.started){if(subsOn(pr.topic)<pr.wait)return;pr.started=true;pr.next=S.t;print(pn,'publisher: beginning loop');pr.hintAt=S.t+1.5;}
+      if(S.t+1e-9>=pr.next){
+        pr.sent++;pr.next+=1/pr.rate;
+        print(pn,'publishing #'+pr.sent+': '+(pr.mtype==='geometry_msgs/msg/Twist'?twistRepr(pr.msg):'std_msgs.msg.String(data=\'...\')')+'\n');
+        const hit=deliver(pr.topic,pr.mtype,pr.msg,pn);pr.hit=(pr.hit||0)+hit;
+        if(pr.times&&pr.sent>=pr.times){if(!pr.hit)pubHint(pn,pr);pn.proc=null;status(pn);refresh();return;}
+      }
+      if(pr.hintAt&&S.t>=pr.hintAt){pr.hintAt=0;pubHint(pn,pr);}
+      return;}
+    if(pr.type==='echo'&&pr.topic==='/turtle1/pose'&&turtleUp()&&S.t>=pr.next){pr.next=S.t+0.25;print(pn,poseYaml(poseOf(W)));pr.count++;S.f.echoPose=(S.f.echoPose||0)+1;return;}
+    if(pr.type==='hz'&&pr.topic==='/turtle1/pose'&&turtleUp()&&S.t>=pr.next){pr.next=S.t+1;print(pn,'average rate: 62.500\n  min: 0.016s max: 0.016s std dev: 0.00000s window: 63');S.f.hz=true;return;}
+    if(pr.type==='goal'&&W.rotDone>pr.seen){
+      print(pn,'Result:\n    delta: '+(normAng(W.turtle.th-pr.start)).toFixed(6)+'\n\nGoal finished with status: SUCCEEDED');S.f.actionDone=true;pn.proc=null;status(pn);refresh();}
+  }
+  const wallState={at:-9};
+  function advance(sec){
+    const n=Math.round(sec/DT);
+    for(let i=0;i<n;i++){
+      S.t+=DT;
+      if(turtleUp()){worldTick(W);
+        if(W.wallNote){const pn=panes.find(q=>q.proc&&q.proc.type==='turtlesim');if(pn&&S.t-wallState.at>1){wallState.at=S.t;print(pn,'[WARN] ['+stamp()+'] [turtlesim]: Oh no! I hit the wall! (Clamping from [x='+W.wallNote.x.toFixed(6)+', y='+W.wallNote.y.toFixed(6)+'])','e');}W.wallNote=null;}}
+      for(const pn of panes)procTick(pn);
+    }
+    evalMissions();
+  }
+  /* ---------- screen ---------- */
+  function readout(){
+    const T=W.turtle;
+    $(p+'-read').innerHTML=turtleUp()?'x <b>'+T.x.toFixed(2)+'</b> &nbsp;y <b>'+T.y.toFixed(2)+'</b> &nbsp;heading <b>'+T.th.toFixed(2)+'</b> rad ('+(T.th*180/Math.PI).toFixed(0)+'°) &nbsp;speed <b>'+Math.abs(T.lin).toFixed(1)+'</b> &nbsp;turn rate <b>'+T.ang.toFixed(1)+'</b> &nbsp;pen '+(T.pen.on?'down':'up'):'The turtle window is closed. These numbers appear when turtlesim_node is running.';
+  }
+  function draw(){drawTurtleWorld($(p+'-cv'),W,{running:turtleUp()});readout();}
+  function graph(){
+    const g=$(p+'-graph');if(!g)return;
+    const tp=turtleUp(),tl=running('teleop');
+    g.innerHTML=(tl?'<span class="node">/teleop_turtle</span><span class="topic">→<span>/turtle1/cmd_vel</span></span>':'<span class="node you" style="opacity:.5">(no teleop running)</span><span class="topic">···</span>')+(tp?'<span class="node">/turtlesim</span><span class="topic">→<span>/turtle1/pose</span></span><span class="node you" style="opacity:.6">anyone listening</span>':'<span class="node you" style="opacity:.5">(turtlesim not running)</span>');
+  }
+  function refresh(){graph();draw();}
+  function evalMissions(){
+    let changed=false;
+    for(const m of opt.missions){if(!done[m.k]){let ok=false;try{ok=!!m.ok(S,W,panes);}catch(e){}if(ok){done[m.k]=1;changed=true;}}}
+    if(changed||!$(p+'-missions').firstChild)renderMissions();
+  }
+  function renderMissions(){
+    $(p+'-missions').innerHTML=opt.missions.map(m=>'<div class="mission'+(done[m.k]?' done':'')+'"><span class="box">'+(done[m.k]?'✓':'')+'</span><span>'+m.t+'</span></div>').join('');
+    const n=opt.missions.filter(m=>done[m.k]).length,all=n===opt.missions.length;
+    pillSet(p+'-pill',all,n+' of '+opt.missions.length+' missions');
+    const nx=opt.missions.find(m=>!done[m.k]);
+    $(p+'-next').innerHTML=nx?'<span class="eyebrow" style="color:var(--accent)">Do this next</span><p style="margin:4px 0 0">'+nx.t+'</p><p style="margin:6px 0 0;font-size:13px;color:var(--ink2)">Click a command under the terminals to run it, or type it in a terminal and press Enter.</p>':'<span class="eyebrow" style="color:var(--ok)">All missions done</span><p style="margin:4px 0 0">Now answer the check questions below.</p>';
+    if(all&&opt.onDone)opt.onDone();
+  }
+  /* ---------- wiring ---------- */
+  panes.forEach(pn=>{
+    pn.el.addEventListener('click',e=>{if(!e.target.closest('button'))pn.inp.focus();});
+    pn.inp.addEventListener('focus',()=>pn.el.classList.add('focus'));pn.inp.addEventListener('blur',()=>pn.el.classList.remove('focus'));
+    pn.inp.addEventListener('keydown',e=>{
+      if(pn.proc){
+        if(e.ctrlKey&&(e.key==='c'||e.key==='C')){stop(pn);e.preventDefault();return;}
+        if(pn.proc.type==='teleop'){if(teleopKey(pn,e.key)||/^Arrow/.test(e.key))e.preventDefault();return;}
+        if(e.key.length===1||e.key==='Enter')e.preventDefault();return;}
+      if(e.key==='Enter'){const line=pn.inp.value.trim();pn.inp.value='';if(!line)return;print(pn,'$ '+line,'p');pn.hist.push(line);pn.hi=pn.hist.length;try{run(pn,line);}catch(x){print(pn,'internal error: '+x.message,'e');}evalMissions();refresh();}
+      else if(e.key==='ArrowUp'&&pn.hist.length){pn.hi=Math.max(0,pn.hi-1);pn.inp.value=pn.hist[pn.hi];e.preventDefault();}
+      else if(e.key==='ArrowDown'&&pn.hist.length){pn.hi=Math.min(pn.hist.length,pn.hi+1);pn.inp.value=pn.hist[pn.hi]||'';e.preventDefault();}
+    });
+  });
+  pbox.addEventListener('click',e=>{const b=e.target.closest('[data-stop]');if(b)stop(panes[+b.dataset.stop]);});
+  if(opt.keypad)$(p+'-keys').addEventListener('click',e=>{const b=e.target.closest('[data-k]');if(!b)return;const pn=panes.find(q=>q.proc&&q.proc.type==='teleop');if(!pn){return;}
+    const k=b.dataset.k,map={up:'ArrowUp',down:'ArrowDown',left:'ArrowLeft',right:'ArrowRight'};teleopKey(pn,map[k]||k);evalMissions();});
+  const chips=opt.chips||[];
+  $(p+'-chips').innerHTML=chips.map((c,i)=>'<button type="button" class="chip" data-c="'+i+'" title="'+c.replace(/"/g,'&quot;')+'">'+(c.length>46?c.slice(0,44)+'…':c)+'</button>').join('');
+  $(p+'-chips').addEventListener('click',e=>{const b=e.target.closest('[data-c]');if(!b)return;
+    const line=chips[+b.dataset.c];
+    const pn=panes.find(q=>!q.proc&&document.activeElement===q.inp)||panes.find(q=>!q.proc&&!q.inp.value)||panes.find(q=>!q.proc)||panes[0];
+    if(opt.fill||pn.proc){pn.inp.value=line;pn.inp.focus();return;}
+    print(pn,'$ '+line,'p');pn.hist.push(line);pn.hi=pn.hist.length;try{run(pn,line);}catch(x){print(pn,'internal error: '+x.message,'e');}evalMissions();refresh();});
+  $(p+'-reset').addEventListener('click',()=>{panes.forEach(pn=>{pn.proc=null;pn.out.textContent='';pn.lines=0;status(pn);});resetWorld(W);S.f={};S.t=0;print(panes[0],'Lab reset. Type help, or click a command below the terminals.','d');refresh();});
+  let last=performance.now();
+  setInterval(()=>{const now=performance.now();let dt=(now-last)/1000;last=now;if(!visible(opt.mod)||dt>0.5)return;advance(Math.min(dt,0.25));if(!(S.n%1))draw();},16);
+  reg(refresh);
+  print(panes[0],'Practice terminals. Click a command under the terminals to run it, or type one and press Enter.','d');
+  renderMissions();refresh();
+  const api={W:W,S:S,panes:panes,run:(i,l)=>{const pn=panes[i];print(pn,'$ '+l,'p');run(pn,l);evalMissions();refresh();},key:(i,k)=>{const pn=panes[i];if(pn.proc&&pn.proc.type==='teleop'){teleopKey(pn,k);evalMissions();}},stop:i=>{stop(panes[i]);evalMissions();},advance:s=>{advance(s);refresh();},done:done,text:i=>panes[i].out.textContent};
+  window.RL=window.RL||{};window.RL[p]=api;
+  return api;
+}
+
+/* ===== labs 1 to 3: the simulated terminals ===== */
+const PUB1='ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0}}"';
+const PUB2='ros2 topic pub --once /turtle1/cmd_vel geometry_msgs/msg/Twist "{angular: {z: 1.5708}}"';
+const PUB3='ros2 topic pub -r 1 /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0}, angular: {z: 1.0}}"';
+const NODE='ros2 run turtlesim turtlesim_node',TELE='ros2 run turtlesim turtle_teleop_key';
+rosLab('l1',{mod:1,panes:2,keypad:true,chips:[NODE,TELE,'printenv ROS_DISTRO','help'],
+  missions:[
+    {k:'a',t:'In Terminal 1, start the turtle window: <span class="mono">ros2 run turtlesim turtlesim_node</span>',ok:S=>S.f.turtleStarted},
+    {k:'b',t:'In Terminal 2, start the keyboard controller: <span class="mono">ros2 run turtlesim turtle_teleop_key</span>',ok:S=>S.f.teleopStarted},
+    {k:'c',t:'Click in Terminal 2 and drive with the arrow keys (or the on-screen keys). Make the turtle travel at least 6 units.',ok:(S,W)=>S.f.teleopSent>=3&&W.path>=6},
+    {k:'d',t:'Press <kbd>R</kbd>, then <kbd>D</kbd>, then <kbd>G</kbd>. Watch the turtle turn to a fixed heading each time.',ok:S=>S.f.rotKeys>=3},
+    {k:'e',t:'Drive into a wall and read the warning that turtlesim prints in Terminal 1.',ok:(S,W)=>W.wallHits>0},
+    {k:'f',t:'Press <kbd>Q</kbd> in Terminal 2. The teleop program ends. Does the turtle window stay open?',ok:S=>S.f.teleopQuit},
+    {k:'g',t:'Click Ctrl+C in Terminal 1 (or press it with the cursor there) to close the turtle window.',ok:S=>S.f.turtleStopped}
+  ],
+  onDone:()=>finish(1,'l1',['l1','q1'])});
+rosLab('l2',{mod:2,panes:3,graph:true,keypad:true,
+  chips:[NODE,TELE,'ros2 node list','ros2 node info /turtlesim','ros2 topic list','ros2 topic list -t','ros2 topic info /turtle1/cmd_vel','ros2 interface show geometry_msgs/msg/Twist','ros2 topic echo /turtle1/cmd_vel','ros2 topic echo /turtle1/pose','ros2 topic hz /turtle1/pose'],
+  missions:[
+    {k:'a',t:'Start both programs: turtlesim_node in one terminal and turtle_teleop_key in another. Watch the picture above the terminals.',ok:S=>S.f.turtleStarted&&S.f.teleopStarted},
+    {k:'b',t:'Run <span class="mono">ros2 node list</span> in the third terminal. Which two nodes do you see?',ok:S=>S.f.nodeList},
+    {k:'c',t:'Run <span class="mono">ros2 topic list -t</span> and find the topic that carries commands, and its message type.',ok:S=>S.f.topicListT},
+    {k:'d',t:'Run <span class="mono">ros2 topic info /turtle1/cmd_vel</span> and read who is sending and who is listening.',ok:S=>S.f.topicInfo},
+    {k:'e',t:'Run <span class="mono">ros2 interface show geometry_msgs/msg/Twist</span> and find the two fields turtlesim uses: linear x and angular z.',ok:S=>S.f.interface},
+    {k:'f',t:'Echo the commands: run <span class="mono">ros2 topic echo /turtle1/cmd_vel</span> in the third terminal, then press an arrow key in the teleop terminal. The same numbers appear in the echo.',ok:S=>S.f.echoCmd>=1},
+    {k:'g',t:'Stop that echo with Ctrl+C. Then echo <span class="mono">/turtle1/pose</span> and watch the turtle report where it is.',ok:S=>S.f.echoPose>=3}
+  ],
+  onDone:()=>finish(2,'l2',['l2','q2'])});
+rosLab('l3',{mod:3,panes:3,keypad:false,fill:true,
+  chips:[NODE,PUB1,PUB2,PUB3,
+    'ros2 service call /clear std_srvs/srv/Empty',
+    'ros2 service call /turtle1/set_pen turtlesim/srv/SetPen "{\'off\': 1}"',
+    'ros2 service call /turtle1/set_pen turtlesim/srv/SetPen "{r: 255, g: 100, b: 0, width: 4, \'off\': 0}"',
+    'ros2 service call /turtle1/teleport_absolute turtlesim/srv/TeleportAbsolute "{x: 2.0, y: 2.0, theta: 0.0}"',
+    'ros2 action send_goal /turtle1/rotate_absolute turtlesim/action/RotateAbsolute "{theta: 3.14}"',
+    'ros2 service list -t'],
+  missions:[
+    {k:'a',t:'Start turtlesim_node in Terminal 1.',ok:S=>S.f.turtleStarted},
+    {k:'b',t:'Publish one forward command with <span class="mono">--once</span>. The turtle should travel 2 units.',ok:(S,W)=>S.f.pubCount>=1&&W.path>=1.8},
+    {k:'c',t:'Publish a turn-only command, then a forward one, so the turtle moves in a different direction.',ok:(S,W)=>S.f.pubCount>=3&&Math.abs(W.turtle.th)>0.5},
+    {k:'d',t:'Drive a full circle with <span class="mono">-r 1</span>: both linear.x and angular.z in the message, repeated once a second. Let it make a whole lap.',ok:(S,W)=>curveTurns(W)>=0.95},
+    {k:'e',t:'Stop the repeating publisher with Ctrl+C. The turtle coasts for up to a second, then stops by itself.',ok:S=>S.f.pubStopped},
+    {k:'f',t:'Wipe the lines with the <span class="mono">/clear</span> service.',ok:S=>S.f.cleared},
+    {k:'g',t:'Lift the pen with <span class="mono">set_pen</span>, then <span class="mono">teleport_absolute</span> to a new spot. No line is drawn.',ok:S=>S.f.setPen&&S.f.teleported},
+    {k:'h',t:'Turn to a heading with the rotate action: <span class="mono">ros2 action send_goal ...</span>. It reports a result when it arrives.',ok:S=>S.f.actionDone}
+  ],
+  onDone:()=>finish(3,'l3',['l3','q3'])});
+
+quiz('q1-box','q1-pill',1,'q1',['l1','q1'],[
+  {q:'You press the up arrow in the teleop terminal. What actually moves the turtle?',
+   o:['The teleop program reaches into the turtle window and changes its position.','Teleop publishes a message on a topic, and turtlesim, which is listening to that topic, moves the turtle.','Turtlesim reads the keyboard itself.'],a:1,
+   why:['The two programs are separate and never touch each other\'s memory.','Right: teleop only sends a Twist message. It does not know what a turtle is.','Turtlesim never reads the keyboard. That is the teleop program\'s job.']},
+  {q:'You press Q in the teleop terminal. What happens?',
+   o:['Only the teleop program ends. The turtle window stays open.','Both programs end, because they are one application.','The turtle resets to the middle.'],a:0,
+   why:['Right: they are two programs. You close the window with Ctrl+C in its own terminal.','They are separate programs in separate terminals.','Q only quits the teleop. The turtle keeps its place.']},
+  {q:'In the VM\'s Terminator, how do you paste a command you copied from this page?',
+   o:['Ctrl+V','Ctrl+Shift+V (or right-click, or middle-click on highlighted text)','Ctrl+P'],a:1,
+   why:['In a terminal Ctrl+V is not paste, so nothing seems to happen.','Right. Ctrl+Shift+V pastes into a terminal.','Ctrl+P recalls the previous command in many shells.']}
+]);
+quiz('q2-box','q2-pill',2,'q2',['l2','q2'],[
+  {q:'What is a topic?',
+   o:['A program that moves a robot.','A named channel. Nodes publish messages to it, and nodes that subscribe to it receive them.','A file that stores robot settings.'],a:1,
+   why:['That is a node.','Right: a topic is only a name plus a message type.','Settings are parameters. A topic carries a stream of messages.']},
+  {q:'Which fields of a Twist does turtlesim use?',
+   o:['linear.x and angular.z','linear.x and linear.y','angular.x and angular.y'],a:0,
+   why:['Right: forward speed and turn rate. The turtle lives on a flat floor and cannot slide sideways or tilt.','Turtlesim ignores sideways speed.','Those would tilt the turtle, which it cannot do.']},
+  {q:'<span class="mono">ros2 topic info /turtle1/cmd_vel</span> says: Publisher count: 0, Subscription count: 1. What does that mean?',
+   o:['Turtlesim is listening but nothing is sending commands, so no teleop or publisher is running.','Teleop is sending, but nothing receives it.','The topic does not exist.'],a:0,
+   why:['Right. The listener is turtlesim. Start the teleop and the publisher count becomes 1.','The reverse. The subscription is turtlesim.','If it did not exist, ros2 would say Unknown topic.']}
+]);
+quiz('q3-box','q3-pill',3,'q3',['l3','q3'],[
+  {q:'<span class="mono">ros2 topic pub -r 1 /turtle1/cmd_vel geometry_msgs/msg/Twist "{linear: {x: 2.0}, angular: {z: 1.0}}"</span> keeps running. What does the turtle draw?',
+   o:['A straight line to the wall.','A circle (it moves forward and turns at the same time).','A square.'],a:1,
+   why:['A straight line has no turn rate.','Right: forward speed 2 with turn rate 1 gives radius 2 units.','A square needs separate straight and turn commands.']},
+  {q:'You press Ctrl+C on a repeating publisher while the turtle is moving. What does the turtle do?',
+   o:['Stops instantly.','Keeps its last command for about a second, then stops, because turtlesim forgets a command after 1 s without a new one.','Keeps going forever.'],a:1,
+   why:['Nobody sent a stop message. The turtle stops because the command expires.','Right. That is the 1 s command timeout.','If it went on for ever it would hit the wall. The timeout prevents that.']},
+  {q:'Why does the message sit inside double quotes in the shell?',
+   o:['Quotes make ROS 2 run faster.','The shell would otherwise split the text at spaces and treat the braces as special.','Quotes are optional and only for style.'],a:1,
+   why:['No effect on speed.','Right: the quotes hand the YAML to ros2 as a single piece of text.','Without them the command usually fails.']}
+]);
+
+/* ===== lab 4: the plan editor, lab 5: open loop against closed loop ===== */
+(function(){
+  const W=makeWorld(),done={},G=[
+    {k:'sq',t:'Draw a square.',ok:r=>r.n===4&&r.m===1},
+    {k:'hx',t:'Draw a pentagon or a hexagon.',ok:r=>(r.n===5||r.n===6)&&r.m===1},
+    {k:'st',t:'Draw a five-point star. It is five sides with a 144° turn at each corner.',ok:r=>r.n===5&&r.m===2}
+  ];
+  let rows=polygonPlan(4,1,2,2,1).map(r=>r.slice()),run=null,res=null;
+  const tb=$('pe-tbl'),cv=$('pe-cv');
+  const f4=x=>{const s=(+x).toFixed(4).replace(/0+$/,'').replace(/\.$/,'.0');return /\./.test(s)?s:s+'.0';};
+  function code(){
+    $('pe-code').textContent='def make_plan():\n    return [\n'+rows.map(r=>'        ('+f4(r[0])+', '+f4(r[1])+', '+f4(r[2])+'),').join('\n')+'\n    ]';
+  }
+  function table(){
+    tb.innerHTML='<thead><tr><th>#</th><th>Forward speed<br><span class="mono">linear.x</span> (units/s)</th><th>Turn rate<br><span class="mono">angular.z</span> (rad/s)</th><th>Hold for (s)</th><th></th></tr></thead><tbody>'+
+      rows.map((r,i)=>'<tr><td>'+(i+1)+'</td>'+[0,1,2].map(j=>'<td><input type="number" step="0.1" data-r="'+i+'" data-c="'+j+'" value="'+(+(+r[j]).toFixed(4))+'" aria-label="Row '+(i+1)+' column '+(j+1)+'"></td>').join('')+'<td><button type="button" class="chip" data-del="'+i+'" aria-label="Delete row '+(i+1)+'">×</button></td></tr>').join('')+'</tbody>';
+    code();
+  }
+  tb.addEventListener('input',e=>{const el=e.target;if(el.dataset.r===undefined)return;const v=parseFloat(el.value);rows[+el.dataset.r][+el.dataset.c]=isNaN(v)?0:v;code();});
+  tb.addEventListener('click',e=>{const b=e.target.closest('[data-del]');if(!b)return;rows.splice(+b.dataset.del,1);table();});
+  $('pe-add').addEventListener('click',()=>{rows.push([2,0,1]);table();});
+  $('pe-fill').addEventListener('click',()=>{
+    const n=Math.max(3,Math.min(12,Math.round(+$('pe-n').value)||4)),m=Math.max(1,Math.min(n-1,Math.round(+$('pe-m').value)||1)),side=Math.max(0.5,+$('pe-side').value||2),sp=Math.max(0.2,+$('pe-sp').value||2),tr=Math.max(0.2,+$('pe-tr').value||1);
+    rows=polygonPlan(n,m,side,sp,tr).map(r=>r.slice());table();
+    $('pe-turn').textContent='Turn angle at each corner: '+(m*360/n).toFixed(1)+'° = '+(m*2*Math.PI/n).toFixed(4)+' rad. At '+tr+' rad/s that takes '+(m*2*Math.PI/n/tr).toFixed(4)+' s.';
+  });
+  function say(h){$('pe-res').innerHTML=h;}
+  function start(){
+    if(!rows.length){say('The table is empty. Add a row or press "Fill the table".');return;}
+    resetWorld(W);res=null;
+    run={node:makePlanNode(rows.map(r=>r.slice())),s:makeSched(0.02,0,mulberryB(3)),fin:false};
+    say('Running…');
+  }
+  function step(n){
+    for(let i=0;i<n&&run&&!run.fin;i++){
+      if(schedDue(run.s,W.t))run.node.tick(W);
+      worldTick(W);
+      if(run.node.done()&&Math.abs(W.turtle.lin)<1e-9&&W.t-W.turtle.lastCmd>0.05){run.fin=true;}
+    }
+    if(run&&run.fin){
+      run=null;res=detectShape(W);
+      if(res.ok){
+        const nm={3:'triangle',4:'square',5:res.m===2?'five-point star':'pentagon',6:'hexagon',7:'heptagon',8:'octagon'}[res.n]||(res.n+'-sided shape');
+        say('<b>'+(res.m>1&&res.n!==5?res.n+'-point star pattern ('+res.m+' turns)':nm)+'.</b> '+res.n+' sides of about '+res.side.toFixed(2)+' units, '+res.turnDeg.toFixed(1)+'° at each corner. The pen ended '+res.err.toFixed(2)+' units from where it started.');
+        for(const g of G)if(!done[g.k]&&g.ok(res)){done[g.k]=1;}
+      }else say('<b>Not a closed shape yet:</b> '+res.why);
+      goals();
+    }
+  }
+  function goals(){
+    $('pe-goals').innerHTML=G.map(g=>'<div class="mission'+(done[g.k]?' done':'')+'"><span class="box">'+(done[g.k]?'✓':'')+'</span><span>'+g.t+'</span></div>').join('');
+    const n=G.filter(g=>done[g.k]).length;pillSet('pe-pill',n===G.length,n+' of '+G.length+' shapes');
+    if(n===G.length)finish(4,'l4',['l4','q4']);
+  }
+  function draw(){
+    drawTurtleWorld(cv,W,{});
+    const T=W.turtle;$('pe-read').innerHTML='time <b>'+W.t.toFixed(1)+'</b> s &nbsp;x <b>'+T.x.toFixed(2)+'</b> &nbsp;y <b>'+T.y.toFixed(2)+'</b> &nbsp;heading <b>'+(T.th*180/Math.PI).toFixed(0)+'°</b>';
+  }
+  $('pe-run').addEventListener('click',start);
+  $('pe-reset').addEventListener('click',()=>{run=null;resetWorld(W);say('Press Run.');draw();});
+  let last=performance.now();
+  setInterval(()=>{const now=performance.now();let dt=(now-last)/1000;last=now;if(!visible(4)||dt>0.5||!run)return;step(Math.max(1,Math.round(dt*(+$('pe-speed').value)/TS.DT)));draw();},16);
+  reg(draw);
+  table();goals();say('Press Run to draw the square in the table.');draw();
+  window.PE={W:W,rows:()=>rows,setRows:r=>{rows=r.map(x=>x.slice());table();},run:()=>{start();while(run)step(2000);},res:()=>res,done:done};
+})();
+
+(function(){
+  const cv=$('cl-cv'),per=$('cl-per'),jit=$('cl-jit'),sides=$('cl-sides'),found={};
+  let seed=7,A=null,B=null;
+  const F=Math.fround;
+  function go(){
+    const p=+per.value,j=+jit.value,n=+sides.value;
+    $('cl-pv').textContent=(p*1000).toFixed(0)+' ms ('+(1/p).toFixed(0)+' Hz)';$('cl-jv').textContent=(j*1000).toFixed(0)+' ms';
+    A=runOffline(makePlanNode(polygonPlan(n,1,2,2,1)),p,j,seed,80);
+    B=runOffline(makePoseSquare({sides:n}),TS.DT,j,seed,80);
+    draw();
+    $('cl-oe').textContent=A.endErr.toFixed(2);$('cl-ce').textContent=B.endErr.toFixed(2);
+    $('cl-oh').textContent=A.headErr.toFixed(1)+'°';$('cl-ch').textContent=B.headErr.toFixed(1)+'°';
+    $('cl-ot').textContent=A.t.toFixed(1)+' s';$('cl-ct').textContent=B.t.toFixed(1)+' s';
+    if(A.endErr>0.3&&B.endErr<0.05)found.gap=1;
+    if(A.endErr<0.15)found.good=1;
+    if(n!==4)found.other=1;
+    missions();
+  }
+  function draw(){
+    if(!A)return;
+    const dummy={trails:[],turtle:{x:-9,y:-9,th:0}};
+    drawTurtleWorld(cv,dummy,{extra:[{trails:A.world.trails,color:'#ff8a5c',width:3.5},{trails:B.world.trails,color:'#7dffb0',width:2.5}],turtles:[{x:A.world.turtle.x,y:A.world.turtle.y,th:A.world.turtle.th,color:'#ff8a5c'},{x:B.world.turtle.x,y:B.world.turtle.y,th:B.world.turtle.th,color:'#7dffb0'}]});
+  }
+  const M=[
+    {k:'good',t:'Find a timer setting where even the open-loop script closes its shape (end error under 0.15 units). A fast timer with no jitter does it.'},
+    {k:'gap',t:'Find a setting where the open-loop path misses by more than 0.3 units but the closed-loop path stays within 0.05.'},
+    {k:'other',t:'Try a shape other than the square (3, 5, 6 or 8 sides) and check that the closed loop still closes.'}
+  ];
+  function missions(){
+    $('cl-missions').innerHTML=M.map(m=>'<div class="mission'+(found[m.k]?' done':'')+'"><span class="box">'+(found[m.k]?'✓':'')+'</span><span>'+m.t+'</span></div>').join('');
+    const n=M.filter(m=>found[m.k]).length;pillSet('cl-pill',n===M.length,n+' of '+M.length);
+    if(n===M.length)finish(5,'l5',['l5','q5']);
+  }
+  [per,jit,sides].forEach(e=>e.addEventListener('input',go));
+  $('cl-again').addEventListener('click',()=>{seed=seed*31+7;go();});
+  reg(draw);
+  go();
+  window.CL={go:go,set:(p,j,n)=>{per.value=p;jit.value=j;sides.value=n;go();},A:()=>A,B:()=>B,found:found};
+})();
+
+quiz('q4-box','q4-pill',4,'q4',['l4','q4'],[
+  {q:'The plan line <span class="mono">(2.0, 0.0, 1.0)</span> means:',
+   o:['Go forward at 2 units per second for 1 second (so about 2 units), with no turning.','Go forward 2 units, turn 0 degrees, wait 1 second.','Turn at 2 radians per second for 1 second.'],a:0,
+   why:['Right: the three numbers are linear speed, turn rate and time.','The numbers are rates, not distances or angles.','The first number is the forward speed. The turn rate is the second.']},
+  {q:'You want a 90° corner and the turn rate is 1.0 rad/s. How long must the turn line last?',
+   o:['1 second','About 1.571 seconds (pi / 2 radians divided by 1 rad/s)','90 seconds'],a:1,
+   why:['That would give 1 radian, about 57°.','Right: time = angle / rate.','Mixing degrees with rad/s. Convert 90° to 1.571 rad first.']},
+  {q:'What turn angle at each corner draws a five-point star?',
+   o:['72°, the same as a pentagon','144° (two fifths of a full turn)','90°'],a:1,
+   why:['72° gives a pentagon.','Right: TURNS = 2 and SIDES = 5 give 2 × 360° / 5 = 144°.','90° gives a square.']},
+  {q:'Why is <span class="mono">draw_shape.py</span> called open loop?',
+   o:['It runs forever.','It never looks at where the turtle really is. It only follows the clock.','It does not publish anything.'],a:1,
+   why:['It ends when the plan ends.','Right: no sensor feedback means errors from timing build up unseen.','It publishes Twist messages from a timer.']},
+  {q:'In the class version, what does <span class="mono">self.line_number</span> mean?',
+   o:['A variable that belongs to this ShapeDrawer and is remembered between calls of on_timer.','A variable that is forgotten as soon as the method ends.','A function that counts the lines in the file.'],a:0,
+   why:['Right: self. variables live as long as the object does, which is why the class can pick up where it left off.','That describes an ordinary variable inside a method, without self.','It is a variable, not a function.']},
+  {q:'Who calls <span class="mono">on_timer</span> in the class version?',
+   o:['You do, in a loop in main.','ROS 2 does, 50 times a second, because we gave it the method with create_timer. A function called this way is a callback.','The turtle does.'],a:1,
+   why:['main only calls spin_once, which lets ROS 2 run whatever is due.','Right: that is what makes it a callback.','Turtlesim never calls your code. It only sends and receives messages.']}
+]);
+quiz('q5-box','q5-pill',5,'q5',['l5','q5'],[
+  {q:'What does <span class="mono">draw_square_pose.py</span> use that <span class="mono">draw_shape.py</span> does not?',
+   o:['A subscription to /turtle1/pose, so it knows where the turtle really is.','A faster timer.','A different message type for commands.'],a:0,
+   why:['Right: the pose topic is the feedback.','It has no timer at all. Its callback runs when a pose arrives.','Both publish the same Twist on the same topic.']},
+  {q:'Why does a late timer tick hurt the open-loop script but not the closed-loop one?',
+   o:['The closed-loop script runs on a faster computer.','The closed loop never counts time. Each command is worked out from the current pose, so an error is corrected rather than carried forward.','It does not. They are equally affected.'],a:1,
+   why:['Same computer in the lab.','Right: feedback removes the error as it appears.','Move the jitter slider and compare the two end errors.']},
+  {q:'What does feedback cost you?',
+   o:['Nothing at all.','You need a measurement (the pose), more code, and gains to tune so the robot does not overshoot or crawl.','It only works in simulation.'],a:1,
+   why:['There is always a price.','Right. On a real robot the measurement is a sensor, which has its own noise.','The same idea runs real robots, with real sensors.']}
+]);
+quiz('q6-box','q6-pill',6,'q6',['q6'],[
+  {q:'A terminal says <span class="mono">ros2: command not found</span>. What is the most likely fix?',
+   o:['Reinstall the VM.','The ROS 2 setup file has not been loaded in this terminal. Open a fresh terminal, or run <span class="mono">source /opt/ros/&lt;your release&gt;/setup.bash</span>.','Run the command as administrator.'],a:1,
+   why:['Far too drastic.','Right: each terminal needs the ROS 2 environment. The VM normally loads it for you in every new terminal.','Administrator rights do not load the environment.']},
+  {q:'You publish a Twist and the turtle does not move. What do you check first?',
+   o:['That turtlesim_node is running, and that the topic name and message type match, using <span class="mono">ros2 topic list -t</span>.','Whether the pen is down.','Whether the wall is too close.'],a:0,
+   why:['Right: a typo in the topic name creates a new, unused topic, and nothing complains.','The pen only affects the line, not the motion.','The wall would stop it, but the warning prints in the turtlesim terminal.']},
+  {q:'You copied a command. Ctrl+V does nothing in the terminal. Why?',
+   o:['The clipboard is empty.','Terminals use Ctrl+Shift+V to paste, because Ctrl+V already has another meaning there.','The VM blocks pasting.'],a:1,
+   why:['Try right-click, then Paste.','Right. Or right-click, or middle-click on highlighted text.','Guest Additions turn on the shared clipboard between your computer and the VM.']}
+]);
+
+document.querySelectorAll('pre[data-py]').forEach(pre=>{
+  const bar=document.createElement('div');bar.className='row';bar.style.cssText='justify-content:space-between;margin-bottom:4px';
+  const nm=document.createElement('span');nm.className='mono';nm.style.color='var(--ink2)';nm.textContent=pre.dataset.py;
+  const bt=document.createElement('button');bt.type='button';bt.className='chip';bt.textContent='Copy';
+  const sel=()=>{try{const r=document.createRange();r.selectNodeContents(pre);const s=window.getSelection();s.removeAllRanges();s.addRange(r);bt.textContent='Selected: press Ctrl+C';}catch(e){bt.textContent='Select and copy by hand';}};
+  bt.addEventListener('click',()=>{
+    const ok=()=>{bt.textContent='Copied';setTimeout(()=>{bt.textContent='Copy';},1500);};
+    try{navigator.clipboard.writeText(pre.textContent).then(ok,sel);}catch(e){sel();}
+  });
+  bar.appendChild(nm);bar.appendChild(bt);pre.parentNode.insertBefore(bar,pre);
+});
+
+/* ===== sign-off: lab results fill in by themselves, VM steps are ticked by hand ===== */
+{
+  const auto=[
+    [1,'Module 1 lab: started turtlesim, drove it with the keyboard, and closed both programs'],
+    [2,'Module 2 lab: listed nodes and topics, and echoed commands and pose'],
+    [3,'Module 3 lab: published Twist messages, called services and sent an action goal'],
+    [4,'Module 4 lab: edited the plan and drew a square, a pentagon or hexagon, and a star'],
+    [5,'Module 5 lab: compared open loop with closed loop'],
+    [6,'Module 6 quiz: troubleshooting']
+  ];
+  const hw=[
+    'I installed 7-Zip, extracted the VM from the first .zip.001 file, and imported it into VirtualBox. It starts and I can log in.',
+    'I know the host key (right Ctrl) releases my mouse, and my VM memory and processors sit in the green zone.',
+    'In the VM, turtlesim_node and turtle_teleop_key ran in two Terminator panes and I drove the turtle with the arrow keys.',
+    'In the VM, I used ros2 topic list, ros2 topic echo /turtle1/cmd_vel and ros2 topic pub to move the turtle.',
+    'In the VM, draw_shape.py drew a square, and then a star after I changed SIDES and TURNS.',
+    'In the VM, draw_square_pose.py closed its square, and I can say why it beats draw_shape.py when the timer is late.',
+    'I ran printenv ROS_DISTRO in the VM and wrote the release name down.'
+  ];
+  const idx=k=>mods.findIndex(m=>m.id==='m'+k);
+  function row(text,checked,disabled){
+    const l=document.createElement('label');l.className='check';l.style.flexDirection='row';
+    const c=document.createElement('input');c.type='checkbox';c.checked=checked;c.disabled=disabled;
+    const s=document.createElement('span');s.textContent=text;l.appendChild(c);l.appendChild(s);return{l:l,c:c};
+  }
+  function paintAuto(){
+    const box=$('wk-auto');box.innerHTML='';
+    auto.forEach(a=>{
+      const on=!!prog.done[a[0]],r=row(a[1],on,true);
+      if(!on){const b=document.createElement('button');b.type='button';b.className='chip';b.textContent='go to it';b.dataset.go=idx(a[0]);r.l.appendChild(b);r.l.style.opacity='.75';}
+      box.appendChild(r.l);
+    });
+  }
+  function status(){
+    const na=auto.filter(a=>prog.done[a[0]]).length,nh=Object.keys(prog.wk).length,tot=auto.length+hw.length,n=na+nh;
+    $('wk-pill').textContent=n+' of '+tot;$('wk-pill').className='pill'+(n===tot?' ok':'');
+    return n===tot;
+  }
+  function sync(){
+    paintAuto();const full=status();
+    if(full&&!prog.done[SIGNOFF]){prog.done[SIGNOFF]=1;save();updateRail();}
+    else if(!full&&prog.done[SIGNOFF]){delete prog.done[SIGNOFF];save();updateRail();}
+  }
+  function renderHw(){
+    const box=$('wk-list');box.innerHTML='';
+    hw.forEach((t,i)=>{const r=row(t,!!prog.wk[i],false);r.c.id='wk'+i;
+      r.c.addEventListener('change',()=>{if(r.c.checked)prog.wk[i]=1;else delete prog.wk[i];save();sync();});box.appendChild(r.l);});
+  }
+  onProgress=sync;
+  $('reset-all').addEventListener('click',()=>{prog={done:{},wk:{}};save();renderHw();updateRail();sync();});
+  /* module 0 is done when the student says the VM runs */
+  const vm=$('vm-ok');if(vm){vm.checked=!!prog.done[0];vm.addEventListener('change',()=>{if(vm.checked)markDone(0);else{delete prog.done[0];save();updateRail();}});}
+  buildRail();renderHw();
+  const h=(location.hash||'').match(/^#m(\d+)$/);show(h?+h[1]:0,true);
+}
+
+
+</script>
+
+</body></html>

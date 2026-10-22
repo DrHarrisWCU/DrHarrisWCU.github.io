@@ -1,4 +1,5 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Robot Lab Tutorial A</title>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Robot Lab Tutorial A</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -172,7 +173,7 @@ textarea.edit{width:100%;font:12.5px/1.5 var(--font-m);padding:10px 12px;border:
 .chip[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
 #arch-steps li{font-size:14px;color:var(--ink2)}#arch-steps li.on{color:var(--ink);font-weight:600}
 </style>
-</head><body><div class="wrap">
+<div class="wrap">
 <nav class="rail" id="rail" aria-label="Modules"></nav>
 <main id="main">
 
@@ -217,8 +218,7 @@ textarea.edit{width:100%;font:12.5px/1.5 var(--font-m);padding:10px 12px;border:
     <h2 style="margin-bottom:10px">What you need</h2>
     <div class="tw"><table>
       <tr><th>Part</th><th>What it is</th></tr>
-       <tr><td>quad</td><td>Smart servos. Each has its own microcontroller, encoder and serial bus</td></tr>
-      <tr><td><a href="robotlab_A_python.zip">robotlab_A_python.zip</a></td><td>All of the associatd code and 3D models for this tutorial series.</td></tr>
+      <tr><td>Two DYNAMIXEL XL430-W250</td><td>Smart servos. Each has its own microcontroller, encoder and serial bus</td></tr>
       <tr><td>Either: U2D2 plus U2D2 Power Hub Board</td><td>USB to servo-bus adapter, and the board that feeds power into the bus. A U2D2 alone carries data only</td></tr>
       <tr><td>Or: OpenCR 1.0</td><td>A controller board that doubles as the adapter once it runs the passthrough sketch, and takes the power input itself</td></tr>
       <tr><td>12 V supply, 5 A is plenty</td><td>Powers the servos through the board above. USB never powers them</td></tr>
@@ -343,9 +343,7 @@ robotlab-a-env\Scripts\Activate.ps1      # Windows PowerShell</pre></li>
     <p style="margin-bottom:0;font-size:13px;color:var(--ink2)">Module 2 has a short Python script, <span class="mono">scan_bus.py</span>, that finds servos the same way. Use it to confirm that Python sees what Wizard set.</p></div>
 
   <div class="callout"><span class="eyebrow">Try these, then say what you saw</span>
-    <p><ol><li>Before you rename anything, plug in both new servos together and scan. What does Wizard show, and why? (Both answer to ID 1 at the same moment.) Unplug one again.</li>
-      <li>In Wizard, switch Torque Enable on and look at the ID row. What changed, and why would the maker lock it? (Hint: the ID is stored in non-volatile memory, and a half-finished write while the motor is driving would be a bad time to lose power.) </li>
-      <li>Which servo is the yaw joint and which is the pitch joint? Say how you can tell by moving each one by hand.</li></ol></p></div>
+    <p>1. Before you rename anything, plug in both new servos together and scan. What does Wizard show, and why? (Both answer to ID 1 at the same moment.) Unplug one again. 2. In Wizard, switch Torque Enable on and look at the ID row. What changed, and why would the maker lock it? (Hint: the ID is stored in non-volatile memory, and a half-finished write while the motor is driving would be a bad time to lose power.) 3. Which servo is the yaw joint and which is the pitch joint? Say how you can tell by moving each one by hand.</p></div>
 
   <details class="ask"><summary>For the mentor: sign-off question</summary><p>Why can the servos share three wires, and what breaks when two share an ID? Listen for: every servo hears every packet, only the addressed ID answers, and two answers overlap into a bad CRC.</p></details>
   <div class="nav2"><button class="btn ghost" data-go="m0">Back</button><button class="btn" data-go="m1">Next: Talk to a servo</button></div>
@@ -2824,7 +2822,7 @@ const MJ_SCHEMA={mujoco:{model:0},compiler:{angle:0},option:{timestep:1,integrat
   site:{name:0,pos:2},actuator:{},position:{name:0,joint:0,kp:1,kv:1,forcerange:2,ctrlrange:2}};
 const MJ_LINK_I=2.208e-5, MJ_GRAV_T=0.0572*9.81*0.01175;   // tilt-link inertia about the pitch axis, gravity torque amplitude
 function mjParse(xml){
-  const src=xml.replace(/<!-{2}[\s\S]*?-{2}>/g,m=>m.replace(/[^\n]/g,'')).replace(/<\?[\s\S]*?\?>/g,m=>m.replace(/[^\n]/g,''));
+  const src=xml.replace(/<!--[\s\S]*?-->/g,m=>m.replace(/[^\n]/g,'')).replace(/<\?[\s\S]*?\?>/g,m=>m.replace(/[^\n]/g,''));
   const lineAt=i=>src.slice(0,i).split('\n').length;
   const tags=[],stack=[],re=/<(\/?)([A-Za-z_][\w.-]*)([^<>]*)>/g;let m,last=0;
   const stray=s=>/[<>]/.test(s);
@@ -4194,4 +4192,6 @@ document.querySelectorAll('pre[data-py]').forEach(pre=>{
   const h=(location.hash||'').match(/^#m(\d+)$/);show(h?+h[1]:0,true);
 }
 
-</script></body></html>
+</script>
+
+</body></html>
