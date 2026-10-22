@@ -421,14 +421,24 @@
         description:
           "Experiment with timing behavior and timer-based circuit concepts."
       },
-      {
+      { 
         title: "Image2CPP",
         href: "image2cpp/index.html",
         image: "image2cpp.png",
         icon: "▦",
+        button: "Open Tool",
         description:
           "Convert images into C/C++ bitmap data for use with microcontrollers and embedded displays."
-      },      
+      },     
+       { 
+        title: "Robotics Tutorials",
+        href: "https://drharriswcu.github.io/robotics_tutorials/index.html",
+        image: "ROS2_Intro.png",
+        icon: "🐢",
+        button: "Open Page",
+        description:
+          "A series of interactive tutorials and simulations introducing Dynamixel motors, Kinematics, robot arm, ROS2."
+      },  
     ];
 
     const grid = document.getElementById("simulator-grid");
@@ -473,7 +483,7 @@
         <h3>${simulator.title}</h3>
         <p>${simulator.description}</p>
         <a class="button" href="${simulator.href}">
-          Open simulator →
+          ${simulator.button || "Open simulator"} →
         </a>
       `;
 
