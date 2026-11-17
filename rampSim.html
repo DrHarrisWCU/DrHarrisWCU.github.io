@@ -1,0 +1,57 @@
+<title>Ramp Force Checker</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: inputs and diagram side by side; readouts below as a plain table. Workshop-drawing look, sans + mono. */
+:root{
+  --bg:#f5f4f8; --panel:#ffffff; --fg:#241b33; --muted:#6a6178; --line:#d9d4e3;
+  --accent:#592d88; --accent-ink:#ffffff; --gold:#b8963f; --ok:#1d7a4d; --warn:#a35a00;
+  --ramp:#cfc7dd; --box:#592d88;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#17121f; --panel:#221a2f; --fg:#efeaf7; --muted:#a79bba; --line:#3a2f4c;
+    --accent:#b48be6; --accent-ink:#17121f; --gold:#d8b76a; --ok:#5fcf9a; --warn:#f0b255;
+    --ramp:#3d3153; --box:#b48be6; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#17121f; --panel:#221a2f; --fg:#efeaf7; --muted:#a79bba; --line:#3a2f4c;
+  --accent:#b48be6; --accent-ink:#17121f; --gold:#d8b76a; --ok:#5fcf9a; --warn:#f0b255;
+  --ramp:#3d3153; --box:#b48be6; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.45;
+  padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:880px;margin:0 auto;display:grid;gap:16px}
+h1{font-size:22px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:62ch}
+.grid{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px}
+@media(max-width:640px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px}
+.field{display:grid;gap:4px;margin-bottom:12px}
+label,.lbl{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.row{display:flex;gap:8px;align-items:center}
+input[type=number]{width:100%;font:600 16px var(--mono);padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+input[type=number]:focus,select:focus,button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.unit{font:13px var(--mono);color:var(--muted);min-width:34px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.seg button{font:600 12px var(--sans);padding:6px 12px;background:var(--bg);color:var(--fg);border:0;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--accent);color:var(--accent-ink)}
+.chk{display:flex;gap:8px;align-items:center;font-size:14px;color:var(--fg);text-transform:none;letter-spacing:0;font-weight:500}
+svg{width:100%;height:auto;display:block}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:420px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+td.v{font:600 16px var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.f{font:12.5px var(--mono);color:var(--muted)}
+tr.key td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.note{font-size:13px;color:var(--muted)}
+.warn{color:var(--warn)}
+</style>
+
+<main>
+  <header>
+    <h1>Ramp Force Checker</h1>
