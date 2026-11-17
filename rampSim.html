@@ -1,5 +1,9 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ramp Force Checker</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <style>
 /* Layout: inputs and diagram side by side; readouts below as a plain table. Workshop-drawing look, sans + mono. */
 :root{
@@ -22,6 +26,7 @@
   --ramp:#3d3153; --box:#b48be6; color-scheme:dark;
 }
 *{box-sizing:border-box}
+body{margin:0}
 body{background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:15px;line-height:1.45;
   padding-block:20px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 main{max-width:880px;margin:0 auto;display:grid;gap:16px}
@@ -51,7 +56,128 @@ tr.key td{background:color-mix(in srgb,var(--accent) 10%,transparent)}
 .note{font-size:13px;color:var(--muted)}
 .warn{color:var(--warn)}
 </style>
+</head>
+<body>
 
 <main>
   <header>
     <h1>Ramp Force Checker</h1>
+    <p class="sub">Type exact values to check the force needed to push a load up a ramp. Use it to compare with your hand calculation. It does not replace it.</p>
+  </header>
+
+  <div class="grid">
+    <section class="card" aria-label="Inputs">
+      <div class="field">
+        <span class="lbl">Enter the load as</span>
+        <div class="seg" role="group" aria-label="Load type">
+          <button type="button" id="modeMass" aria-pressed="true">Mass (kg)</button>
+          <button type="button" id="modeWeight" aria-pressed="false">Weight (N)</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="load" id="loadLabel">Mass</label>
+        <div class="row"><input id="load" type="number" step="any" min="0" value="5" inputmode="decimal"><span class="unit" id="loadUnit">kg</span></div>
+      </div>
+      <div class="field">
+        <label for="angle">Ramp angle</label>
+        <div class="row"><input id="angle" type="number" step="any" min="0" max="90" value="15" inputmode="decimal"><span class="unit">deg</span></div>
+      </div>
+      <div class="field">
+        <label for="len">Ramp length (optional)</label>
+        <div class="row"><input id="len" type="number" step="any" min="0" value="2" inputmode="decimal"><span class="unit">m</span></div>
+      </div>
+      <div class="field">
+        <label class="chk"><input id="fric" type="checkbox"> Include friction</label>
+        <div class="row"><input id="mu" type="number" step="any" min="0" value="0.3" inputmode="decimal" disabled aria-label="Friction coefficient"><span class="unit">&mu;</span></div>
+      </div>
+      <div class="field">
+        <label for="g">Gravity</label>
+        <div class="row"><input id="g" type="number" step="any" min="0" value="9.81" inputmode="decimal"><span class="unit">m/s&sup2;</span></div>
+      </div>
+      <p class="note" id="msg" role="status"></p>
+    </section>
+
+    <section class="card" aria-label="Diagram">
+      <svg id="dia" viewBox="0 0 420 260" role="img" aria-label="Load on a ramp at the chosen angle"></svg>
+    </section>
+  </div>
+
+  <section class="card tbl" aria-label="Results">
+    <table>
+      <thead><tr><th>Quantity</th><th>Value</th><th>How it is found</th></tr></thead>
+      <tbody id="out"></tbody>
+    </table>
+  </section>
+  <p class="note">Rounded to 4 significant figures. The force along the ramp is the push needed to move at constant speed (no acceleration). At 0&deg; it should be zero and at 90&deg; it should equal the full weight.</p>
+</main>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var mode='mass';
+  function fmt(x){ if(!isFinite(x)) return '—'; if(x===0) return '0'; var a=Math.abs(x);
+    var s=a>=1000||a<0.01? x.toExponential(2) : String(+x.toPrecision(4)); return s; }
+  function num(id){ var v=parseFloat($(id).value); return isNaN(v)?NaN:v; }
+  function row(name,val,unit,how,key){
+    return '<tr'+(key?' class="key"':'')+'><td>'+name+'</td><td class="v">'+val+' '+unit+'</td><td class="f">'+how+'</td></tr>';
+  }
+  function draw(a,hasLen){
+    var rad=a*Math.PI/180, W=420,H=260, x0=40,y0=220, L=300;
+    var x1=x0+L*Math.cos(rad), y1=y0-L*Math.sin(rad);
+    if(a>=85){ x1=x0+L*Math.cos(85*Math.PI/180); y1=y0-L*Math.sin(85*Math.PI/180); }
+    var s='';
+    s+='<polygon points="'+x0+','+y0+' '+(x1)+','+y0+' '+x1+','+y1+'" fill="var(--ramp)" stroke="var(--muted)" stroke-width="1.5"/>';
+    // box on ramp at 55% along
+    var t=0.55, cx=x0+(x1-x0)*t, cy=y0+(y1-y0)*t, ang=-Math.atan2(y0-y1,x1-x0)*180/Math.PI;
+    s+='<g transform="translate('+cx+','+cy+') rotate('+ang+')"><rect x="-18" y="-30" width="36" height="30" rx="3" fill="var(--box)"/><text x="0" y="-11" text-anchor="middle" font-family="var(--mono)" font-size="11" fill="var(--accent-ink)">load</text></g>';
+    // angle arc
+    var r=46, ax=x0+r*Math.cos(rad), ay=y0-r*Math.sin(rad);
+    s+='<path d="M '+(x0+r)+' '+y0+' A '+r+' '+r+' 0 0 0 '+ax+' '+ay+'" fill="none" stroke="var(--gold)" stroke-width="2"/>';
+    s+='<text x="'+(x0+r+8)+'" y="'+(y0-8)+'" font-family="var(--mono)" font-size="13" font-weight="700" fill="var(--fg)">'+fmt(a)+'°</text>';
+    if(hasLen){
+      s+='<text x="'+((x0+x1)/2-30)+'" y="'+((y0+y1)/2-12)+'" font-family="var(--mono)" font-size="12" fill="var(--muted)" transform="rotate('+ang+' '+((x0+x1)/2-30)+' '+((y0+y1)/2-12)+')">L</text>';
+      s+='<line x1="'+x1+'" y1="'+y0+'" x2="'+x1+'" y2="'+y1+'" stroke="var(--muted)" stroke-dasharray="4 3"/>';
+      s+='<text x="'+(x1-14)+'" y="'+((y0+y1)/2)+'" text-anchor="end" font-family="var(--mono)" font-size="12" fill="var(--muted)">h</text>';
+    }
+    $('dia').innerHTML=s;
+  }
+  function update(){
+    var load=num('load'), a=num('angle'), L=num('len'), g=num('g'), mu=num('mu'), useF=$('fric').checked;
+    var bad=[];
+    if(!(load>=0)) bad.push('load'); if(!(a>=0&&a<=90)) bad.push('angle between 0 and 90'); if(!(g>0)) bad.push('gravity');
+    if(useF && !(mu>=0)) bad.push('friction coefficient');
+    $('msg').textContent=''; $('msg').className='note';
+    if(bad.length){ $('msg').textContent='Check the '+bad.join(', ')+'.'; $('msg').className='note warn'; $('out').innerHTML=''; draw(isNaN(a)?0:Math.min(Math.max(a,0),90),false); return; }
+    var W = mode==='mass'? load*g : load;
+    var rad=a*Math.PI/180, s=Math.sin(rad), c=Math.cos(rad);
+    var Fpar=W*s, N=W*c, Ffric=useF? mu*N : 0, Fpush=Fpar+Ffric;
+    var hasLen = L>0, h = hasLen? L*s : NaN;
+    var h = '';
+    h+=row('Weight, W', fmt(W),'N', mode==='mass'?'W = m × g = '+fmt(load)+' × '+fmt(g):'entered directly');
+    h+=row('Force along the ramp (push needed, no friction)', fmt(Fpar),'N','W × sin('+fmt(a)+'°)', !useF);
+    h+=row('Weight pressing into the ramp (normal force)', fmt(N),'N','W × cos('+fmt(a)+'°)');
+    if(useF){
+      h+=row('Friction force', fmt(Ffric),'N','μ × normal force = '+fmt(mu)+' × '+fmt(N));
+      h+=row('Push needed up the ramp, with friction', fmt(Fpush),'N','W sinθ + μ W cosθ', true);
+    }
+    h+=row('Mechanical advantage', Fpush>0? fmt(W/Fpush):'—','','W ÷ push needed (what the simple-machines tool calls MA)');
+    if(hasLen){
+      var hh=L*s;
+      h+=row('Height gained, h', fmt(hh),'m','L × sinθ');
+      h+=row('Lever check: force × L', fmt(Fpar*L),'J','equals W × h = '+fmt(W*hh)+' J (no friction)');
+    }
+    $('out').innerHTML=h;
+    draw(a,hasLen);
+  }
+  function setMode(m){ mode=m;
+    $('modeMass').setAttribute('aria-pressed',m==='mass'); $('modeWeight').setAttribute('aria-pressed',m==='weight');
+    $('loadLabel').textContent = m==='mass'?'Mass':'Weight'; $('loadUnit').textContent = m==='mass'?'kg':'N';
+    $('load').value = m==='mass'?'5':'49'; update(); }
+  $('modeMass').onclick=function(){setMode('mass')}; $('modeWeight').onclick=function(){setMode('weight')};
+  $('fric').onchange=function(){ $('mu').disabled=!$('fric').checked; update(); };
+  ['load','angle','len','mu','g'].forEach(function(id){ $(id).addEventListener('input',update); });
+  update();
+})();
+</script>
+</body>
+</html>
